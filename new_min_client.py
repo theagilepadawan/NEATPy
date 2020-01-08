@@ -14,12 +14,12 @@ import json
 
 if __name__ == "__main__":
     ep = RemoteEndpoint()
-    ep.with_address("127.0.0.1")
-    ep.with_port(5000)
+    ep.with_address("weevil.info")
+    ep.with_port(80)
 
     tp = TransportProperties()
     print(tp.props)
-    tp.require("test")#SelectionProperties.ZERO_RTT_MSG)
+    tp.require(SelectionProperties.ZERO_RTT_MSG)
     # tp.prefer(SelectionProperties.RELIABILIY)
     # tp.ignore(SelectionProperties.CONGESTION_CONTROL)
     # tp.ignore(SelectionProperties.PRESERVE_ORDER)

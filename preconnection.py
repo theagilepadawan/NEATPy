@@ -135,7 +135,7 @@ def on_readable(ops):
 ############################### CLIENT CALLBACKS ###################################
 def client_on_readable(ops):
     read(ops)
-    neat_close(ops.ctx, ops.flow)
+   # neat_close(ops.ctx, ops.flow)
     return NEAT_OK
 
 
@@ -147,10 +147,12 @@ def client_on_close(ops):
 def client_on_writable(ops):
     #thread1 = multiprocessing.Process(target=writeable_thread_cli, args=(ops,)).start()
     shim_print("ON WRITABLE RAN")
-    message = b"Hi!"
+    #message = b"Hi!"
+    message = b"GET / HTTP/1.1\r\nHost: weevil.info\r\nUser-agent: libneat\r\nConnection: close\r\n\r\n"
 
     try:
-        neat_write(ops.ctx, ops.flow, message, 3, None, 0)
+        #neat_write(ops.ctx, ops.flow, message, 3, None, 0)
+        neat_write(ops.ctx, ops.flow, message, len(message), None, 0)
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
 
@@ -158,7 +160,7 @@ def client_on_writable(ops):
 
 
 def client_on_all_written(ops):
-    # shim_print("ON ALL WRITTEN RAN")
+    shim_print("ON ALL WRITTEN RAN")
     ops.on_readable = client_on_readable
     ops.on_writable = None
     neat_set_operations(ops.ctx, ops.flow, ops)
@@ -175,19 +177,20 @@ def client_on_connected(ops):
 ############################### CLIENT CALLBACKS END ###############################
 
 ############################### COMMON #############################################
-
-
+new_file = f= open("site.html","w+")
 def read(ops):
     shim_print("ON READABLE")
-    buffer = charArr(32)
+    num = 32*1024*1024
+    buffer = charArr(num)
     bytes_read = new_uint32_tp()
     try:
-        neat_read(ops.ctx, ops.flow, buffer, 31, bytes_read, None, 0)
+        neat_read(ops.ctx, ops.flow, buffer, num-1, bytes_read, None, 0)
         byte_array = bytearray(uint32_tp_value(bytes_read))
         for i in range(uint32_tp_value(bytes_read)):
             byte_array[i] = buffer[i]
 
         shim_print("Read {} bytes: {}".format(uint32_tp_value(bytes_read), byte_array.decode()))
+        new_file.write(byte_array.decode())
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
 
