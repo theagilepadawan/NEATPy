@@ -1,0 +1,14 @@
+*.pyc
+*.cmake
+*.dylib
+.DS_Store
+.idea/
+Makefile
+__pycache__/
+_neat.so
+examples/
+libneat-static.a
+socketapi/
+tests/
+CMakeCache.txt
+CMakeFiles/
