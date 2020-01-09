@@ -10,12 +10,15 @@
 import sys
 from endpoint import *
 from preconnection import *
+from transport_properties import *
 
 
 if __name__ == "__main__":
 
     local_specifier = LocalEndpoint()
     local_specifier.with_port(5000)
-    precon = Preconnection(local_endpoint=local_specifier, transport_properties=None)
+
+    tp = TransportProperties()
+    precon = Preconnection(local_endpoint=local_specifier, transport_properties=tp)
     precon.listen()
     sys.exit()

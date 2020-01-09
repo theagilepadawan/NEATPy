@@ -2,6 +2,7 @@
 
 from neat import *
 from connection import Connection
+from listner import *
 from utils import *
 import sys
 import copy
@@ -39,10 +40,11 @@ class Preconnection:
         self.established_connection = None
         self.local_endpoint = local_endpoint
         self.remote_endpoint = remote_endpoint
+        self.transport_properties = transport_properties
 
-        if transport_properties is not None:
-            json_representation = transport_properties.to_json()
-            if json_representation == None:
+        if self.transport_properties is not None:
+            json_representation = self.transport_properties.to_json()
+            if json_representation is None:
                 exit(1)
             print(json_representation)
             neat_set_property(self.ctx, self.flow, json_representation)
@@ -66,12 +68,11 @@ class Preconnection:
 
     def listen(self):
         shim_print("LISTEN!")
-        test = self
-        def on_con(ops):
-            Connection(test)
-            on_connected(ops)
 
-        self.ops.on_connected = on_con #on_connected
+        listner = Listner(self)
+
+
+        self.ops.on_connected = on_connected
         self.ops.on_readable = on_readable
 
         neat_set_operations(self.ctx, self.flow, self.ops)
@@ -158,7 +159,6 @@ def client_on_writable(ops):
 
 
 def client_on_all_written(ops):
-    # shim_print("ON ALL WRITTEN RAN")
     ops.on_readable = client_on_readable
     ops.on_writable = None
     neat_set_operations(ops.ctx, ops.flow, ops)

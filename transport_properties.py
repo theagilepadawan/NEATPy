@@ -116,7 +116,7 @@ class TransportProperties:
             for prop, preference in self.props.items():
                 if preference.value == PreferenceLevel.PREFER.value:
                     for protocol in candidates:
-                        if protocols_services[protocol][prop] >= ServiceLevel.OPTIONAL.value:
+                        if protocols_services[protocol][prop].value >= ServiceLevel.OPTIONAL.value:
                             shim_print(f'{protocol.value} supports {prop.name}')
                             ranking_dict[protocol] += 1
             ranking = sorted(ranking_dict.items(), key=lambda f: f[1], reverse=True)

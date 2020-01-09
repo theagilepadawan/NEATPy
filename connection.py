@@ -11,8 +11,8 @@ class Connection():
         print("CONNECTION CREATED!!!")
         self.preconnection = preconnection
 
-        #self.local_endpoint = preconnection.local_endpoint
-        #self.remote_endpoint = preconnection.remote_endpoint
+        # self.local_endpoint = preconnection.local_endpoint
+        # self.remote_endpoint = preconnection.remote_endpoint
         # self.context = ctx
         # self.flow = flow
         # self.ops = ops
@@ -22,7 +22,7 @@ class Connection():
         # self.ops.on_received = self.on_received
         #
         # neat_set_operations(self.context, self.flow, self.ops)
-        #print("OPERATIONS SET!!!")
+        # print("OPERATIONS SET!!!")
         return
     #
     # def on_writable(self, ops):
