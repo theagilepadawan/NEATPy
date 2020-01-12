@@ -38,36 +38,36 @@ class Preconnection:
                 shim_print("No protocols support given properties")
                 exit(1)
             shim_print(json_representation)
-            neat_set_property(self.context, self.flow, json_representation)
+            neat_set_property(self.__context, self.__flow, json_representation)
 
         return
 
     def initiate(self):
-        self.ops.on_connected = client_on_connected
-        self.ops.on_close = client_on_close
-        neat_set_operations(self.context, self.flow, self.ops)
+        self.__ops.on_connected = client_on_connected
+        self.__ops.on_close = client_on_close
+        neat_set_operations(self.__context, self.__flow, self.__ops)
 
-        if neat_open(self.context, self.flow, self.remote_endpoint.address, self.remote_endpoint.port, None, 0):
+        if neat_open(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, None, 0):
             sys.exit("neat_open failed")
 
         shim_print("CLIENT RUNNING NEAT INITIATED FROM PYTHON")
 
-        neat_start_event_loop(self.context, NEAT_RUN_DEFAULT)
+        neat_start_event_loop(self.__context, NEAT_RUN_DEFAULT)
         # neat_free_ctx(self.ctx)
         return
 
     def listen(self):
         shim_print("LISTEN!")
         # listner = Listner(self)
-        self.ops.on_connected = self.handle_connected
-        neat_set_operations(self.context, self.flow, self.ops)
+        self.__ops.on_connected = self.handle_connected
+        neat_set_operations(self.__context, self.__flow, self.__ops)
 
-        if neat_accept(self.context, self.flow, self.local_endpoint.port, None, 0):
+        if neat_accept(self.__context, self.__flow, self.local_endpoint.port, None, 0):
             sys.exit("neat_accept failed")
 
         shim_print("A SERVER RUNNING NEAT STARTING FROM PYTHON 🎊")
 
-        neat_start_event_loop(self.context, NEAT_RUN_DEFAULT)
+        neat_start_event_loop(self.__context, NEAT_RUN_DEFAULT)
         return
 
     @staticmethod

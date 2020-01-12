@@ -24,7 +24,7 @@ class Connection():
         self.transport_stack = transport_stack
 
         # Map connection for later callbacks fired
-        fd = self.get_flow_fd(self.flow)
+        fd = self.get_flow_fd(self.__flow)
         Connection.con_list[fd] = self
 
         shim_print(f"Connection established - transport used: {transport_stack}")
@@ -40,15 +40,15 @@ class Connection():
         self.sent_handler = lambda: shim_print(
             "My message got sent, and this is a callback handling it 😎")  # preconnection.sent_handler
 
-        self.ops.on_readable = self.handle_readable
-        self.ops.on_writable = self.handle_writeable
-        self.ops.on_all_written = self.handle_all_written
+        self.__ops.on_readable = self.handle_readable
+        self.__ops.on_writable = self.handle_writeable
+        self.__ops.on_all_written = self.handle_all_written
 
-        neat_set_operations(self.context, self.flow, self.ops)
+        neat_set_operations(self.__context, self.__flow, self.__ops)
 
         return
 
-    def send(self, message_data):
+    def send(self, message_data, end_of_message = True):
         self.msg_list.append(message_data)
 
     @staticmethod
