@@ -110,7 +110,7 @@ class TransportProperties:
         if len(candidates) == 1:
             properties = json.dumps({"transport": {"value": candidates.pop(0).value, "precedence": 1}})
 
-        # "...then sort candidates according to Preferred properties"
+        # "...then sort candidates according to Preferred properties" [Cite]
         elif len(candidates) > 1:
             ranking_dict = dict(zip(candidates, [0] * len(candidates)))
             for prop, preference in self.props.items():
@@ -125,6 +125,6 @@ class TransportProperties:
             candidates = [item[0].value for item in ranking]
             properties = json.dumps({"transport": {"value": candidates, "precedence": 2}})
         else:
-            shim_print("No protocols support given properties")
+            properties = None
 
         return properties

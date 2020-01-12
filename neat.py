@@ -122,6 +122,9 @@ NEAT_RUN_DEFAULT = _neat.NEAT_RUN_DEFAULT
 NEAT_RUN_ONCE = _neat.NEAT_RUN_ONCE
 NEAT_RUN_NOWAIT = _neat.NEAT_RUN_NOWAIT
 
+def neat_get_socket_fd(nf):
+    return _neat.neat_get_socket_fd(nf)
+
 def neat_init_ctx():
     return _neat.neat_init_ctx()
 
@@ -179,6 +182,12 @@ class neat_flow_operations(object):
 # Register neat_flow_operations in _neat:
 _neat.neat_flow_operations_swigregister(neat_flow_operations)
 
+
+def set_ops_user_data(ops, data):
+    return _neat.set_ops_user_data(ops, data)
+
+def get_ops_user_data(ops):
+    return _neat.get_ops_user_data(ops)
 NEAT_TYPE_INTEGER = _neat.NEAT_TYPE_INTEGER
 NEAT_TYPE_FLOAT = _neat.NEAT_TYPE_FLOAT
 NEAT_TYPE_STRING = _neat.NEAT_TYPE_STRING
