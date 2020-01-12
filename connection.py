@@ -16,9 +16,9 @@ class Connection():
 
     def __init__(self, ops, preconnection, transport_stack):
         # NEAT specific
-        self.ops = ops
-        self.context = ops.ctx
-        self.flow = ops.flow
+        self.__ops = ops
+        self.__context = ops.ctx
+        self.__flow = ops.flow
         self.msg_list = []
         self.msg_list.append(b"Testing message request queue")
         self.transport_stack = transport_stack
