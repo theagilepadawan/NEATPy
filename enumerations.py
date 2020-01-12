@@ -1,4 +1,5 @@
 from enum import Enum, auto
+import math
 
 
 class SupportedProtocolStacks(Enum):
@@ -25,7 +26,7 @@ class PreferenceLevel(Enum):
 
 
 class SelectionProperties(Enum):
-    RELIABILIY = 'reliability'
+    RELIABILITY = 'reliability'
     PRESERVE_MSG_BOUNDARIES = 'preserve-msg-boundaries'
     PER_MSG_RELIABILITY = 'per-msg-reliability'
     PRESERVE_ORDER = 'preserve-order'
@@ -45,7 +46,7 @@ class SelectionProperties(Enum):
     @staticmethod
     def get_default(prop):
         defaults = {
-            SelectionProperties.RELIABILIY: PreferenceLevel.REQUIRE,
+            SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
             SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.PREFER,
             SelectionProperties.PER_MSG_RELIABILITY: PreferenceLevel.IGNORE,
             SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
@@ -63,10 +64,48 @@ class SelectionProperties(Enum):
         return defaults[prop]
 
 
+class MessageProperties(Enum):
+    """
+    [From draft-ietf-taps-interface-latest - https://ietf-tapswg.github.io/api-drafts/draft-ietf-taps-interface.html]
+    << Applications may need to annotate the Messages they send with extra information to control how data is scheduled
+    and processed by the transport protocols in the Connection. Therefore a message context containing these properties
+    can be passed to the Send Action. >>
+    """
+    LIFETIME = 'msg-lifetime'
+    PRIORITY = 'msg-prio'
+    ORDERED = 'msg-ordered'
+    IDEMPOTENT = 'idempotent'
+    FINAL = 'final'
+    CORRUPTION_PROTECTION_LENGTH = 'msg-checksum-len'
+    RELIABLE_DATA_TRANSFER = 'msg-reliable'
+    MESSAGE_CAPACITY_PROFILE_OVERRIDE = 'msg-capacity-profile'
+    SINGULAR_TRANSMISSION = 'singular-transmission'
+
+    @staticmethod
+    def get_default(prop):
+        defaults = {
+            MessageProperties.LIFETIME: math.inf,
+            MessageProperties.PRIORITY: 100,
+            MessageProperties.ORDERED: True,
+            MessageProperties.IDEMPOTENT: False,
+            MessageProperties.FINAL: False,
+            MessageProperties.CORRUPTION_PROTECTION_LENGTH: -1,
+            MessageProperties.RELIABLE_DATA_TRANSFER: True,
+            MessageProperties.MESSAGE_CAPACITY_PROFILE_OVERRIDE: CapacityProfiles.DEFAULT,
+            MessageProperties.SINGULAR_TRANSMISSION: False,
+        }
+        return defaults[prop]
+
+
+class CapacityProfiles(Enum):
+    DEFAULT = auto()
+    LOW_LATENCY = auto()
+
+
 class CommunicationDirections(Enum):
     """
     [From draft-ietf-taps-interface-latest - https://ietf-tapswg.github.io/api-drafts/draft-ietf-taps-interface.html]
-    "This property specifies whether an application wants to use the connection for sending and/or receiving data.
+    << This property specifies whether an application wants to use the connection for sending and/or receiving data.
     Possible values are: Bidirectional: The connection must support sending and receiving data
 
     Unidirectional send:
@@ -75,7 +114,7 @@ class CommunicationDirections(Enum):
     Unidirectional receive: The connection must support receiving data, and the application cannot use the connection
     to send any data The default is bidirectional. Since unidirectional communication can be supported by transports
     offering bidirectional communication, specifying unidirectional communication may cause a transport stack that
-    supports bidirectional communication to be selected."
+    supports bidirectional communication to be selected. >>
     """
     BIDIRECTIONAL = auto()
     UNIDIRECTIONAL_SEND = auto()

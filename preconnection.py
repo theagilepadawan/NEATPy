@@ -18,7 +18,7 @@ class Preconnection:
 
         self.__context, self.__flow, self.__ops = neat_utils.neat_bootstrap()
 
-        # todo: Find a more sophisticated way to keep track of preconnections
+        # Todo: Find a more sophisticated way to keep track of preconnections
         Preconnection.preconnection_list[0] = self
 
         # ..."event handlers to be registered by the application

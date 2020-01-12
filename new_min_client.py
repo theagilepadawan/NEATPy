@@ -15,7 +15,7 @@ if __name__ == "__main__":
     tp = TransportProperties()
     print(tp.props)
     tp.require(SelectionProperties.ZERO_RTT_MSG)
-    tp.prohibit(SelectionProperties.RELIABILIY)
+    tp.prohibit(SelectionProperties.RELIABILITY)
     # tp.prefer(SelectionProperties.RELIABILIY)
     tp.ignore(SelectionProperties.CONGESTION_CONTROL)
     tp.ignore(SelectionProperties.PRESERVE_ORDER)

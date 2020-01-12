@@ -5,7 +5,7 @@ import json
 
 protocols_services = {
     SupportedProtocolStacks.TCP: {
-        SelectionProperties.RELIABILIY: ServiceLevel.INTRINSIC_SERVICE,
+        SelectionProperties.RELIABILITY: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.PRESERVE_MSG_BOUNDARIES: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.PER_MSG_RELIABILITY: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.PRESERVE_ORDER: ServiceLevel.INTRINSIC_SERVICE,
@@ -21,7 +21,7 @@ protocols_services = {
     },
 
     SupportedProtocolStacks.SCTP: {
-        SelectionProperties.RELIABILIY: ServiceLevel.OPTIONAL,
+        SelectionProperties.RELIABILITY: ServiceLevel.OPTIONAL,
         SelectionProperties.PRESERVE_MSG_BOUNDARIES: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.PER_MSG_RELIABILITY: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.PRESERVE_ORDER: ServiceLevel.INTRINSIC_SERVICE,
@@ -37,7 +37,7 @@ protocols_services = {
     },
 
     SupportedProtocolStacks.UDP: {
-        SelectionProperties.RELIABILIY: ServiceLevel.NOT_PROVIDED,
+        SelectionProperties.RELIABILITY: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.PRESERVE_MSG_BOUNDARIES: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.PER_MSG_RELIABILITY: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.PRESERVE_ORDER: ServiceLevel.NOT_PROVIDED,
