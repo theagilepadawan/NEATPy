@@ -13,13 +13,11 @@ from endpoint import *
 from preconnection import *
 from transport_properties import *
 
-
 if __name__ == "__main__":
-
     local_specifier = LocalEndpoint()
     local_specifier.with_port(5000)
 
     tp = TransportProperties()
-    precon = Preconnection(local_endpoint=local_specifier, transport_properties=None)
-    precon.listen()
+    preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=None)
+    preconnection.listen()
     sys.exit()

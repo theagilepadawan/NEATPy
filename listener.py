@@ -22,8 +22,9 @@ class Listener():
         self.connection_limit = math.inf
 
         self.stopped_event_handler = None
+        self.listen_error_handler = None
 
-        # Todo: Find a more sophisticated way to keep track of listners (or is it necessary?)
+        # Todo: Find a more sophisticated way to keep track of listeners (or is it necessary?)
         Listener.listener_list[0] = self
 
         self.__ops.on_connected = self.handle_connected

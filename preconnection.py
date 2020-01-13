@@ -11,7 +11,7 @@ import sys
 
 class Preconnection:
     preconnection_list = {}
-    listner_list = {}
+    listener_list = {}
 
     def __init__(self, local_endpoint=None, remote_endpoint=None,
                  transport_properties=None,
@@ -22,7 +22,7 @@ class Preconnection:
         # Todo: Find a more sophisticated way to keep track of preconnections
         Preconnection.preconnection_list[0] = self
 
-        # ..."event handlers to be registered by the application
+        # ...event handlers to be registered by the application
         self.ready_handler = None
         self.receive_handler = None
         self.sent_handler = None
@@ -40,8 +40,13 @@ class Preconnection:
                 exit(1)
             shim_print(json_representation)
             neat_set_property(self.__context, self.__flow, json_representation)
-
         return
+
+    """
+    []
+    Active open is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming 
+    Connection requests. Active open is used by clients in client-server interactions.
+    """
 
     def initiate(self):
         self.__ops.on_connected = client_on_connected
@@ -64,10 +69,39 @@ class Preconnection:
     client-server interactions. Passive open is supported by this interface through the Listen Action and returns a 
     Listener object:
     """
+
     def listen(self):
         shim_print("LISTEN!")
         listner = Listener(self.__context, self.__flow, self.__ops, self)
         return
+
+    """
+    []
+    The Rendezvous() Action causes the Preconnection to listen on the Local Endpoint for an incoming Connection from 
+    the Remote Endpoint, while simultaneously trying to establish a Connection from the Local Endpoint to the Remote Endpoint.
+    """
+
+    def rendezvous(self):
+        additional_ctx, additional_flow, additional_ops = neat_utils.neat_bootstrap()
+
+        self.__ops.on_connected = self.handle_connected
+        neat_set_operations(self.__context, self.__flow, self.__ops)
+
+        additional_ops.on_connected = self.handle_connected
+        neat_set_operations(additional_ctx, additional_flow, additional_ops)
+
+        if self.local_endpoint is None or self.remote_endpoint is None:
+            shim_print("Both local and remote endpoints must be set for rendezvous. Aborting...")
+            sys.exit(1)
+
+        if neat_open(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, None, 0):
+            # Todo: should this just return None to application?
+            sys.exit("neat_open failed")
+
+        if neat_accept(additional_ctx, additional_flow, self.local_endpoint.port, None, 0):
+            sys.exit("neat_accept failed")
+
+        shim_print("Rendezvous started! 🤩")
 
     @staticmethod
     def handle_connected(ops):
