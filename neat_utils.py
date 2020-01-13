@@ -28,3 +28,7 @@ def get_transport_stack_used(ctx, flow):
         return byte_array.decode()
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+
+
+def stop_neat(context, flow):
+    neat_abort(context, flow)

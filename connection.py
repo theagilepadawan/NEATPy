@@ -1,6 +1,6 @@
 # coding=utf-8
 # !/usr/bin/env python3
-
+import neat_utils
 from neat import *
 import sys
 import copy
@@ -12,22 +12,22 @@ from callbacks import *
 
 
 class Connection():
-    con_list = {}
+    connection_list = {}
 
-    def __init__(self, ops, preconnection, transport_stack):
+    def __init__(self, ops, preconnection):
         # NEAT specific
         self.__ops = ops
         self.__context = ops.ctx
         self.__flow = ops.flow
         self.msg_list = []
         self.msg_list.append(b"Testing message request queue")
-        self.transport_stack = transport_stack
+        self.transport_stack = neat_utils.get_transport_stack_used(ops.ctx, ops.flow)
 
         # Map connection for later callbacks fired
         fd = self.get_flow_fd(self.__flow)
-        Connection.con_list[fd] = self
+        Connection.connection_list[fd] = self
 
-        shim_print(f"Connection established - transport used: {transport_stack}")
+        shim_print(f"Connection established - transport used: {self.transport_stack}")
 
         # Python specific
         self.test_counter = 0
@@ -86,4 +86,4 @@ class Connection():
     @staticmethod
     def get_connection_by_operations_struct(ops):
         fd = Connection.get_flow_fd(ops.flow)
-        return Connection.con_list[fd]
+        return Connection.connection_list[fd]

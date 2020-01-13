@@ -23,6 +23,7 @@ if __name__ == "__main__":
     # tp.prefer(SelectionProperties.ZERO_RTT_MSG)
 
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
+    preconnection.ready_handler = lambda con: con.send("")
     preconnection.initiate()
 
 

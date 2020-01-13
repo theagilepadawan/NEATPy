@@ -2,7 +2,7 @@
 
 from neat import *
 from connection import Connection
-from listner import *
+from listener import *
 from utils import *
 import neat_utils
 from callbacks import *
@@ -11,6 +11,7 @@ import sys
 
 class Preconnection:
     preconnection_list = {}
+    listner_list = {}
 
     def __init__(self, local_endpoint=None, remote_endpoint=None,
                  transport_properties=None,
@@ -48,6 +49,7 @@ class Preconnection:
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
         if neat_open(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, None, 0):
+            # Todo: should this just return None to application?
             sys.exit("neat_open failed")
 
         shim_print("CLIENT RUNNING NEAT INITIATED FROM PYTHON")
@@ -56,25 +58,21 @@ class Preconnection:
         # neat_free_ctx(self.ctx)
         return
 
+    """
+    []
+    Passive open is the Action of waiting for Connections from remote Endpoints, commonly used by servers in 
+    client-server interactions. Passive open is supported by this interface through the Listen Action and returns a 
+    Listener object:
+    """
     def listen(self):
         shim_print("LISTEN!")
-        # listner = Listner(self)
-        self.__ops.on_connected = self.handle_connected
-        neat_set_operations(self.__context, self.__flow, self.__ops)
-
-        if neat_accept(self.__context, self.__flow, self.local_endpoint.port, None, 0):
-            sys.exit("neat_accept failed")
-
-        shim_print("A SERVER RUNNING NEAT STARTING FROM PYTHON 🎊")
-
-        neat_start_event_loop(self.__context, NEAT_RUN_DEFAULT)
+        listner = Listener(self.__context, self.__flow, self.__ops, self)
         return
 
     @staticmethod
     def handle_connected(ops):
-        transport_stack_used = neat_utils.get_transport_stack_used(ops.ctx, ops.flow)
         precon = Preconnection.preconnection_list[0]
         precon.number_of_connections += 1
-        new_connection = Connection(ops, precon, transport_stack_used)
+        new_connection = Connection(ops, precon)
         # self.ready_handler(new_connection)
         return NEAT_OK
