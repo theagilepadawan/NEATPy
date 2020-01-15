@@ -5,8 +5,7 @@ from connection import Connection
 from listener import *
 from utils import *
 import neat_utils
-from callbacks import *
-from enumerations import *
+    from enumerations import *
 import sys
 
 
