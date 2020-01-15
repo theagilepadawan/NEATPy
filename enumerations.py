@@ -119,3 +119,38 @@ class CommunicationDirections(Enum):
     BIDIRECTIONAL = auto()
     UNIDIRECTIONAL_SEND = auto()
     UNIDIRECTIONAL_RECEIVE = auto()
+
+
+class ConnectionEvents(Enum):
+    READY = auto()
+    CONNECTION_RECEIVED = auto()
+    RENDEZVOUS_DONE = auto()
+    EXPIRED = auto()
+    CLOSED = auto()
+
+    INITIATE_ERROR = auto()
+    CONNECTION_ERROR = auto()
+    SOFT_ERROR = auto()
+    SEND_ERROR = auto()
+    CLONED_ERROR = auto()
+
+    EXCESSIVE_RETRANSMISSION = auto()
+    RECEIVED = auto()
+    RECEIVED_PARTIAL = auto()
+    SENT = auto()
+
+
+class PreconnectionEvents(Enum):
+    RENDEZVOUS_DONE = auto()
+    RENDEZVOUS_ERROR = auto()
+
+
+class ListenerEvents(Enum):
+    STOPPED = auto()
+    LISTEN_ERROR = auto()
+
+
+class Events(Enum):
+    _ConnectionEvents = ConnectionEvents
+    _PreconnectionEvents = PreconnectionEvents
+    _ListenerEvents = ListenerEvents

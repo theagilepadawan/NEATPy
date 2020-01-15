@@ -6,6 +6,7 @@ from listener import *
 from utils import *
 import neat_utils
 from callbacks import *
+from enumerations import *
 import sys
 
 
@@ -33,6 +34,8 @@ class Preconnection:
         self.number_of_connections = 0
         self.connection_limit = None
 
+        self.event_handler_list = {event: None for name, event in ConnectionEvents.__members__.items()}
+
         if self.transport_properties is not None:
             json_representation = self.transport_properties.to_json()
             if json_representation is None:
@@ -42,6 +45,13 @@ class Preconnection:
             neat_set_property(self.__context, self.__flow, json_representation)
         return
 
+    def set_event_handler(self, event: ConnectionEvents, handler):
+        if isinstance(event, ConnectionEvents):
+            self.event_handler_list[event] = handler
+        else:
+            shim_print("No valid event passed. Exiting.")
+            sys.exit(1)
+
     """
     []
     Active open is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming 
@@ -49,8 +59,7 @@ class Preconnection:
     """
 
     def initiate(self):
-        self.__ops.on_connected = client_on_connected
-        self.__ops.on_close = client_on_close
+        self.__ops.on_connected = self.client_on_connected
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
         if neat_open(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, None, 0):
@@ -60,7 +69,7 @@ class Preconnection:
         shim_print("CLIENT RUNNING NEAT INITIATED FROM PYTHON")
 
         neat_start_event_loop(self.__context, NEAT_RUN_DEFAULT)
-        # neat_free_ctx(self.ctx)
+        #neat_free_ctx(self.ctx)
         return
 
     """
@@ -84,10 +93,10 @@ class Preconnection:
     def rendezvous(self):
         additional_ctx, additional_flow, additional_ops = neat_utils.neat_bootstrap()
 
-        self.__ops.on_connected = self.handle_connected
+        self.__ops.on_connected = self.handle_connected_rendezvous
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
-        additional_ops.on_connected = self.handle_connected
+        additional_ops.on_connected = self.handle_connected_rendezvous
         neat_set_operations(additional_ctx, additional_flow, additional_ops)
 
         if self.local_endpoint is None or self.remote_endpoint is None:
@@ -104,9 +113,16 @@ class Preconnection:
         shim_print("Rendezvous started! 🤩")
 
     @staticmethod
-    def handle_connected(ops):
+    def handle_connected_rendezvous(ops):
         precon = Preconnection.preconnection_list[0]
         precon.number_of_connections += 1
-        new_connection = Connection(ops, precon)
-        # self.ready_handler(new_connection)
+        new_connection = Connection(ops, precon, 'rendezvous')
+        return NEAT_OK
+
+    @staticmethod
+    def client_on_connected(ops):
+        shim_print("ON CONNECTED RAN (CLIENT)")
+        precon = Preconnection.preconnection_list[0]
+        precon.number_of_connections += 1
+        new_connection = Connection(ops, precon, 'active')
         return NEAT_OK

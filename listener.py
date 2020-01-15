@@ -23,6 +23,7 @@ class Listener():
 
         self.stopped_event_handler = None
         self.listen_error_handler = None
+        self.ready_handler = preconnection.ready_handler
 
         # Todo: Find a more sophisticated way to keep track of listeners (or is it necessary?)
         Listener.listener_list[0] = self
@@ -51,8 +52,7 @@ class Listener():
         listener = Listener.listener_list[0]
         if listener.connection_limit > listener.number_of_connections:
             listener.number_of_connections += 1
-            new_connection = Connection(ops, listener.preconnection)
-            # self.ready_handler(new_connection)
+            new_connection = Connection(ops, listener.preconnection, 'passive')
         else:
             shim_print("Connection limit is reached!")
 
