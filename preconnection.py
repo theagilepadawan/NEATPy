@@ -58,6 +58,10 @@ class Preconnection:
     """
 
     def initiate(self):
+        if not self.remote_endpoint:
+            shim_print("Remote Endpoint MUST be specified if when calling initiate on the preconnection")
+            sys.exit(1)
+
         self.__ops.on_connected = self.client_on_connected
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
@@ -68,7 +72,7 @@ class Preconnection:
         shim_print("CLIENT RUNNING NEAT INITIATED FROM PYTHON")
 
         neat_start_event_loop(self.__context, NEAT_RUN_DEFAULT)
-        #neat_free_ctx(self.ctx)
+        # neat_free_ctx(self.ctx)
         return
 
     """
@@ -79,6 +83,10 @@ class Preconnection:
     """
 
     def listen(self):
+        if not self.remote_endpoint:
+            shim_print("Local Endpoint MUST be specified if when calling listen on the preconnection")
+            sys.exit(1)
+            
         shim_print("LISTEN!")
         listner = Listener(self.__context, self.__flow, self.__ops, self)
         return
