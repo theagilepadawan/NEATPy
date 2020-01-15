@@ -64,7 +64,7 @@ class SelectionProperties(Enum):
         return defaults[prop]
 
 
-class MessageProperties(Enum):
+class MessageContextProperties(Enum):
     """
     [From draft-ietf-taps-interface-latest - https://ietf-tapswg.github.io/api-drafts/draft-ietf-taps-interface.html]
     << Applications may need to annotate the Messages they send with extra information to control how data is scheduled
@@ -84,15 +84,15 @@ class MessageProperties(Enum):
     @staticmethod
     def get_default(prop):
         defaults = {
-            MessageProperties.LIFETIME: math.inf,
-            MessageProperties.PRIORITY: 100,
-            MessageProperties.ORDERED: True,
-            MessageProperties.IDEMPOTENT: False,
-            MessageProperties.FINAL: False,
-            MessageProperties.CORRUPTION_PROTECTION_LENGTH: -1,
-            MessageProperties.RELIABLE_DATA_TRANSFER: True,
-            MessageProperties.MESSAGE_CAPACITY_PROFILE_OVERRIDE: CapacityProfiles.DEFAULT,
-            MessageProperties.SINGULAR_TRANSMISSION: False,
+            MessageContextProperties.LIFETIME: math.inf,
+            MessageContextProperties.PRIORITY: 100,
+            MessageContextProperties.ORDERED: True,
+            MessageContextProperties.IDEMPOTENT: False,
+            MessageContextProperties.FINAL: False,
+            MessageContextProperties.CORRUPTION_PROTECTION_LENGTH: -1,
+            MessageContextProperties.RELIABLE_DATA_TRANSFER: True,
+            MessageContextProperties.MESSAGE_CAPACITY_PROFILE_OVERRIDE: CapacityProfiles.DEFAULT,
+            MessageContextProperties.SINGULAR_TRANSMISSION: False,
         }
         return defaults[prop]
 
