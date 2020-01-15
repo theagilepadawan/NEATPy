@@ -29,7 +29,7 @@ class Connection():
         # Python specific
         self.connection_type = connection_type
         self.test_counter = 0
-        self.msg_list = []
+        self.msg_list = []  # ; self.msg_list.append("NEAT!!!".encode('UTF-8'))
         self.received_called = False
         self.request_queue = []
         self.preconnection = preconnection
@@ -38,7 +38,7 @@ class Connection():
         self.event_handler_list = preconnection.event_handler_list
 
         self.__ops.on_readable = self.handle_readable
-        self.__ops.on_writable = self.handle_writeable
+        #self.__ops.on_writable = self.handle_writeable
         self.__ops.on_all_written = self.handle_all_written
         self.__ops.on_close = self.handle_closed
 
@@ -55,6 +55,8 @@ class Connection():
     def send(self, message_data, end_of_message=True):
         shim_print("SEND CALLED")
         self.msg_list.append(message_data)
+        self.__ops.on_writable = self.handle_writeable
+        neat_set_operations(self.__context, self.__flow, self.__ops)
 
     def receive(self):
         self.received_called = True
@@ -67,14 +69,15 @@ class Connection():
         shim_print("ON WRITABLE CALLBACK")
 
         connection = Connection.get_connection_by_operations_struct(ops)
-        message_to_be_sent = connection.msg_list.pop()
-        try:
-            neat_write(ops.ctx, ops.flow, message_to_be_sent, len(message_to_be_sent), None, 0)
-        except:
-            shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        if len(connection.msg_list) > 0:
+            message_to_be_sent = connection.msg_list.pop()
+            try:
+                neat_write(ops.ctx, ops.flow, message_to_be_sent, len(message_to_be_sent), None, 0)
+            except:
+                shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
 
-        ops.on_writable = None
-        neat_set_operations(ops.ctx, ops.flow, connection.ops)
+            ops.on_writable = None
+            neat_set_operations(ops.ctx, ops.flow, connection.ops)
 
         return NEAT_OK
 

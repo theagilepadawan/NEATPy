@@ -22,3 +22,4 @@ def shim_print(main_msg, additional_msg="",  level=None):
         print(f'{additional_msg}')
     print("*" * cols)
     print(Fore.RESET)
+    #mport time; time.sleep(5)

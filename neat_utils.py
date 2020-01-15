@@ -26,8 +26,6 @@ def get_transport_stack_used(ctx, flow):
         byte_array = bytearray(size_tp_value(bytes_read))
         for i in range(size_tp_value(bytes_read)):
             byte_array[i] = buffer[i]
-
-        # shim_print("Transport protocol used" + Fore.CYAN + " {}".format(byte_array.decode()) + Fore.RESET)
         return byte_array.decode()
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
@@ -39,7 +37,6 @@ def stop_neat(context, flow):
 
 def read(ops):
     shim_print("ON READABLE")
-    shim_print(ops.flow)
     buffer = charArr(32)
     bytes_read = new_uint32_tp()
     try:
