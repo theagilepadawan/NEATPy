@@ -38,17 +38,16 @@ class Connection():
         self.event_handler_list = preconnection.event_handler_list
 
         self.__ops.on_readable = self.handle_readable
-        #self.__ops.on_writable = self.handle_writeable
+        # self.__ops.on_writable = self.handle_writeable
         self.__ops.on_all_written = self.handle_all_written
         self.__ops.on_close = self.handle_closed
 
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
-        # Fire of Connection received handler (if present)
-        if self.event_handler_list[ConnectionEvents.CONNECTION_RECEIVED] is not None:
+        # Fire off appropriate event handler (if present)
+        if connection_type is "passive" and self.event_handler_list[ConnectionEvents.CONNECTION_RECEIVED]:
             self.event_handler_list[ConnectionEvents.CONNECTION_RECEIVED](self)
-
-        if self.event_handler_list[ConnectionEvents.READY] is not None:
+        if connection_type == 'active' and self.event_handler_list[ConnectionEvents.READY]:
             self.event_handler_list[ConnectionEvents.READY](self)
         return
 
@@ -63,6 +62,11 @@ class Connection():
 
     def close(self):
         neat_close(self.__ops.ctx, self.__ops.flow)
+
+    def get_transport_properties(self):
+        return self.props
+
+    # Static methods
 
     @staticmethod
     def handle_writeable(ops):

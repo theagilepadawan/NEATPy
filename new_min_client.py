@@ -39,7 +39,7 @@ if __name__ == "__main__":
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
 
     preconnection.set_event_handler(ConnectionEvents.RECEIVED, handle_received)
-    preconnection.set_event_handler(ConnectionEvents.CONNECTION_RECEIVED, ready_handler)
+    preconnection.set_event_handler(ConnectionEvents.READY, ready_handler)
     preconnection.set_event_handler(ConnectionEvents.SENT, sent_event_handler)
 
     preconnection.initiate()

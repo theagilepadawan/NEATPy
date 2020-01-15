@@ -83,10 +83,10 @@ class Preconnection:
     """
 
     def listen(self):
-        if not self.remote_endpoint:
+        if not self.local_endpoint  :
             shim_print("Local Endpoint MUST be specified if when calling listen on the preconnection")
             sys.exit(1)
-            
+
         shim_print("LISTEN!")
         listner = Listener(self.__context, self.__flow, self.__ops, self)
         return
