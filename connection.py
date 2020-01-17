@@ -13,7 +13,7 @@ from enumerations import *
 class Connection():
     connection_list = {}
 
-    def __init__(self, ops, preconnection, connection_type):
+    def __init__(self, ops, preconnection, connection_type, listener=None):
         # NEAT specific
         self.__ops = ops
         self.__context = ops.ctx
@@ -29,10 +29,11 @@ class Connection():
         # Python specific
         self.connection_type = connection_type
         self.test_counter = 0
-        self.msg_list = []  # ; self.msg_list.append("NEAT!!!".encode('UTF-8'))
+        self.msg_list = []
         self.received_called = False
         self.request_queue = []
         self.preconnection = preconnection
+        self.listener = listener
         self.props = copy.deepcopy(self.preconnection.transport_properties)
 
         self.event_handler_list = preconnection.event_handler_list
@@ -51,7 +52,7 @@ class Connection():
             self.event_handler_list[ConnectionEvents.READY](self)
         return
 
-    def send(self, message_data, end_of_message=True):
+    def send(self, message_data, message_context=None, end_of_message=True):
         shim_print("SEND CALLED")
         self.msg_list.append(message_data)
         self.__ops.on_writable = self.handle_writeable
@@ -65,6 +66,12 @@ class Connection():
 
     def get_transport_properties(self):
         return self.props
+
+    def clone(self):
+        pass
+
+    def stop_listener(self):
+        self.listener.stop()
 
     # Static methods
 
@@ -82,6 +89,8 @@ class Connection():
 
             ops.on_writable = None
             neat_set_operations(ops.ctx, ops.flow, connection.ops)
+        else:
+            shim_print("No messag")
 
         return NEAT_OK
 
@@ -111,7 +120,8 @@ class Connection():
         connection = Connection.get_connection_by_operations_struct(ops)
 
         if connection.event_handler_list[ConnectionEvents.CLOSED] is not None:
-            connection.event_handler_list[ConnectionEvents.CLOSED]()
+            shim_print("CLOSED HANDLER")
+            connection.event_handler_list[ConnectionEvents.CLOSED](connection)
 
         if connection.connection_type == 'active':
             neat_stop_event_loop(ops.ctx)

@@ -5,6 +5,8 @@ import sys
 
 from utils import shim_print
 
+DEBUG = 0
+
 
 def neat_bootstrap():
     ctx = neat_init_ctx()
@@ -31,8 +33,8 @@ def get_transport_stack_used(ctx, flow):
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
 
 
-def stop_neat(context, flow):
-    neat_abort(context, flow)
+def stop_neat(context):
+    neat_stop_event_loop(context)
 
 
 def read(ops):
@@ -48,5 +50,3 @@ def read(ops):
         shim_print("Read {} bytes: {}".format(uint32_tp_value(bytes_read), byte_array.decode()))
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
-
-

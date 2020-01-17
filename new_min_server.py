@@ -27,6 +27,10 @@ def connection_received_handler(connection):
     connection.receive()
 
 
+def closed_handler(connection):
+    connection.stop_listener()
+
+
 if __name__ == "__main__":
     local_specifier = LocalEndpoint()
     local_specifier.with_port(5000)
@@ -37,6 +41,7 @@ if __name__ == "__main__":
     preconnection.set_event_handler(ConnectionEvents.RECEIVED, received_handler)
     preconnection.set_event_handler(ConnectionEvents.SENT, sent_event_handler)
     preconnection.set_event_handler(ConnectionEvents.CONNECTION_RECEIVED, connection_received_handler)
+    preconnection.set_event_handler(ConnectionEvents.CLOSED, closed_handler)
 
     preconnection.listen()
     sys.exit()

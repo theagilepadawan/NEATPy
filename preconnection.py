@@ -14,8 +14,7 @@ class Preconnection:
     listener_list = {}
 
     def __init__(self, local_endpoint=None, remote_endpoint=None,
-                 transport_properties=None,
-                 security_parameters=None):
+                 transport_properties=None, security_parameters=None):
 
         self.__context, self.__flow, self.__ops = neat_utils.neat_bootstrap()
 
@@ -30,7 +29,7 @@ class Preconnection:
         self.local_endpoint = local_endpoint
         self.remote_endpoint = remote_endpoint
         self.transport_properties = transport_properties
-        self.number_of_connections = 0
+        self.number_of_connections = 0 # Is this really needed for the preconnecntion? Maybe regarding rendezvous?
         self.connection_limit = None
 
         self.event_handler_list = {event: None for name, event in ConnectionEvents.__members__.items()}

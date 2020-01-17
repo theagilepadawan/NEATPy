@@ -39,7 +39,8 @@ class Listener():
         neat_start_event_loop(self.__context, NEAT_RUN_DEFAULT)
 
     def stop(self):
-        neat_utils.stop_neat(self.__context, self.__flow)
+        shim_print("LISTENER STOP")
+        neat_utils.stop_neat(self.__context)
 
     def set_new_connection_limit(self, value):
         self.connection_limit = value
@@ -52,7 +53,7 @@ class Listener():
         listener = Listener.listener_list[0]
         if listener.connection_limit > listener.number_of_connections:
             listener.number_of_connections += 1
-            new_connection = Connection(ops, listener.preconnection, 'passive')
+            new_connection = Connection(ops, listener.preconnection, 'passive', listener)
         else:
             shim_print("Connection limit is reached!")
 

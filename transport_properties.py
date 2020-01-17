@@ -2,6 +2,7 @@ from enumerations import *
 from utils import *
 from colorama import Fore, Back, Style
 import json
+from enum import Enum, auto
 
 protocols_services = {
     SupportedProtocolStacks.TCP: {
@@ -54,9 +55,27 @@ protocols_services = {
 }
 
 
+class TransportPropertyProfiles(Enum):
+    RELIABLE_INORDER_STREAM = {SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
+                               SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
+                               SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
+                               SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.IGNORE}
+
+    RELIABLE_MESSAGE = {SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
+                        SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
+                        SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
+                        SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE}
+
+    UNRELIABLE_DATAGRAM = {SelectionProperties.RELIABILITY: PreferenceLevel.IGNORE,
+                           SelectionProperties.PRESERVE_ORDER: PreferenceLevel.IGNORE,
+                           SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.IGNORE,
+                           SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE,
+                           MessageContextProperties.IDEMPOTENT: True}
+
+
 class TransportProperties:
 
-    def __init__(self):
+    def __init__(self, property_profile = None):
         self.props = {prop: SelectionProperties.get_default(prop) for name, prop in
                       SelectionProperties.__members__.items()}
 

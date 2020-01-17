@@ -64,6 +64,21 @@ class SelectionProperties(Enum):
         return defaults[prop]
 
 
+class ConnectionProperties(Enum):
+    RETRANSMISSION_THRESHOLD_BEFORE_EXCESSIVE_RETRANSMISSION_NOTIFICATION = 'retransmit-notify-threshold'
+    REQUIRED_MINIMUM_CORRUPTION_PROTECTION_COVERAGE_FOR_RECEIVING = 'recv-checksum-len'
+    PRIORITY = 'conn-prio'
+    TIMEOUT_FOR_ABORTING_CONNECTION = 'conn-timeout'
+    CONNECTION_GROUP_TRANSMISSION_SCHEDULER = 'conn-scheduler'
+    MAXIMUM_MESSAGE_SIZE_CONCURRENT_WITH_CONNECTION_ESTABLISHMENT = 'zero-rtt-msg-max-len'
+    MAXIMUM_MESSAGE_SIZE_BEFORE_FRAGMENTATION_OR_SEGMENTATION = 'singular-transmission-msg-max-len'
+    MAXIMUM_MESSAGE_SIZE_ON_SEND = 'send-msg-max-len'
+    MAXIMUM_MESSAGE_SIZE_ON_RECEIVE = 'recv-msg-max-len'
+    CAPACITY_PROFILE = 'conn-capacity-profile'
+    BOUNDS_ON_SEND_OR_RECEIVE_RATE = 'max-send-rate / max-recv-rate'
+    USER_TIMEOUT_TCP = auto()# Add three members here?
+
+
 class MessageContextProperties(Enum):
     """
     [From draft-ietf-taps-interface-latest - https://ietf-tapswg.github.io/api-drafts/draft-ietf-taps-interface.html]
