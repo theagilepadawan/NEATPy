@@ -30,8 +30,9 @@ class Connection():
         self.connection_type = connection_type
         self.test_counter = 0
         self.msg_list = []
+        self.messages_passed_to_back_end = []
         self.received_called = False
-        self.request_queue = []
+        self.close_called = False
         self.preconnection = preconnection
         self.listener = listener
         self.props = copy.deepcopy(self.preconnection.transport_properties)
@@ -54,15 +55,25 @@ class Connection():
 
     def send(self, message_data, message_context=None, end_of_message=True):
         shim_print("SEND CALLED")
+        if self.close_called:
+            shim_print("Closed is called, no further sending is possible")
+            return
         self.msg_list.append(message_data)
         self.__ops.on_writable = self.handle_writeable
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
     def receive(self):
+        if self.close_called:
+            shim_print("Closed is called, no further reception is possible")
+            return
         self.received_called = True
 
     def close(self):
-        neat_close(self.__ops.ctx, self.__ops.flow)
+        # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
+        if self.msg_list or self.messages_passed_to_back_end:
+            self.close_called = True
+        else:
+            neat_close(self.__ops.ctx, self.__ops.flow)
 
     def get_transport_properties(self):
         return self.props
@@ -86,11 +97,11 @@ class Connection():
                 neat_write(ops.ctx, ops.flow, message_to_be_sent, len(message_to_be_sent), None, 0)
             except:
                 shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
-
+            connection.messages_passed_to_back_end.append(message_to_be_sent)
             ops.on_writable = None
             neat_set_operations(ops.ctx, ops.flow, connection.ops)
         else:
-            shim_print("No messag")
+            shim_print("No message")
 
         return NEAT_OK
 
@@ -98,9 +109,14 @@ class Connection():
     def handle_all_written(ops):
         shim_print("ALL WRITTEN")
         connection = Connection.get_connection_by_operations_struct(ops)
+        connection.messages_passed_to_back_end.pop()
 
         if connection.event_handler_list[ConnectionEvents.SENT] is not None:
             connection.event_handler_list[ConnectionEvents.SENT](connection)
+
+        if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
+            shim_print("All messages passed down to the network layer - calling close")
+            neat_close(connection.__ops.ctx, connection.__ops.flow)
 
         return NEAT_OK
 
