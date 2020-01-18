@@ -1,6 +1,7 @@
 # coding=utf-8
 # !/usr/bin/env python3
 import neat_utils
+from message_context import *
 from neat import *
 import sys
 import copy
@@ -10,7 +11,7 @@ from utils import *
 from enumerations import *
 
 
-class Connection():
+class Connection:
     connection_list = {}
 
     def __init__(self, ops, preconnection, connection_type, listener=None):
@@ -53,12 +54,12 @@ class Connection():
             self.event_handler_list[ConnectionEvents.READY](self)
         return
 
-    def send(self, message_data, message_context=None, end_of_message=True):
+    def send(self, message_data, message_context=MessageContext(), end_of_message=True):
         shim_print("SEND CALLED")
         if self.close_called:
             shim_print("Closed is called, no further sending is possible")
             return
-        self.msg_list.append(message_data)
+        self.msg_list.append((message_data, message_context))
         self.__ops.on_writable = self.handle_writeable
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
@@ -95,12 +96,12 @@ class Connection():
 
         connection = Connection.get_connection_by_operations_struct(ops)
         if len(connection.msg_list) > 0:
-            message_to_be_sent = connection.msg_list.pop()
+            message_to_be_sent, context = connection.msg_list.pop(0)
             try:
                 neat_write(ops.ctx, ops.flow, message_to_be_sent, len(message_to_be_sent), None, 0)
             except:
                 shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
-            connection.messages_passed_to_back_end.append(message_to_be_sent)
+            connection.messages_passed_to_back_end.append((message_to_be_sent, context))
             ops.on_writable = None
             neat_set_operations(ops.ctx, ops.flow, connection.ops)
         else:
@@ -112,7 +113,7 @@ class Connection():
     def handle_all_written(ops):
         shim_print("ALL WRITTEN")
         connection = Connection.get_connection_by_operations_struct(ops)
-        connection.messages_passed_to_back_end.pop()
+        connection.messages_passed_to_back_end.pop(0)
 
         if connection.event_handler_list[ConnectionEvents.SENT] is not None:
             connection.event_handler_list[ConnectionEvents.SENT](connection)

@@ -76,40 +76,7 @@ class ConnectionProperties(Enum):
     MAXIMUM_MESSAGE_SIZE_ON_RECEIVE = 'recv-msg-max-len'
     CAPACITY_PROFILE = 'conn-capacity-profile'
     BOUNDS_ON_SEND_OR_RECEIVE_RATE = 'max-send-rate / max-recv-rate'
-    USER_TIMEOUT_TCP = auto()# Add three members here?
-
-
-class MessageContextProperties(Enum):
-    """
-    [From draft-ietf-taps-interface-latest - https://ietf-tapswg.github.io/api-drafts/draft-ietf-taps-interface.html]
-    << Applications may need to annotate the Messages they send with extra information to control how data is scheduled
-    and processed by the transport protocols in the Connection. Therefore a message context containing these properties
-    can be passed to the Send Action. >>
-    """
-    LIFETIME = 'msg-lifetime'
-    PRIORITY = 'msg-prio'
-    ORDERED = 'msg-ordered'
-    IDEMPOTENT = 'idempotent'
-    FINAL = 'final'
-    CORRUPTION_PROTECTION_LENGTH = 'msg-checksum-len'
-    RELIABLE_DATA_TRANSFER = 'msg-reliable'
-    MESSAGE_CAPACITY_PROFILE_OVERRIDE = 'msg-capacity-profile'
-    SINGULAR_TRANSMISSION = 'singular-transmission'
-
-    @staticmethod
-    def get_default(prop):
-        defaults = {
-            MessageContextProperties.LIFETIME: math.inf,
-            MessageContextProperties.PRIORITY: 100,
-            MessageContextProperties.ORDERED: True,
-            MessageContextProperties.IDEMPOTENT: False,
-            MessageContextProperties.FINAL: False,
-            MessageContextProperties.CORRUPTION_PROTECTION_LENGTH: -1,
-            MessageContextProperties.RELIABLE_DATA_TRANSFER: True,
-            MessageContextProperties.MESSAGE_CAPACITY_PROFILE_OVERRIDE: CapacityProfiles.DEFAULT,
-            MessageContextProperties.SINGULAR_TRANSMISSION: False,
-        }
-        return defaults[prop]
+    USER_TIMEOUT_TCP = auto()  # Add three members here?
 
 
 class CapacityProfiles(Enum):

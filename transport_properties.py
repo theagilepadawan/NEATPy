@@ -2,6 +2,7 @@ from enumerations import *
 from utils import *
 from colorama import Fore, Back, Style
 import json
+from message_context import *
 from enum import Enum, auto
 
 protocols_services = {

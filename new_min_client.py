@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     tp = TransportProperties()
     tp.require(SelectionProperties.ZERO_RTT_MSG)
-    tp.prohibit(SelectionProperties.RELIABILITY)
+    #tp.prohibit(SelectionProperties.RELIABILITY)
     tp.ignore(SelectionProperties.CONGESTION_CONTROL)
     tp.ignore(SelectionProperties.PRESERVE_ORDER)
     tp.ignore(SelectionProperties.RETRANSMIT_NOTIFY)
