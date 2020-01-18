@@ -37,6 +37,10 @@ def stop_neat(context):
     neat_stop_event_loop(context)
 
 
+def abort_neat(context, flow):
+    neat_abort(context, flow)
+
+
 def read(ops):
     shim_print("ON READABLE")
     buffer = charArr(32)

@@ -75,6 +75,9 @@ class Connection():
         else:
             neat_close(self.__ops.ctx, self.__ops.flow)
 
+    def abort(self):
+        neat_utils.abort_neat(self.__context, self.__flow)
+
     def get_transport_properties(self):
         return self.props
 
