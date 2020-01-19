@@ -41,6 +41,10 @@ def abort_neat(context, flow):
     neat_abort(context, flow)
 
 
+def get_flow_fd(flow):
+    return neat_get_socket_fd(flow)
+
+
 def read(ops):
     shim_print("ON READABLE")
     buffer = charArr(32)

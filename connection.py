@@ -22,7 +22,7 @@ class Connection:
         self.transport_stack = neat_utils.get_transport_stack_used(ops.ctx, ops.flow)
 
         # Map connection for later callbacks fired
-        fd = self.get_flow_fd(self.__flow)
+        fd = neat_utils.get_flow_fd(self.__flow)
         Connection.connection_list[fd] = self
 
         shim_print(f"Connection established - transport used: {self.transport_stack}")
@@ -40,12 +40,7 @@ class Connection:
 
         self.event_handler_list = preconnection.event_handler_list
 
-        self.__ops.on_readable = self.handle_readable
-        # self.__ops.on_writable = self.handle_writeable
-        self.__ops.on_all_written = self.handle_all_written
-        self.__ops.on_close = self.handle_closed
-
-        neat_set_operations(self.__context, self.__flow, self.__ops)
+        NeatCallbacks.ready_neat_callbacks(ops)
 
         # Fire off appropriate event handler (if present)
         if connection_type is "passive" and self.event_handler_list[ConnectionEvents.CONNECTION_RECEIVED]:
@@ -60,8 +55,8 @@ class Connection:
             shim_print("Closed is called, no further sending is possible")
             return
         self.msg_list.append((message_data, message_context))
-        self.__ops.on_writable = self.handle_writeable
-        neat_set_operations(self.__context, self.__flow, self.__ops)
+        NeatCallbacks.message_passed(self.__ops)
+
 
     def receive(self):
         if self.close_called:
@@ -89,6 +84,22 @@ class Connection:
         self.listener.stop()
 
     # Static methods
+    @staticmethod
+    def get_connection_by_operations_struct(ops):
+        fd = neat_utils.get_flow_fd(ops.flow)
+        return Connection.connection_list[fd]
+
+
+class NeatCallbacks():
+
+    @staticmethod
+    def ready_neat_callbacks(ops):
+        shim_print("READY CALLBACKS")
+        ops.on_readable = NeatCallbacks.handle_readable
+        ops.on_writable = NeatCallbacks.handle_writeable
+        ops.on_all_written = NeatCallbacks.handle_all_written
+        ops.on_close = NeatCallbacks.handle_closed
+        neat_set_operations(ops.ctx, ops.flow, ops)
 
     @staticmethod
     def handle_writeable(ops):
@@ -103,11 +114,20 @@ class Connection:
                 shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
             connection.messages_passed_to_back_end.append((message_to_be_sent, context))
             ops.on_writable = None
-            neat_set_operations(ops.ctx, ops.flow, connection.ops)
         else:
             shim_print("No message")
+            ops.on_writable = None
 
+        neat_set_operations(ops.ctx, ops.flow, connection.ops)
         return NEAT_OK
+
+
+    @staticmethod
+    def message_passed(ops):
+        ops.on_writable = NeatCallbacks.handle_writeable
+        neat_set_operations(ops.ctx, ops.flow, ops)
+        return NEAT_OK
+
 
     @staticmethod
     def handle_all_written(ops):
@@ -147,16 +167,8 @@ class Connection:
             neat_stop_event_loop(ops.ctx)
         return NEAT_OK
 
-    @staticmethod
-    def get_flow_fd(flow):
-        return neat_get_socket_fd(flow)
 
-    @staticmethod
-    def get_connection_by_operations_struct(ops):
-        fd = Connection.get_flow_fd(ops.flow)
-        return Connection.connection_list[fd]
-
-    class ConnectionState(Enum):
-        CREATED = auto()
-        ESTABLISHED = auto()
-        CLOSED = auto()
+class ConnectionState(Enum):
+    CREATED = auto()
+    ESTABLISHED = auto()
+    CLOSED = auto()

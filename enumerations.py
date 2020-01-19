@@ -57,8 +57,8 @@ class SelectionProperties(Enum):
             SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
             SelectionProperties.MULTIPATH: PreferenceLevel.PREFER,
             # SelectionPropertiesDefaults.DIRECTION: CommunicationDirections.BIDIRECTIONAL,
-            SelectionProperties.RETRANSMIT_NOTIFY: PreferenceLevel.REQUIRE,
-            SelectionProperties.SOFT_ERROR_NOTIFY: PreferenceLevel.REQUIRE
+            SelectionProperties.RETRANSMIT_NOTIFY: PreferenceLevel.IGNORE,
+            SelectionProperties.SOFT_ERROR_NOTIFY: PreferenceLevel.IGNORE
         }
 
         return defaults[prop]

@@ -70,8 +70,9 @@ class TransportPropertyProfiles(Enum):
     UNRELIABLE_DATAGRAM = {SelectionProperties.RELIABILITY: PreferenceLevel.IGNORE,
                            SelectionProperties.PRESERVE_ORDER: PreferenceLevel.IGNORE,
                            SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.IGNORE,
-                           SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE,
-                           MessageContextProperties.IDEMPOTENT: True}
+                           SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE}
+                            # Todo: Final layout of transport, selection and messageproperties
+                           #MessageContextProperties.IDEMPOTENT: True}
 
 
 class TransportProperties:
@@ -79,6 +80,8 @@ class TransportProperties:
     def __init__(self, property_profile = None):
         self.props = {prop: SelectionProperties.get_default(prop) for name, prop in
                       SelectionProperties.__members__.items()}
+        if property_profile:
+            self.props.update(property_profile.value)
 
     def add(self, prop: SelectionProperties, preference: PreferenceLevel):
         self.props[prop] = preference
