@@ -57,7 +57,6 @@ class Connection:
         self.msg_list.append((message_data, message_context))
         NeatCallbacks.message_passed(self.__ops)
 
-
     def receive(self):
         if self.close_called:
             shim_print("Closed is called, no further reception is possible")
@@ -121,25 +120,30 @@ class NeatCallbacks():
         neat_set_operations(ops.ctx, ops.flow, connection.ops)
         return NEAT_OK
 
-
     @staticmethod
     def message_passed(ops):
         ops.on_writable = NeatCallbacks.handle_writeable
         neat_set_operations(ops.ctx, ops.flow, ops)
         return NEAT_OK
 
-
     @staticmethod
     def handle_all_written(ops):
         shim_print("ALL WRITTEN")
+        close = False
         connection = Connection.get_connection_by_operations_struct(ops)
-        connection.messages_passed_to_back_end.pop(0)
+        message, messageContext = connection.messages_passed_to_back_end.pop(0)
 
         if connection.event_handler_list[ConnectionEvents.SENT] is not None:
             connection.event_handler_list[ConnectionEvents.SENT](connection)
 
         if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
             shim_print("All messages passed down to the network layer - calling close")
+            close = True
+        elif messageContext.props[MessageContextProperties.FINAL] is True:
+            shim_print("Message is marked final, closing connection")
+            close = True
+
+        if close:
             neat_close(connection.__ops.ctx, connection.__ops.flow)
 
         return NEAT_OK
