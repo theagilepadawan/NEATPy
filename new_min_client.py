@@ -24,19 +24,21 @@ def ready_handler(connection):
     connection.send("You're NEAT 😍".encode('UTF-8'))
 
 
-profiles_dict = {
-    "udp": TransportPropertyProfiles.UNRELIABLE_DATAGRAM,
-    "tcp": TransportPropertyProfiles.RELIABLE_INORDER_STREAM,
-    "sctp": TransportPropertyProfiles.RELIABLE_MESSAGE
-}
 
 if __name__ == "__main__":
+    profiles_dict = {
+        "udp": TransportPropertyProfiles.UNRELIABLE_DATAGRAM,
+        "tcp": TransportPropertyProfiles.RELIABLE_INORDER_STREAM,
+        "sctp": TransportPropertyProfiles.RELIABLE_MESSAGE
+    }
+
     ep = RemoteEndpoint()
     ep.with_address("127.0.0.1")
     ep.with_port(5000)
 
     profile = None
-    if len(sys.argv) > 1: profile = profiles_dict[sys.argv[1]]
+    if len(sys.argv) > 1:
+        profile = profiles_dict[sys.argv[1]]
 
     tp = TransportProperties(profile)
 
