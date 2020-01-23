@@ -139,7 +139,7 @@ class NeatCallbacks():
         if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
             shim_print("All messages passed down to the network layer - calling close")
             close = True
-        elif messageContext.props[MessageContextProperties.FINAL] is True:
+        elif messageContext.props[MessageProperties.FINAL] is True:
             shim_print("Message is marked final, closing connection")
             close = True
 

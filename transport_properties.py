@@ -2,8 +2,11 @@ from enumerations import *
 from utils import *
 from colorama import Fore, Back, Style
 import json
+from selection_properties import *
 from message_context import *
 from enum import Enum, auto
+from enumerations import *
+from connection_properties import *
 
 protocols_services = {
     SupportedProtocolStacks.TCP: {
@@ -17,7 +20,7 @@ protocols_services = {
         SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.CONGESTION_CONTROL: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.MULTIPATH: ServiceLevel.OPTIONAL,
-        # SelectionPropertiesDefaults.DIRECTION: ,
+        SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
     },
@@ -33,7 +36,7 @@ protocols_services = {
         SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.CONGESTION_CONTROL: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.MULTIPATH: ServiceLevel.OPTIONAL,
-        # SelectionPropertiesDefaults.DIRECTION: ,
+        SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.OPTIONAL,
     },
@@ -49,7 +52,7 @@ protocols_services = {
         SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.CONGESTION_CONTROL: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.MULTIPATH: ServiceLevel.NOT_PROVIDED,
-        # SelectionPropertiesDefaults.DIRECTION: ,
+        SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
     },
@@ -71,48 +74,24 @@ class TransportPropertyProfiles(Enum):
                            SelectionProperties.PRESERVE_ORDER: PreferenceLevel.IGNORE,
                            SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.IGNORE,
                            SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE}
-                            # Todo: Final layout of transport, selection and messageproperties
-                           #MessageContextProperties.IDEMPOTENT: True}
+    # Todo: Final layout of transport, selection and messageproperties
+    # MessageContextProperties.IDEMPOTENT: True}
 
 
 class TransportProperties:
 
-    def __init__(self, property_profile = None):
-        self.props = {prop: SelectionProperties.get_default(prop) for name, prop in
-                      SelectionProperties.__members__.items()}
+    def __init__(self, property_profile=None):
+        self.selection_properties = SelectionProperties.get_default()
+        self.message_properties = MessageProperties.get_default()
+        self.connection_properties = ConnectionProperties.get_default()
+
+        # Updates the selection properties dict with values from the transport profile
         if property_profile:
-            self.props.update(property_profile.value)
-
-    def add(self, prop: SelectionProperties, preference: PreferenceLevel):
-        self.props[prop] = preference
-
-    def require(self, prop: SelectionProperties):
-        self.props[prop] = PreferenceLevel.REQUIRE
-
-    def prefer(self, prop: SelectionProperties):
-        self.props[prop] = PreferenceLevel.PREFER
-
-    def ignore(self, prop: SelectionProperties):
-        self.props[prop] = PreferenceLevel.IGNORE
-
-    def avoid(self, prop: SelectionProperties):
-        self.props[prop] = PreferenceLevel.AVOID
-
-    def prohibit(self, prop: SelectionProperties):
-        self.props[prop] = PreferenceLevel.PROHIBIT
-
-    def default(self, prop: SelectionProperties):
-        self.props[prop] = PreferenceLevel.REQUIRE
+            self.selection_properties.update(property_profile.value)
 
     def filter_protocols(self, protocol_level, preference_level, candidates):
         remove_list = []
-        props_with_preference_level = filter((lambda p: self.props[p] == preference_level), self.props)
-        valid_candidates_after_filtering = filter((lambda c: True), candidates)
-
-        ########
-
-        remove_list = []
-        for prop, preference in self.props.items():
+        for prop, preference in self.selection_properties.items():
             if preference == preference_level:
                 for protocol in candidates:
                     if protocols_services[protocol][prop] == protocol_level:
@@ -136,7 +115,7 @@ class TransportProperties:
         # "...then sort candidates according to Preferred properties" [Cite]
         elif len(candidates) > 1:
             ranking_dict = dict(zip(candidates, [0] * len(candidates)))
-            for prop, preference in self.props.items():
+            for prop, preference in self.selection_properties.items():
                 if preference.value == PreferenceLevel.PREFER.value:
                     for protocol in candidates:
                         if protocols_services[protocol][prop].value >= ServiceLevel.OPTIONAL.value:
