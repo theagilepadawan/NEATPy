@@ -11,7 +11,8 @@
 
 > My masters thesis. Implementing a transport system specified by the TAPS WG (link). Leveraging the work put in the NEAT Project, while providing a high level interface in Python.
 
-### 🏠 [Homepage](https://github.com/kefranabg/readme-md-generator#readme)
+### 🔗 [TAPS](https://datatracker.ietf.org/wg/taps/documents/)
+### 🔗 [NEAT](https://www.neat-project.org/)
 
 ## Install
 
