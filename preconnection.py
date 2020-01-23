@@ -29,7 +29,7 @@ class Preconnection:
         self.local_endpoint = local_endpoint
         self.remote_endpoint = remote_endpoint
         self.transport_properties = transport_properties
-        self.number_of_connections = 0 # Is this really needed for the preconnecntion? Maybe regarding rendezvous?
+        self.number_of_connections = 0  # Is this really needed for the preconnecntion? Maybe regarding rendezvous?
         self.connection_limit = None
 
         self.event_handler_list = {event: None for name, event in ConnectionEvents.__members__.items()}
@@ -82,13 +82,13 @@ class Preconnection:
     """
 
     def listen(self):
-        if not self.local_endpoint  :
+        if not self.local_endpoint:
             shim_print("Local Endpoint MUST be specified if when calling listen on the preconnection")
             sys.exit(1)
 
         shim_print("LISTEN!")
         listner = Listener(self.__context, self.__flow, self.__ops, self)
-        return
+        return NEAT_OK
 
     """
     []

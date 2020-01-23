@@ -114,6 +114,7 @@ class ConnectionEvents(Enum):
     CONNECTION_ERROR = auto()
     SOFT_ERROR = auto()
     SEND_ERROR = auto()
+    RECEIVE_ERROR = auto()
     CLONED_ERROR = auto()
 
     EXCESSIVE_RETRANSMISSION = auto()

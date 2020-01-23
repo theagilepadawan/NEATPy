@@ -57,7 +57,7 @@ class Connection:
         self.msg_list.append((message_data, message_context))
         NeatCallbacks.message_passed(self.__ops)
 
-    def receive(self):
+    def receive(self, min_incomplete_length=None, max_length=None):
         if self.close_called:
             shim_print("Closed is called, no further reception is possible")
             return

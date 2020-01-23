@@ -147,6 +147,10 @@ class TransportProperties:
             shim_print(f"Ranking after filtering: {ranking_string}")
             candidates = [item[0].value for item in ranking]
             properties = json.dumps({"transport": {"value": candidates, "precedence": 2}})
+
+            # properties = json.dumps({"transport": {"value": candidates, "precedence": 2},
+            #                          "SO/SOL_SOCKET/TCP_NODELAY": {"value": 1, "precedence": 1}})
+
         else:
             properties = None
 
