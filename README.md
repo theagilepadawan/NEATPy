@@ -21,13 +21,13 @@
 ## Install
 
 ```sh
-npm install
+-
 ```
 
 ## Usage
 
 ```sh
-npm run start
+-
 ```
 
 ## Author
@@ -38,7 +38,7 @@ npm run start
 
 ## 🤝 Contributing
 
-Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/kefranabg/readme-md-generator/issues). You can also take a look at the [contributing guide](https://github.com/kefranabg/readme-md-generator/blob/master/CONTRIBUTING.md).
+-
 
 ## Show your support
 
@@ -47,7 +47,7 @@ Give a ⭐️ if this project helped you!
 ## 📝 License
 
 Copyright © 2020 [Michael Gundersen](https://github.com/theagilepadawan).<br />
-This project is [MIT](https://github.com/kefranabg/readme-md-generator/blob/master/LICENSE) licensed.
+
 
 ***
 _This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
