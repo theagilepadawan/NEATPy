@@ -36,10 +36,6 @@
 
 -
 
-## Show your support
-
-Give a ⭐️ if this project helped you!
-
 ## 📝 License
 
 Copyright © 2020 [Michael Gundersen](https://github.com/theagilepadawan).<br />
