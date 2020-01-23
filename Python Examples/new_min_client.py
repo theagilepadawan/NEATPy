@@ -1,11 +1,15 @@
 # coding=utf-8
 # !/usr/bin/env python3
+import os, sys, inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
 
 from preconnection import *
 from endpoint import *
 from transport_properties import *
 from enumerations import *
-import sys
 
 
 def sent_event_handler(connection):

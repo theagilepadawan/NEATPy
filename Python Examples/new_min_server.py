@@ -6,9 +6,12 @@
     Note that the NEAT bindings currently require Python 2.7 or larger.
     Python 3 will not work.
 """
+import os, sys, inspect
 
-import sys
-from time import *
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
 from endpoint import *
 from preconnection import *
 from transport_properties import *
