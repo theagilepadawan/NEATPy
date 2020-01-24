@@ -90,76 +90,93 @@ class Connection:
 
 
 def handle_writable(ops):
-    shim_print("ON WRITABLE CALLBACK")
-    connection = Connection.get_connection_by_operations_struct(ops)
-    if len(connection.msg_list) > 0:
-        message_to_be_sent, context = connection.msg_list.pop(0)
-        try:
-            neat_write(ops.ctx, ops.flow, message_to_be_sent, len(message_to_be_sent), None, 0)
-        except:
-            shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
-        connection.messages_passed_to_back_end.append((message_to_be_sent, context))
+    try:
+        shim_print("ON WRITABLE CALLBACK")
+        connection = Connection.get_connection_by_operations_struct(ops)
+        if len(connection.msg_list) > 0:
+            message_to_be_sent, context = connection.msg_list.pop(0)
+            try:
+                neat_write(ops.ctx, ops.flow, message_to_be_sent, len(message_to_be_sent), None, 0)
+            except:
+                shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+            connection.messages_passed_to_back_end.append((message_to_be_sent, context))
 
-        if connection.connection_type == 'active':
-            pass
+            if connection.connection_type == 'active':
+                pass
+            else:
+                ops.on_writable = None
         else:
+            shim_print("No message")
             ops.on_writable = None
-    else:
-        shim_print("No message")
-        ops.on_writable = None
-    neat_set_operations(ops.ctx, ops.flow, connection.ops)
+        neat_set_operations(ops.ctx, ops.flow, connection.ops)
+    except:
+        pass
     return NEAT_OK
 
 
 def message_passed(ops):
-    ops.on_writable = handle_writable
-    neat_set_operations(ops.ctx, ops.flow, ops)
+    try:
+        ops.on_writable = handle_writable
+        neat_set_operations(ops.ctx, ops.flow, ops)
+    except:
+        pass
     return NEAT_OK
 
 
 def handle_all_written(ops):
-    shim_print("ALL WRITTEN")
-    close = False
-    connection = Connection.get_connection_by_operations_struct(ops)
-    message, messageContext = connection.messages_passed_to_back_end.pop(0)
-    if connection.event_handler_list[ConnectionEvents.SENT] is not None:
-        connection.event_handler_list[ConnectionEvents.SENT](connection)
-    if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
-        shim_print("All messages passed down to the network layer - calling close")
-        close = True
-    elif messageContext.props[MessageProperties.FINAL] is True:
-        shim_print("Message is marked final, closing connection")
-        close = True
-    if close:
-        neat_close(connection.__ops.ctx, connection.__ops.flow)
-    else:
-        if connection.connection_type == 'active':
-            ops.on_readable = handle_readable
-            ops.on_writable = None
+    try:
+        shim_print("ALL WRITTEN")
+        close = False
+        connection = Connection.get_connection_by_operations_struct(ops)
+        message, messageContext = connection.messages_passed_to_back_end.pop(0)
+        if connection.event_handler_list[ConnectionEvents.SENT] is not None:
+            connection.event_handler_list[ConnectionEvents.SENT](connection)
+        if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
+            shim_print("All messages passed down to the network layer - calling close")
+            close = True
+        elif messageContext.props[MessageProperties.FINAL] is True:
+            shim_print("Message is marked final, closing connection")
+            close = True
+        if close:
+            neat_close(connection.__ops.ctx, connection.__ops.flow)
         else:
-            pass
-        neat_set_operations(ops.ctx, ops.flow, ops)
+            if connection.connection_type == 'active':
+                ops.on_readable = handle_readable
+                ops.on_writable = None
+            else:
+                pass
+            neat_set_operations(ops.ctx, ops.flow, ops)
+    except:
+        pass
+
     return NEAT_OK
 
 
 def handle_readable(ops):
-    shim_print("HANDLE READABLE")
-    connection = Connection.get_connection_by_operations_struct(ops)
-    if connection.received_called:
-        neat_utils.read(ops)
-    if connection.event_handler_list[ConnectionEvents.RECEIVED] is not None:
-        connection.event_handler_list[ConnectionEvents.RECEIVED](connection)
+    try:
+        shim_print("HANDLE READABLE")
+        connection = Connection.get_connection_by_operations_struct(ops)
+        if connection.received_called:
+            neat_utils.read(ops)
+        if connection.event_handler_list[ConnectionEvents.RECEIVED] is not None:
+            connection.event_handler_list[ConnectionEvents.RECEIVED](connection)
+
+    except:
+        pass
     return NEAT_OK
 
 
 def handle_closed(ops):
-    shim_print("HANDLE CLOSED")
-    connection = Connection.get_connection_by_operations_struct(ops)
-    if connection.event_handler_list[ConnectionEvents.CLOSED] is not None:
-        shim_print("CLOSED HANDLER")
-        connection.event_handler_list[ConnectionEvents.CLOSED](connection)
-    if connection.connection_type == 'active':
-        neat_stop_event_loop(ops.ctx)
+    try:
+        shim_print("HANDLE CLOSED")
+        connection = Connection.get_connection_by_operations_struct(ops)
+        if connection.event_handler_list[ConnectionEvents.CLOSED] is not None:
+            shim_print("CLOSED HANDLER")
+            connection.event_handler_list[ConnectionEvents.CLOSED](connection)
+        if connection.connection_type == 'active':
+            neat_stop_event_loop(ops.ctx)
+    except:
+        pass
     return NEAT_OK
 
 
