@@ -28,7 +28,6 @@ def ready_handler(connection):
     connection.send("You're NEAT 😍".encode('UTF-8'))
 
 
-
 if __name__ == "__main__":
     profiles_dict = {
         "udp": TransportPropertyProfiles.UNRELIABLE_DATAGRAM,
