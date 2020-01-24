@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from neat import *
-from connection import Connection
+from connection import *
 from listener import *
 from utils import *
 import neat_utils
@@ -62,6 +62,7 @@ class Preconnection:
             sys.exit(1)
 
         self.__ops.on_connected = self.client_on_connected
+        self.__ops.on_close = handle_closed
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
         if neat_open(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, None, 0):

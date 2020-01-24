@@ -4,7 +4,7 @@ import sys
 import neat_utils
 import math;
 from neat import *
-from connection import Connection
+from connection import *
 from utils import *
 
 
@@ -29,6 +29,8 @@ class Listener():
         Listener.listener_list[0] = self
 
         self.__ops.on_connected = self.handle_connected
+        self.__ops.on_readable = handle_readable
+
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
         if neat_accept(self.__context, self.__flow, preconnection.local_endpoint.port, None, 0):

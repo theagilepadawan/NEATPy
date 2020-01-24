@@ -40,18 +40,14 @@ class Connection:
 
         self.event_handler_list = preconnection.event_handler_list
 
-        ops.on_readable = handle_readable
-        ops.on_writable = handle_writeable
-        ops.on_close = handle_closed
-
-        neat_set_operations(ops.ctx, ops.flow, ops)
-
         # Fire off appropriate event handler (if present)
         if connection_type is "passive" and self.event_handler_list[ConnectionEvents.CONNECTION_RECEIVED]:
             self.event_handler_list[ConnectionEvents.CONNECTION_RECEIVED](self)
         if connection_type == 'active' and self.event_handler_list[ConnectionEvents.READY]:
             self.event_handler_list[ConnectionEvents.READY](self)
-        return
+        ops.on_writable = handle_writable
+        ops.on_all_written = handle_all_written
+        neat_set_operations(ops.ctx, ops.flow, ops)
 
     def send(self, message_data, message_context=MessageContext(), end_of_message=True):
         shim_print("SEND CALLED")
@@ -93,7 +89,7 @@ class Connection:
         return Connection.connection_list[fd]
 
 
-def handle_writeable(ops):
+def handle_writable(ops):
     shim_print("ON WRITABLE CALLBACK")
     connection = Connection.get_connection_by_operations_struct(ops)
     if len(connection.msg_list) > 0:
@@ -103,8 +99,11 @@ def handle_writeable(ops):
         except:
             shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
         connection.messages_passed_to_back_end.append((message_to_be_sent, context))
-        ops.on_writable = None
-        ops.on_all_written = handle_all_written
+
+        if connection.connection_type == 'active':
+            pass
+        else:
+            ops.on_writable = None
     else:
         shim_print("No message")
         ops.on_writable = None
@@ -113,7 +112,7 @@ def handle_writeable(ops):
 
 
 def message_passed(ops):
-    ops.on_writable = handle_writeable
+    ops.on_writable = handle_writable
     neat_set_operations(ops.ctx, ops.flow, ops)
     return NEAT_OK
 
@@ -133,6 +132,13 @@ def handle_all_written(ops):
         close = True
     if close:
         neat_close(connection.__ops.ctx, connection.__ops.flow)
+    else:
+        if connection.connection_type == 'active':
+            ops.on_readable = handle_readable
+            ops.on_writable = None
+        else:
+            pass
+        neat_set_operations(ops.ctx, ops.flow, ops)
     return NEAT_OK
 
 

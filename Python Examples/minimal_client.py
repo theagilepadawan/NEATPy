@@ -3,9 +3,13 @@
 """
     This file is a ported version of the C example bundled with NEAT.
 """
+import os, sys, inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
 
 from neat import *
-import sys
 
 
 def on_readable(ops):
