@@ -2,6 +2,14 @@ from enum import Enum, auto
 import math
 
 
+class InterfaceTypes(Enum):
+    WIFI = auto()
+    WIRED = auto()
+    CELLULAR = auto()
+    LOOPBACK = auto()
+    # ???
+
+
 class SupportedProtocolStacks(Enum):
     SCTP = "SCTP"
     SCTP_UDP = "SCTP/UDP"

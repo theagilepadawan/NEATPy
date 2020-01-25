@@ -12,6 +12,7 @@ class SelectionProperties(Enum):
     PER_MSG_CHECKSUM_LEN_SEND = 'per-msg-checksum-len-send'
     PER_MSG_CHECKSUM_LEN_RECV = 'per-msg-checksum-len-recv'
     CONGESTION_CONTROL = 'congestion-control'
+    INTERFACE = 'interface'
     MULTIPATH = 'multipath'
     DIRECTION = CommunicationDirections.BIDIRECTIONAL
     RETRANSMIT_NOTIFY = 'retransmit-notify'
@@ -32,6 +33,7 @@ class SelectionProperties(Enum):
             SelectionProperties.PER_MSG_CHECKSUM_LEN_SEND: PreferenceLevel.IGNORE,
             SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV: PreferenceLevel.IGNORE,
             SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
+            SelectionProperties.INTERFACE: (), # TODO: Settle on a reasoable default
             SelectionProperties.MULTIPATH: PreferenceLevel.PREFER,
             SelectionProperties.DIRECTION: CommunicationDirections.BIDIRECTIONAL,
             SelectionProperties.RETRANSMIT_NOTIFY: PreferenceLevel.IGNORE,
