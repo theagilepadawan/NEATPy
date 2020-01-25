@@ -10,6 +10,11 @@ class InterfaceTypes(Enum):
     # ???
 
 
+class AddressPreference(Enum):
+    STABLE = auto()
+    TEMPORARY = auto()
+
+
 class SupportedProtocolStacks(Enum):
     SCTP = "SCTP"
     SCTP_UDP = "SCTP/UDP"

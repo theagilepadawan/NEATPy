@@ -13,6 +13,8 @@ class SelectionProperties(Enum):
     PER_MSG_CHECKSUM_LEN_RECV = 'per-msg-checksum-len-recv'
     CONGESTION_CONTROL = 'congestion-control'
     INTERFACE = 'interface'
+    PVD = 'pvd'
+    LOCAL_ADDRESS_PREFERENCE = 'local-address-preference'
     MULTIPATH = 'multipath'
     DIRECTION = CommunicationDirections.BIDIRECTIONAL
     RETRANSMIT_NOTIFY = 'retransmit-notify'
@@ -33,7 +35,9 @@ class SelectionProperties(Enum):
             SelectionProperties.PER_MSG_CHECKSUM_LEN_SEND: PreferenceLevel.IGNORE,
             SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV: PreferenceLevel.IGNORE,
             SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
-            SelectionProperties.INTERFACE: (), # TODO: Settle on a reasoable default
+            SelectionProperties.INTERFACE: (),  # TODO: Settle on a reasoable default
+            SelectionProperties.PVD: (),  # TODO: Settle on a reasoable default
+            SelectionProperties.LOCAL_ADDRESS_PREFERENCE: AddressPreference.STABLE, # TODO: Need to dynamically set default (Listeners/Redezvous vs. others)
             SelectionProperties.MULTIPATH: PreferenceLevel.PREFER,
             SelectionProperties.DIRECTION: CommunicationDirections.BIDIRECTIONAL,
             SelectionProperties.RETRANSMIT_NOTIFY: PreferenceLevel.IGNORE,
