@@ -55,6 +55,6 @@ def read(ops):
         for i in range(uint32_tp_value(bytes_read)):
             byte_array[i] = buffer[i]
 
-        shim_print("Read {} bytes: {}".format(uint32_tp_value(bytes_read), byte_array.decode()))
+        shim_print("Read {} bytes: {}".format(uint32_tp_value(bytes_read), byte_array.decode()), level="msg")
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))

@@ -47,6 +47,8 @@ class Connection:
             self.event_handler_list[ConnectionEvents.READY](self)
         ops.on_writable = handle_writable
         ops.on_all_written = handle_all_written
+        ops.on_close = handle_closed
+
         neat_set_operations(ops.ctx, ops.flow, ops)
 
     def send(self, message_data, message_context=MessageContext(), end_of_message=True):
@@ -128,13 +130,13 @@ def handle_all_written(ops):
         shim_print("ALL WRITTEN")
         close = False
         connection = Connection.get_connection_by_operations_struct(ops)
-        message, messageContext = connection.messages_passed_to_back_end.pop(0)
+        message, message_context = connection.messages_passed_to_back_end.pop(0)
         if connection.event_handler_list[ConnectionEvents.SENT] is not None:
             connection.event_handler_list[ConnectionEvents.SENT](connection)
         if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
             shim_print("All messages passed down to the network layer - calling close")
             close = True
-        elif messageContext.props[MessageProperties.FINAL] is True:
+        elif message_context.props[MessageProperties.FINAL] is True:
             shim_print("Message is marked final, closing connection")
             close = True
         if close:
@@ -160,7 +162,6 @@ def handle_readable(ops):
             neat_utils.read(ops)
         if connection.event_handler_list[ConnectionEvents.RECEIVED] is not None:
             connection.event_handler_list[ConnectionEvents.RECEIVED](connection)
-
     except:
         pass
     return NEAT_OK
