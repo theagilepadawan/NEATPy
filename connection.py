@@ -8,8 +8,11 @@ import copy
 
 import neat_utils
 from utils import *
+from typing import Callable, List, Tuple
 from enumerations import *
 
+Message_queue_object = Tuple[bytes, MessageContext]
+Batch_struct = List[Message_queue_object]
 
 class Connection:
     connection_list = {}
@@ -32,8 +35,13 @@ class Connection:
         self.test_counter = 0
         self.msg_list = []
         self.messages_passed_to_back_end = []
+
+
+
         self.received_called = False
         self.close_called = False
+        self.batch_in_session = False
+
         self.preconnection = preconnection
         self.listener = listener
         self.props = copy.deepcopy(self.preconnection.transport_properties)
@@ -53,11 +61,26 @@ class Connection:
 
     def send(self, message_data, message_context=MessageContext(), end_of_message=True):
         shim_print("SEND CALLED")
+
+        # If the connection is closed, prohibit further sending
         if self.close_called:
             shim_print("Closed is called, no further sending is possible")
             return
-        self.msg_list.append((message_data, message_context))
+
+        if self.batch_in_session:
+            # Check if batch_struct is already present (i.e if this is the first send in batch or not)
+            if isinstance(self.msg_list[-1], List):
+                self.msg_list[-1].append(message_data,message_context)
+            else:
+                self.msg_list.append([message_data, message_context])
+        else:
+            self.msg_list.append((message_data, message_context))
         message_passed(self.__ops)
+
+    def batch(self, bacth_block: Callable[[], None]):
+        self.batch_in_session = True
+        bacth_block()
+        self.batch_in_session = False
 
     def receive(self, min_incomplete_length=None, max_length=None):
         if self.close_called:
@@ -131,8 +154,7 @@ def handle_all_written(ops):
         close = False
         connection = Connection.get_connection_by_operations_struct(ops)
         message, message_context = connection.messages_passed_to_back_end.pop(0)
-        if connection.event_handler_list[ConnectionEvents.SENT] is not None:
-            connection.event_handler_list[ConnectionEvents.SENT](connection)
+
         if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
             shim_print("All messages passed down to the network layer - calling close")
             close = True
@@ -148,6 +170,9 @@ def handle_all_written(ops):
             else:
                 pass
             neat_set_operations(ops.ctx, ops.flow, ops)
+
+        if connection.event_handler_list[ConnectionEvents.SENT] is not None:
+            connection.event_handler_list[ConnectionEvents.SENT](connection)
     except:
         pass
 
