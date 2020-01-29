@@ -167,9 +167,7 @@ def handle_all_written(ops):
             if connection.connection_type == 'active':
                 ops.on_readable = handle_readable
                 ops.on_writable = None
-            else:
-                pass
-            neat_set_operations(ops.ctx, ops.flow, ops)
+                neat_set_operations(ops.ctx, ops.flow, ops)
 
         if connection.event_handler_list[ConnectionEvents.SENT] is not None:
             connection.event_handler_list[ConnectionEvents.SENT](connection)

@@ -16,14 +16,18 @@ from endpoint import *
 from preconnection import *
 from transport_properties import *
 from enumerations import *
+from time import sleep
 
 
 def sent_event_handler(connection):
-    connection.close()
+    pass
+    #connection.close()
 
 
 def received_handler(connection):
-    connection.send("No, you're NEAT 😘".encode('UTF-8'))
+    connection.send("PONG".encode('UTF-8'))
+    sleep(1)
+
 
 
 def connection_received_handler(connection):
@@ -42,7 +46,7 @@ if __name__ == "__main__":
     preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=None)
 
     preconnection.set_event_handler(ConnectionEvents.RECEIVED, received_handler)
-    preconnection.set_event_handler(ConnectionEvents.SENT, sent_event_handler)
+    #preconnection.set_event_handler(ConnectionEvents.SENT, sent_event_handler)
     preconnection.set_event_handler(ConnectionEvents.CONNECTION_RECEIVED, connection_received_handler)
     preconnection.set_event_handler(ConnectionEvents.CLOSED, closed_handler)
 

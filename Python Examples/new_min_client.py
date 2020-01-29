@@ -10,6 +10,7 @@ from preconnection import *
 from endpoint import *
 from transport_properties import *
 from enumerations import *
+from time import sleep
 
 
 def sent_event_handler(connection):
@@ -17,7 +18,9 @@ def sent_event_handler(connection):
 
 
 def handle_received(connection):
-    connection.close()
+    connection.send("PING".encode('UTF-8'))
+    sleep(1)
+    #connection.close()
 
 
 def handle_closed(connection):
@@ -25,7 +28,7 @@ def handle_closed(connection):
 
 
 def ready_handler(connection):
-    connection.send("You're NEAT 😍".encode('UTF-8'))
+    connection.send("PING".encode('UTF-8'))
 
 
 if __name__ == "__main__":

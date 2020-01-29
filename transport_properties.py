@@ -87,7 +87,7 @@ class TransportProperties:
 
         # Updates the selection properties dict with values from the transport profile
         if property_profile:
-            #self.selection_properties.update(property_profile.value)
+            # self.selection_properties.update(property_profile.value)
             self.selection_properties = property_profile.value
 
     def filter_protocols(self, protocol_level, preference_level, candidates):
@@ -128,8 +128,8 @@ class TransportProperties:
             candidates = [item[0].value for item in ranking]
             properties = json.dumps({"transport": {"value": candidates, "precedence": 2}})
 
-            # properties = json.dumps({"transport": {"value": candidates, "precedence": 2},
-            #                          "SO/SOL_SOCKET/TCP_NODELAY": {"value": 1, "precedence": 1}})
+            #properties = json.dumps({"transport": {"value": candidates, "precedence": 2},
+             #                        "interface": {"local_ip": "127.0.0.1", "precedence": 2}})
 
         else:
             properties = None
