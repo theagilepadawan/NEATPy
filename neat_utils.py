@@ -2,6 +2,7 @@ from neat import *
 from neat import charArr, new_uint32_tp, neat_read, uint32_tp_value
 from utils import *
 import sys
+from enum import Enum, auto
 
 from utils import shim_print
 
@@ -58,3 +59,37 @@ def read(ops):
         shim_print("Read {} bytes: {}".format(uint32_tp_value(bytes_read), byte_array.decode()), level="msg")
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+
+
+def write(ops, message):
+    try:
+        neat_write(ops.ctx, ops.flow, message, len(message), None, 0)
+    except:
+        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        return 1
+    return 0
+
+
+def set_neat_callbacks(ops, *callbacks):
+    for tup in callbacks:
+        pass
+
+
+
+class NeatCallbacks(Enum):
+    ON_CONNECTED = lambda ops, value : NeatCallbacks.set_ops(ops.on_connected, value)
+    ON_ERROR = lambda ops, value : NeatCallbacks.set_ops(ops.on_error, value)
+    ON_READABLE = lambda ops, value : NeatCallbacks.set_ops(ops.on_readable, value)
+    ON_WRITABLE = lambda ops, value : NeatCallbacks.set_ops(ops.on_writable, value)
+    ON_ALL_WRITTEN = lambda ops, value : NeatCallbacks.set_ops(ops.on_all_written, value)
+    ON_NETWORK_STATUS_CHANGED = lambda ops, value : NeatCallbacks.set_ops(ops.on_network_status_changed, value)
+    ON_ABORTED = lambda ops, value : NeatCallbacks.set_ops(ops.on_aborted, value)
+    ON_TIMEOUT = lambda ops, value : NeatCallbacks.set_ops(ops.on_timeout, value)
+    ON_CLOSE = lambda ops, value : NeatCallbacks.set_ops(ops.on_close, value)
+    ON_SEND_FAILURE = lambda ops, value : NeatCallbacks.set_ops(ops.on_send_failure, value)
+    ON_SLOWDOWN = auto()  # Not implemented in NEAT
+    ON_RATE_INIT = auto()  # Not implemented in NEAT
+
+    @staticmethod
+    def set_ops(member, value):
+        member = value

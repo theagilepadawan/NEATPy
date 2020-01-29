@@ -7,12 +7,14 @@ import sys
 import copy
 
 import neat_utils
+from neat_utils import NeatCallbacks
 from utils import *
 from typing import Callable, List, Tuple
 from enumerations import *
 
 Message_queue_object = Tuple[bytes, MessageContext]
 Batch_struct = List[Message_queue_object]
+
 
 class Connection:
     connection_list = {}
@@ -36,8 +38,6 @@ class Connection:
         self.msg_list = []
         self.messages_passed_to_back_end = []
 
-
-
         self.received_called = False
         self.close_called = False
         self.batch_in_session = False
@@ -53,7 +53,6 @@ class Connection:
             self.event_handler_list[ConnectionEvents.CONNECTION_RECEIVED](self)
         if connection_type == 'active' and self.event_handler_list[ConnectionEvents.READY]:
             self.event_handler_list[ConnectionEvents.READY](self)
-        ops.on_writable = handle_writable
         ops.on_all_written = handle_all_written
         ops.on_close = handle_closed
 
@@ -70,7 +69,7 @@ class Connection:
         if self.batch_in_session:
             # Check if batch_struct is already present (i.e if this is the first send in batch or not)
             if isinstance(self.msg_list[-1], List):
-                self.msg_list[-1].append(message_data,message_context)
+                self.msg_list[-1].append(message_data, message_context)
             else:
                 self.msg_list.append([message_data, message_context])
         else:
@@ -83,10 +82,12 @@ class Connection:
         self.batch_in_session = False
 
     def receive(self, min_incomplete_length=None, max_length=None):
+        shim_print("RECEIVED CALLED")
         if self.close_called:
             shim_print("Closed is called, no further reception is possible")
             return
         self.received_called = True
+        received_called(self.__ops)
 
     def close(self):
         # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
@@ -102,7 +103,7 @@ class Connection:
         return self.props
 
     def clone(self):
-        pass
+        return NotImplementedError
 
     def stop_listener(self):
         self.listener.stop()
@@ -118,22 +119,20 @@ def handle_writable(ops):
     try:
         shim_print("ON WRITABLE CALLBACK")
         connection = Connection.get_connection_by_operations_struct(ops)
-        if len(connection.msg_list) > 0:
-            message_to_be_sent, context = connection.msg_list.pop(0)
-            try:
-                neat_write(ops.ctx, ops.flow, message_to_be_sent, len(message_to_be_sent), None, 0)
-            except:
-                shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
-            connection.messages_passed_to_back_end.append((message_to_be_sent, context))
 
-            if connection.connection_type == 'active':
-                pass
-            else:
+        # Socket is writable, write if any messages passed to the transport system
+        if connection.msg_list:
+            # Todo: Should we do coalescing of batch sends here?
+            message_to_be_sent, context = connection.msg_list.pop(0)
+            if neat_utils.write(ops, message_to_be_sent):
+                shim_print("Neat failed while writing")
+                # Todo: Elegant error handling
+            # Keep message until NEAT confirms sending with all_written
+            connection.messages_passed_to_back_end.append((message_to_be_sent, context))
+            if not connection.msg_list:
+                # neat_utils.set_neat_callbacks(ops, (NeatCallbacks.ON_WRITABLE, None))
                 ops.on_writable = None
-        else:
-            shim_print("No message")
-            ops.on_writable = None
-        neat_set_operations(ops.ctx, ops.flow, connection.ops)
+                neat_set_operations(ops.ctx, ops.flow, ops)
     except:
         pass
     return NEAT_OK
@@ -142,6 +141,15 @@ def handle_writable(ops):
 def message_passed(ops):
     try:
         ops.on_writable = handle_writable
+        neat_set_operations(ops.ctx, ops.flow, ops)
+    except:
+        pass
+    return NEAT_OK
+
+
+def received_called(ops):
+    try:
+        ops.on_readable = handle_readable
         neat_set_operations(ops.ctx, ops.flow, ops)
     except:
         pass
@@ -163,13 +171,6 @@ def handle_all_written(ops):
             close = True
         if close:
             neat_close(connection.__ops.ctx, connection.__ops.flow)
-        else:
-            if connection.connection_type == 'active':
-                ops.on_readable = handle_readable
-                ops.on_writable = None
-            else:
-                pass
-            neat_set_operations(ops.ctx, ops.flow, ops)
 
         if connection.event_handler_list[ConnectionEvents.SENT] is not None:
             connection.event_handler_list[ConnectionEvents.SENT](connection)
