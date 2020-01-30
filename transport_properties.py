@@ -111,7 +111,7 @@ class TransportProperties:
         # "...then exclude all protocols and paths that do not match a Require"
         candidates = self.filter_protocols(ServiceLevel.NOT_PROVIDED, PreferenceLevel.REQUIRE, candidates)
         if len(candidates) == 1:
-            properties = json.dumps({"transport": {"value": candidates.pop(0).value, "precedence": 1}})
+            properties = json.dumps({"transport": {"value": candidates.pop(0).name, "precedence": 1}})
 
         # "...then sort candidates according to Preferred properties" [Cite]
         elif len(candidates) > 1:
