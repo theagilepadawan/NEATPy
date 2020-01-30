@@ -9,7 +9,7 @@ from utils import shim_print
 DEBUG = 0
 
 
-def neat_bootstrap():
+def bootstrap_backend():
     ctx = neat_init_ctx()
     flow = neat_new_flow(ctx)
     ops = neat_flow_operations()
@@ -35,11 +35,11 @@ def neat_bootstrap():
 #         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
 
 
-def stop_neat(context):
+def stop(context):
     neat_stop_event_loop(context)
 
 
-def abort_neat(context, flow):
+def abort(context, flow):
     neat_abort(context, flow)
 
 

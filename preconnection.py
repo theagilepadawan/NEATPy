@@ -4,7 +4,7 @@ from neat import *
 from connection import *
 from listener import *
 from utils import *
-import neat_utils
+import backend
 from enumerations import *
 import sys
 
@@ -16,8 +16,8 @@ class Preconnection:
     def __init__(self, local_endpoint=None, remote_endpoint=None,
                  transport_properties=None, security_parameters=None):
 
-        self.__context, self.__flow, self.__ops = neat_utils.neat_bootstrap()
-        neat_log_level(self.__context, NEAT_LOG_DEBUG)
+        self.__context, self.__flow, self.__ops = backend.bootstrap_backend()
+
         # Todo: Find a more sophisticated way to keep track of preconnections
         Preconnection.preconnection_list[0] = self
 
@@ -98,7 +98,7 @@ class Preconnection:
     """
 
     def rendezvous(self):
-        additional_ctx, additional_flow, additional_ops = neat_utils.neat_bootstrap()
+        additional_ctx, additional_flow, additional_ops = backend.bootstrap_backend()
 
         self.__ops.on_connected = self.handle_connected_rendezvous
         neat_set_operations(self.__context, self.__flow, self.__ops)

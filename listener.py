@@ -1,7 +1,7 @@
 import copy
 import sys
 
-import neat_utils
+import backend
 import math;
 from neat import *
 from connection import *
@@ -42,7 +42,7 @@ class Listener():
 
     def stop(self):
         shim_print("LISTENER STOP")
-        neat_utils.stop_neat(self.__context)
+        backend.stop(self.__context)
 
     def set_new_connection_limit(self, value):
         self.connection_limit = value

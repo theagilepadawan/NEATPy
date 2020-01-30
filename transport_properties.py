@@ -1,4 +1,3 @@
-from enumerations import *
 from utils import *
 from colorama import Fore, Back, Style
 import json

@@ -1,13 +1,11 @@
 # coding=utf-8
 # !/usr/bin/env python3
-import neat_utils
 from message_context import *
 from neat import *
 import sys
 import copy
 
-import neat_utils
-from neat_utils import NeatCallbacks
+import backend
 from utils import *
 from typing import Callable, List, Tuple
 from enumerations import *
@@ -28,7 +26,7 @@ class Connection:
         self.transport_stack = SupportedProtocolStacks(ops.transport_protocol)
 
         # Map connection for later callbacks fired
-        fd = neat_utils.get_flow_fd(self.__flow)
+        fd = backend.get_flow_fd(self.__flow)
         Connection.connection_list[fd] = self
 
         shim_print(f"Connection established - transport used: {self.transport_stack.name}")
@@ -101,7 +99,7 @@ class Connection:
             neat_close(self.__ops.ctx, self.__ops.flow)
 
     def abort(self):
-        neat_utils.abort_neat(self.__context, self.__flow)
+        backend.abort(self.__context, self.__flow)
 
     def get_transport_properties(self):
         return self.props
@@ -115,7 +113,7 @@ class Connection:
     # Static methods
     @staticmethod
     def get_connection_by_operations_struct(ops):
-        fd = neat_utils.get_flow_fd(ops.flow)
+        fd = backend.get_flow_fd(ops.flow)
         return Connection.connection_list[fd]
 
 
@@ -128,7 +126,7 @@ def handle_writable(ops):
         if connection.msg_list:
             # Todo: Should we do coalescing of batch sends here?
             message_to_be_sent, context = connection.msg_list.pop(0)
-            if neat_utils.write(ops, message_to_be_sent):
+            if backend.write(ops, message_to_be_sent):
                 shim_print("Neat failed while writing")
                 # Todo: Elegant error handling
             # Keep message until NEAT confirms sending with all_written
@@ -190,7 +188,7 @@ def handle_readable(ops):
         connection = Connection.get_connection_by_operations_struct(ops)
         if connection.receive_request_queue:
             min_length, max_length = connection.receive_request_queue.pop(0)
-            msg = neat_utils.read(ops, connection.receive_buffer_size)
+            msg = backend.read(ops, connection.receive_buffer_size)
 
 
 
