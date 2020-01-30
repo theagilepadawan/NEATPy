@@ -46,17 +46,17 @@ def get_flow_fd(flow):
     return neat_get_socket_fd(flow)
 
 
-def read(ops):
+def read(ops, size):
     shim_print("ON READABLE")
-    buffer = charArr(32)
+    buffer = charArr(size)
     bytes_read = new_uint32_tp()
     try:
-        neat_read(ops.ctx, ops.flow, buffer, 31, bytes_read, None, 0)
+        neat_read(ops.ctx, ops.flow, buffer, size-1, bytes_read, None, 0)
         byte_array = bytearray(uint32_tp_value(bytes_read))
         for i in range(uint32_tp_value(bytes_read)):
             byte_array[i] = buffer[i]
-
-        shim_print("Read {} bytes: {}".format(uint32_tp_value(bytes_read), byte_array.decode()), level="msg")
+        message = byte_array.decode()
+        return message
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
 

@@ -18,6 +18,7 @@ Batch_struct = List[Message_queue_object]
 
 class Connection:
     connection_list = {}
+    receive_buffer_size = 32 * 1024 * 1024  # 32MB
 
     def __init__(self, ops, preconnection, connection_type, listener=None):
         # NEAT specific
@@ -37,6 +38,7 @@ class Connection:
         self.test_counter = 0
         self.msg_list = []
         self.messages_passed_to_back_end = []
+        self.receive_request_queue = []
 
         self.received_called = False
         self.close_called = False
@@ -86,8 +88,10 @@ class Connection:
         if self.close_called:
             shim_print("Closed is called, no further reception is possible")
             return
-        self.received_called = True
-        received_called(self.__ops)
+        self.receive_request_queue.append((min_incomplete_length, max_length))
+        # If there is only one request in the queue, this means it was empty and we need to set callback
+        if len(self.receive_request_queue) is 1:
+            received_called(self.__ops)
 
     def close(self):
         # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
@@ -143,7 +147,7 @@ def message_passed(ops):
         ops.on_writable = handle_writable
         neat_set_operations(ops.ctx, ops.flow, ops)
     except:
-        pass
+        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
     return NEAT_OK
 
 
@@ -152,7 +156,7 @@ def received_called(ops):
         ops.on_readable = handle_readable
         neat_set_operations(ops.ctx, ops.flow, ops)
     except:
-        pass
+        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
     return NEAT_OK
 
 
@@ -175,7 +179,7 @@ def handle_all_written(ops):
         if connection.event_handler_list[ConnectionEvents.SENT] is not None:
             connection.event_handler_list[ConnectionEvents.SENT](connection)
     except:
-        pass
+        shim_print("An error occurred: {}".format(sys.exc_info()[0]))
 
     return NEAT_OK
 
@@ -184,12 +188,20 @@ def handle_readable(ops):
     try:
         shim_print("HANDLE READABLE")
         connection = Connection.get_connection_by_operations_struct(ops)
-        if connection.received_called:
-            neat_utils.read(ops)
+        if connection.receive_request_queue:
+            min_length, max_length = connection.receive_request_queue.pop(0)
+            buffer_size = connection.receive_buffer_size
+            if min_length or max_length:
+                if max_length:
+                    buffer_size = max_length
+                else:
+                    buffer_size = min_length
+            msg = neat_utils.read(ops, buffer_size)
+            shim_print("Read {} bytes: {}".format(len(msg), msg), level="msg")
         if connection.event_handler_list[ConnectionEvents.RECEIVED] is not None:
             connection.event_handler_list[ConnectionEvents.RECEIVED](connection)
     except:
-        pass
+        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
     return NEAT_OK
 
 

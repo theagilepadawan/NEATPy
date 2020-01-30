@@ -17,7 +17,7 @@ class Preconnection:
                  transport_properties=None, security_parameters=None):
 
         self.__context, self.__flow, self.__ops = neat_utils.neat_bootstrap()
-        neat_log_level(self.__context, NEAT_LOG_INFO)
+        neat_log_level(self.__context, NEAT_LOG_DEBUG)
         # Todo: Find a more sophisticated way to keep track of preconnections
         Preconnection.preconnection_list[0] = self
 
