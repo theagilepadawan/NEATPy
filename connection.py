@@ -31,7 +31,6 @@ class Connection:
 
         shim_print(f"Connection established - transport used: {self.transport_stack.name}")
 
-
         # Python specific
         self.connection_type = connection_type
         self.test_counter = 0
@@ -81,12 +80,12 @@ class Connection:
         bacth_block()
         self.batch_in_session = False
 
-    def receive(self, min_incomplete_length=None, max_length=None):
+    def receive(self, handler, min_incomplete_length=None, max_length=None):
         shim_print("RECEIVED CALLED")
         if self.close_called:
             shim_print("Closed is called, no further reception is possible")
             return
-        self.receive_request_queue.append((min_incomplete_length, max_length))
+        self.receive_request_queue.append((min_incomplete_length, max_length, handler))
         # If there is only one request in the queue, this means it was empty and we need to set callback
         if len(self.receive_request_queue) is 1:
             received_called(self.__ops)
@@ -187,14 +186,13 @@ def handle_readable(ops):
         shim_print("HANDLE READABLE")
         connection = Connection.get_connection_by_operations_struct(ops)
         if connection.receive_request_queue:
-            min_length, max_length = connection.receive_request_queue.pop(0)
+            min_length, max_length, handler = connection.receive_request_queue.pop(0)
             msg = backend.read(ops, connection.receive_buffer_size)
 
-
-
-            shim_print("Read {} bytes: {}".format(len(msg), msg), level="msg")
-        if connection.event_handler_list[ConnectionEvents.RECEIVED] is not None:
-            connection.event_handler_list[ConnectionEvents.RECEIVED](connection)
+            # UDP delivers complete messages, ignore length specifiers
+            if connection.transport_stack is SupportedProtocolStacks.UDP:
+                pass
+            handler(connection, msg)  # TODO: MessageContext
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
     return NEAT_OK

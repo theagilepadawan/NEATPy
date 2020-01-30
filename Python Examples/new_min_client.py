@@ -15,8 +15,9 @@ from enumerations import *
 def sent_event_handler(connection):
     pass
 
+
 def handle_received(connection):
-    connection.close()
+    pass
 
 
 def handle_closed(connection):
@@ -25,8 +26,13 @@ def handle_closed(connection):
 
 def ready_handler(connection):
     connection.send("You're NEAT 😍".encode('UTF-8'))
-    connection.receive()
 
+    # Handler to be passed to receive
+    def test(connection, message):
+        shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
+        connection.close()
+
+    connection.receive(test)
 
 
 if __name__ == "__main__":

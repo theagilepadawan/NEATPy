@@ -22,12 +22,12 @@ def sent_event_handler(connection):
     connection.close()
 
 
-def received_handler(connection):
-    connection.send("No, you're NEAT 😘".encode('UTF-8'))
-
-
 def connection_received_handler(connection):
-    connection.receive()
+    def test(connection, message):
+        connection.send("No, you're NEAT 😘".encode('UTF-8'))
+        shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
+
+    connection.receive(test)
 
 
 def closed_handler(connection):
@@ -41,7 +41,6 @@ if __name__ == "__main__":
     tp = TransportProperties()
     preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=None)
 
-    preconnection.set_event_handler(ConnectionEvents.RECEIVED, received_handler)
     preconnection.set_event_handler(ConnectionEvents.SENT, sent_event_handler)
     preconnection.set_event_handler(ConnectionEvents.CONNECTION_RECEIVED, connection_received_handler)
     preconnection.set_event_handler(ConnectionEvents.CLOSED, closed_handler)
