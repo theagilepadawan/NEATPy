@@ -97,7 +97,7 @@ class TransportProperties:
                 for protocol in candidates:
                     if protocols_services[protocol][prop] == protocol_level:
                         if protocol not in remove_list:
-                            shim_print(f'{protocol.value} is removed as it does not satisfy {prop.name} requirements')
+                            shim_print(f'{protocol.name} is removed as it does not satisfy {prop.name} requirements')
                         remove_list.append(protocol)
         return [protocol for protocol in candidates if protocol not in remove_list]
 
@@ -120,12 +120,12 @@ class TransportProperties:
                 if preference.value == PreferenceLevel.PREFER.value:
                     for protocol in candidates:
                         if protocols_services[protocol][prop].value >= ServiceLevel.OPTIONAL.value:
-                            shim_print(f'{protocol.value} supports {prop.name}')
+                            shim_print(f'{protocol.name} supports {prop.name}')
                             ranking_dict[protocol] += 1
             ranking = sorted(ranking_dict.items(), key=lambda f: f[1], reverse=True)
-            ranking_string = Fore.BLUE + f'{Fore.RESET} --> {Fore.BLUE}'.join(map(lambda x: str(x[0].value), ranking))
+            ranking_string = Fore.BLUE + f'{Fore.RESET} --> {Fore.BLUE}'.join(map(lambda x: str(x[0].name), ranking))
             shim_print(f"Ranking after filtering: {ranking_string}")
-            candidates = [item[0].value for item in ranking]
+            candidates = [item[0].name for item in ranking]
             properties = json.dumps({"transport": {"value": candidates, "precedence": 2}})
 
             # properties = json.dumps({"transport": {"value": candidates, "precedence": 2},

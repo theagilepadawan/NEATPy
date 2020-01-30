@@ -19,19 +19,20 @@ def neat_bootstrap():
     return ctx, flow, ops
 
 
-def get_transport_stack_used(ctx, flow):
-    buffer = charArr(32)
-    bytes_read = new_size_tp()
-    size_tp_assign(bytes_read, 32)
-
-    try:
-        neat_get_property(ctx, flow, "transport", buffer, bytes_read)
-        byte_array = bytearray(size_tp_value(bytes_read))
-        for i in range(size_tp_value(bytes_read)):
-            byte_array[i] = buffer[i]
-        return byte_array.decode()
-    except:
-        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+# Not in used at the moment, but could be generalized to get a given property with neat_get_property
+# def get_transport_stack_used(ctx, flow):
+#     buffer = charArr(4)
+#     bytes_read = new_size_tp()
+#     size_tp_assign(bytes_read, 4)
+#
+#     try:
+#         neat_get_stack(flow, buffer, bytes_read)
+#         byte_array = bytearray(size_tp_value(bytes_read))
+#         for i in range(size_tp_value(bytes_read)):
+#             byte_array[i] = buffer[i]
+#         return byte_array.decode()
+#     except:
+#         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
 
 
 def stop_neat(context):

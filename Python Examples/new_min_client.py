@@ -13,8 +13,7 @@ from enumerations import *
 
 
 def sent_event_handler(connection):
-    connection.receive()
-
+    pass
 
 def handle_received(connection):
     connection.close()
@@ -26,6 +25,8 @@ def handle_closed(connection):
 
 def ready_handler(connection):
     connection.send("You're NEAT 😍".encode('UTF-8'))
+    connection.receive()
+
 
 
 if __name__ == "__main__":
@@ -49,6 +50,5 @@ if __name__ == "__main__":
 
     preconnection.set_event_handler(ConnectionEvents.RECEIVED, handle_received)
     preconnection.set_event_handler(ConnectionEvents.READY, ready_handler)
-    preconnection.set_event_handler(ConnectionEvents.SENT, sent_event_handler)
 
     preconnection.initiate()

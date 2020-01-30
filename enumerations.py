@@ -16,12 +16,12 @@ class AddressPreference(Enum):
 
 
 class SupportedProtocolStacks(Enum):
-    SCTP = "SCTP"
-    SCTP_UDP = "SCTP/UDP"
-    TCP = "TCP"
-    UDP = "UDP"
-    UDP_LITE = "UDP-Lite"
-    MPTCP = "MPTCP"
+    UDP = 1
+    TCP = 3
+    MPTCP = 4
+    SCTP = 5
+    # SCTP_UDP = "SCTP/UDP"
+    # UDP_LITE = "UDP-Lite"
 
 
 class ServiceLevel(Enum):

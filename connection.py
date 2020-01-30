@@ -25,13 +25,14 @@ class Connection:
         self.__ops = ops
         self.__context = ops.ctx
         self.__flow = ops.flow
-        self.transport_stack = neat_utils.get_transport_stack_used(ops.ctx, ops.flow)
+        self.transport_stack = SupportedProtocolStacks(ops.transport_protocol)
 
         # Map connection for later callbacks fired
         fd = neat_utils.get_flow_fd(self.__flow)
         Connection.connection_list[fd] = self
 
-        shim_print(f"Connection established - transport used: {self.transport_stack}")
+        shim_print(f"Connection established - transport used: {self.transport_stack.name}")
+
 
         # Python specific
         self.connection_type = connection_type
@@ -40,7 +41,6 @@ class Connection:
         self.messages_passed_to_back_end = []
         self.receive_request_queue = []
 
-        self.received_called = False
         self.close_called = False
         self.batch_in_session = False
 
@@ -190,13 +190,10 @@ def handle_readable(ops):
         connection = Connection.get_connection_by_operations_struct(ops)
         if connection.receive_request_queue:
             min_length, max_length = connection.receive_request_queue.pop(0)
-            buffer_size = connection.receive_buffer_size
-            if min_length or max_length:
-                if max_length:
-                    buffer_size = max_length
-                else:
-                    buffer_size = min_length
-            msg = neat_utils.read(ops, buffer_size)
+            msg = neat_utils.read(ops, connection.receive_buffer_size)
+
+
+
             shim_print("Read {} bytes: {}".format(len(msg), msg), level="msg")
         if connection.event_handler_list[ConnectionEvents.RECEIVED] is not None:
             connection.event_handler_list[ConnectionEvents.RECEIVED](connection)
