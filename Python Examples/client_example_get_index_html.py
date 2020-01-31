@@ -27,14 +27,12 @@ def handle_closed(connection):
 # Handler to be passed to receive
 def test(connection, message):
     shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
-    import time;
-    time.sleep(10)
     # connection.receive(test, min_incomplete_length=23000)
 
 
 def ready_handler(connection):
     connection.send(b"GET / HTTP/1.1\r\nHost: weevil.info\r\nUser-agent: libneat\r\nConnection: close\r\n\r\n")
-    connection.receive(test, min_incomplete_length=50000)
+    connection.receive(test, min_incomplete_length=70000)
 
 
 if __name__ == "__main__":

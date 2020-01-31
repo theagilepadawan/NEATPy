@@ -192,7 +192,7 @@ def handle_readable(ops):
             msg = backend.read(ops, connection.receive_buffer_size)
 
             # UDP delivers complete messages, ignore length specifiers
-            if connection.transport_stack is SupportedProtocolStacks.UDP or (min_length is None and max_length is None):
+            if connection.transport_stack is SupportedProtocolStacks.UDP or (min_length is None and max_length is None): # TODO: SCTP here?
                 handler(connection, msg)
             elif connection.transport_stack is SupportedProtocolStacks.TCP or connection.transport_stack is SupportedProtocolStacks.MPTCP:
                 if connection.tcp_to_small_queue:
@@ -218,6 +218,17 @@ def handle_closed(ops):
         if connection.event_handler_list[ConnectionEvents.CLOSED] is not None:
             shim_print("CLOSED HANDLER")
             connection.event_handler_list[ConnectionEvents.CLOSED](connection)
+
+        # If a Connection becomes finished before a requested Receive action can be satisfied,
+        # the implementation should deliver any partial Message content outstanding..."
+        if connection.receive_request_queue:
+            if connection.tcp_to_small_queue:
+                handler = connection.receive_request_queue.pop(0)[0]
+                shim_print("Sending leftovers")
+                handler(connection, connection.tcp_to_small_queue.pop())
+            # "...or if none is available, an indication that there will be no more received Messages."
+            else:
+                shim_print("Connection closed, there will be no more received messages")    # TODO: Should this be thrown as an error (error event?)
         if connection.connection_type == 'active':
             neat_stop_event_loop(ops.ctx)
     except:
