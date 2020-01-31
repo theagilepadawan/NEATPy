@@ -37,6 +37,7 @@ class Connection:
         self.msg_list = []
         self.messages_passed_to_back_end = []
         self.receive_request_queue = []
+        self.tcp_to_small_queue: List[bytes] = []
 
         self.close_called = False
         self.batch_in_session = False
@@ -75,20 +76,20 @@ class Connection:
             self.msg_list.append((message_data, message_context))
         message_passed(self.__ops)
 
-    def batch(self, bacth_block: Callable[[], None]):
-        self.batch_in_session = True
-        bacth_block()
-        self.batch_in_session = False
-
     def receive(self, handler, min_incomplete_length=None, max_length=None):
         shim_print("RECEIVED CALLED")
         if self.close_called:
             shim_print("Closed is called, no further reception is possible")
             return
-        self.receive_request_queue.append((min_incomplete_length, max_length, handler))
+        self.receive_request_queue.append((handler, min_incomplete_length, max_length))
         # If there is only one request in the queue, this means it was empty and we need to set callback
         if len(self.receive_request_queue) is 1:
             received_called(self.__ops)
+
+    def batch(self, bacth_block: Callable[[], None]):
+        self.batch_in_session = True
+        bacth_block()
+        self.batch_in_session = False
 
     def close(self):
         # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
@@ -184,17 +185,29 @@ def handle_all_written(ops):
 def handle_readable(ops):
     try:
         shim_print("HANDLE READABLE")
-        connection = Connection.get_connection_by_operations_struct(ops)
+        connection: Connection = Connection.get_connection_by_operations_struct(ops)
+
         if connection.receive_request_queue:
-            min_length, max_length, handler = connection.receive_request_queue.pop(0)
+            handler, min_length, max_length = connection.receive_request_queue.pop(0)
             msg = backend.read(ops, connection.receive_buffer_size)
 
             # UDP delivers complete messages, ignore length specifiers
-            if connection.transport_stack is SupportedProtocolStacks.UDP:
-                pass
-            handler(connection, msg)  # TODO: MessageContext
+            if connection.transport_stack is SupportedProtocolStacks.UDP or (min_length is None and max_length is None):
+                handler(connection, msg)
+            elif connection.transport_stack is SupportedProtocolStacks.TCP or connection.transport_stack is SupportedProtocolStacks.MPTCP:
+                if connection.tcp_to_small_queue:
+                    msg = connection.tcp_to_small_queue.pop() + msg
+                if min_length and min_length > len(msg):
+                    connection.tcp_to_small_queue.append(msg)
+                    connection.receive(handler, min_length, max_length)
+                elif max_length and max_length < len(msg):
+                    # TODO: Received partial handler should be called, how should it be registered?
+                    raise NotImplementedError
+                else:
+                    handler(connection, msg)  # TODO: MessageContext
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+
     return NEAT_OK
 
 
