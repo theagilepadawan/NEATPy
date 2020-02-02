@@ -1,6 +1,6 @@
 # coding=utf-8
 # !/usr/bin/env python3
-import os, sys, inspect
+import os, sys, inspect, time
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -36,6 +36,7 @@ def ready_handler(connection):
 
 
 if __name__ == "__main__":
+    start = int(time.time())
     profiles_dict = {
         "udp": TransportPropertyProfiles.UNRELIABLE_DATAGRAM,
         "tcp": TransportPropertyProfiles.RELIABLE_INORDER_STREAM,
@@ -58,3 +59,4 @@ if __name__ == "__main__":
     preconnection.set_event_handler(ConnectionEvents.READY, ready_handler)
 
     preconnection.initiate()
+    print(f'Seconds elapsed: {time.time() - start}')

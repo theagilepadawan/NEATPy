@@ -15,7 +15,7 @@ Batch_struct = List[Message_queue_object]
 
 
 class Connection:
-    connection_list = {}
+    connection_list= {}
     receive_buffer_size = 32 * 1024 * 1024  # 32MB
 
     def __init__(self, ops, preconnection, connection_type, listener=None):
@@ -44,7 +44,7 @@ class Connection:
 
         self.preconnection = preconnection
         self.listener = listener
-        self.props = copy.deepcopy(self.preconnection.transport_properties)
+        self.__props = copy.deepcopy(self.preconnection.transport_properties)
 
         self.event_handler_list = preconnection.event_handler_list
 
@@ -102,7 +102,7 @@ class Connection:
         backend.abort(self.__context, self.__flow)
 
     def get_transport_properties(self):
-        return self.props
+        return self.__props
 
     def clone(self):
         return NotImplementedError
@@ -223,7 +223,7 @@ def handle_closed(ops):
         # the implementation should deliver any partial Message content outstanding..."
         if connection.receive_request_queue:
             if connection.tcp_to_small_queue:
-                handler = connection.receive_request_queue.pop(0)[0]
+                handler = connection.receive_request_queue.pop(0)[0] # Should check if there is more than one request in the queue
                 shim_print("Sending leftovers")
                 handler(connection, connection.tcp_to_small_queue.pop())
             # "...or if none is available, an indication that there will be no more received Messages."

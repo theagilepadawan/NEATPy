@@ -27,7 +27,6 @@ def handle_closed(connection):
 # Handler to be passed to receive
 def test(connection, message):
     shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
-    # connection.receive(test, min_incomplete_length=23000)
 
 
 def ready_handler(connection):
