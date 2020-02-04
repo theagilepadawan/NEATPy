@@ -34,6 +34,7 @@ class SupportedProtocolStacks(Enum):
         if os.path.exists("/usr/include/netinet/sctp.h"):
             ret.append(SupportedProtocolStacks.SCTP)
             shim_print("SCTP supported on system")
+        return ret
 
     @staticmethod
     def check_for_mptcp():
