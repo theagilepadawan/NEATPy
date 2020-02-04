@@ -28,7 +28,7 @@ class SupportedProtocolStacks(Enum):
     # UDP_LITE = "UDP-Lite"
 
     @staticmethod
-    def get_protocol_stack_on_system():
+    def get_protocol_stacks_on_system():
         # Base candidates
         ret = [SupportedProtocolStacks.TCP, SupportedProtocolStacks.UDP]
         if os.path.exists("/usr/include/netinet/sctp.h"):
@@ -38,7 +38,7 @@ class SupportedProtocolStacks(Enum):
     @staticmethod
     def check_for_mptcp():
         if os.path.exists("/proc/sys/net/mptcp/mptcp_enabled"):
-            with open('mptcp_enabled') as f:
+            with open("/proc/sys/net/mptcp/mptcp_enabled") as f:
                 status = int(f.readline().strip())
                 return status > 0
 

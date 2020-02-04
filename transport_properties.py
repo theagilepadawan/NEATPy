@@ -104,7 +104,7 @@ class TransportProperties:
 
     def to_json(self):
         properties = None
-        candidates = [SupportedProtocolStacks.TCP, SupportedProtocolStacks.UDP, SupportedProtocolStacks.SCTP]
+        candidates = SupportedProtocolStacks.get_protocol_stacks_on_system()
 
         # "Internally, the transport system will first exclude all protocols and paths that match a Prohibit..."
         candidates = self.filter_protocols(ServiceLevel.INTRINSIC_SERVICE, PreferenceLevel.PROHIBIT, candidates)
@@ -120,7 +120,6 @@ class TransportProperties:
             ranking_dict = dict(zip(candidates, [0] * len(candidates)))
 
             for prop, preference in self.selection_properties.items():
-                shim_print(f"{prop} - {preference}")
                 if preference.value == PreferenceLevel.PREFER.value:
                     for protocol in candidates:
                         if protocols_services[protocol][prop].value >= ServiceLevel.OPTIONAL.value:
