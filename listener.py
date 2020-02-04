@@ -37,8 +37,8 @@ class Listener():
             sys.exit("neat_accept failed")
 
         shim_print("A SERVER RUNNING NEAT STARTING FROM PYTHON 🎊")
-
         neat_start_event_loop(self.__context, NEAT_RUN_DEFAULT)
+        backend.clean_up(self.__context)
 
     def stop(self):
         shim_print("LISTENER STOP")

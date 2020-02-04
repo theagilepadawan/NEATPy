@@ -229,8 +229,8 @@ def handle_closed(ops):
             # "...or if none is available, an indication that there will be no more received Messages."
             else:
                 shim_print("Connection closed, there will be no more received messages")    # TODO: Should this be thrown as an error (error event?)
-        if connection.connection_type == 'active':
-            neat_stop_event_loop(ops.ctx)
+        if connection.connection_type == 'active': # should check if there is any cloned connections etc...
+            backend.stop(ops.ctx)
     except:
         pass
     return NEAT_OK

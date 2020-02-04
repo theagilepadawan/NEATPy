@@ -39,6 +39,10 @@ def stop(context):
     neat_stop_event_loop(context)
 
 
+def clean_up(context):
+    neat_free_ctx(context)
+
+
 def abort(context, flow):
     neat_abort(context, flow)
 
@@ -52,7 +56,7 @@ def read(ops, size):
     buffer = charArr(size)
     bytes_read = new_uint32_tp()
     try:
-        neat_read(ops.ctx, ops.flow, buffer, size-1, bytes_read, None, 0)
+        neat_read(ops.ctx, ops.flow, buffer, size - 1, bytes_read, None, 0)
         byte_array = bytearray(uint32_tp_value(bytes_read))
         for i in range(uint32_tp_value(bytes_read)):
             byte_array[i] = buffer[i]
@@ -76,18 +80,17 @@ def set_neat_callbacks(ops, *callbacks):
         pass
 
 
-
 class NeatCallbacks(Enum):
-    ON_CONNECTED = lambda ops, value : NeatCallbacks.set_ops(ops.on_connected, value)
-    ON_ERROR = lambda ops, value : NeatCallbacks.set_ops(ops.on_error, value)
-    ON_READABLE = lambda ops, value : NeatCallbacks.set_ops(ops.on_readable, value)
-    ON_WRITABLE = lambda ops, value : NeatCallbacks.set_ops(ops.on_writable, value)
-    ON_ALL_WRITTEN = lambda ops, value : NeatCallbacks.set_ops(ops.on_all_written, value)
-    ON_NETWORK_STATUS_CHANGED = lambda ops, value : NeatCallbacks.set_ops(ops.on_network_status_changed, value)
-    ON_ABORTED = lambda ops, value : NeatCallbacks.set_ops(ops.on_aborted, value)
-    ON_TIMEOUT = lambda ops, value : NeatCallbacks.set_ops(ops.on_timeout, value)
-    ON_CLOSE = lambda ops, value : NeatCallbacks.set_ops(ops.on_close, value)
-    ON_SEND_FAILURE = lambda ops, value : NeatCallbacks.set_ops(ops.on_send_failure, value)
+    ON_CONNECTED = lambda ops, value: NeatCallbacks.set_ops(ops.on_connected, value)
+    ON_ERROR = lambda ops, value: NeatCallbacks.set_ops(ops.on_error, value)
+    ON_READABLE = lambda ops, value: NeatCallbacks.set_ops(ops.on_readable, value)
+    ON_WRITABLE = lambda ops, value: NeatCallbacks.set_ops(ops.on_writable, value)
+    ON_ALL_WRITTEN = lambda ops, value: NeatCallbacks.set_ops(ops.on_all_written, value)
+    ON_NETWORK_STATUS_CHANGED = lambda ops, value: NeatCallbacks.set_ops(ops.on_network_status_changed, value)
+    ON_ABORTED = lambda ops, value: NeatCallbacks.set_ops(ops.on_aborted, value)
+    ON_TIMEOUT = lambda ops, value: NeatCallbacks.set_ops(ops.on_timeout, value)
+    ON_CLOSE = lambda ops, value: NeatCallbacks.set_ops(ops.on_close, value)
+    ON_SEND_FAILURE = lambda ops, value: NeatCallbacks.set_ops(ops.on_send_failure, value)
     ON_SLOWDOWN = auto()  # Not implemented in NEAT
     ON_RATE_INIT = auto()  # Not implemented in NEAT
 

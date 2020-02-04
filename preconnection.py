@@ -52,7 +52,7 @@ class Preconnection:
 
     """
     []
-    Active open is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming 
+    Active open is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming
     Connection requests. Active open is used by clients in client-server interactions.
     """
 
@@ -72,13 +72,11 @@ class Preconnection:
         shim_print("CLIENT RUNNING NEAT INITIATED FROM PYTHON")
 
         neat_start_event_loop(self.__context, NEAT_RUN_DEFAULT)
-        # neat_free_ctx(self.ctx)
-        return
-
+        backend.clean_up(self.__context)
     """
     []
-    Passive open is the Action of waiting for Connections from remote Endpoints, commonly used by servers in 
-    client-server interactions. Passive open is supported by this interface through the Listen Action and returns a 
+    Passive open is the Action of waiting for Connections from remote Endpoints, commonly used by servers in
+    client-server interactions. Passive open is supported by this interface through the Listen Action and returns a
     Listener object:
     """
 
@@ -93,7 +91,7 @@ class Preconnection:
 
     """
     []
-    The Rendezvous() Action causes the Preconnection to listen on the Local Endpoint for an incoming Connection from 
+    The Rendezvous() Action causes the Preconnection to listen on the Local Endpoint for an incoming Connection from
     the Remote Endpoint, while simultaneously trying to establish a Connection from the Local Endpoint to the Remote Endpoint.
     """
 
