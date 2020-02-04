@@ -43,6 +43,10 @@ def clean_up(context):
     neat_free_ctx(context)
 
 
+def clone(ctx, flow, endpoint, port):
+    neat_open(ctx, flow, endpoint, port)
+
+
 def abort(context, flow):
     neat_abort(context, flow)
 

@@ -4,6 +4,7 @@ from neat import *
 from connection import *
 from listener import *
 from utils import *
+from endpoint import *
 import backend
 from enumerations import *
 import sys
@@ -27,7 +28,7 @@ class Preconnection:
         self.sent_handler = None
 
         self.local_endpoint = local_endpoint
-        self.remote_endpoint = remote_endpoint
+        self.remote_endpoint: RemoteEndpoint = remote_endpoint
         self.transport_properties = transport_properties
         self.number_of_connections = 0  # Is this really needed for the preconnecntion? Maybe regarding rendezvous?
         self.connection_limit = None
