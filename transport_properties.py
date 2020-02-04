@@ -55,6 +55,7 @@ protocols_services = {
         SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
     },
+
 }
 
 
@@ -86,8 +87,9 @@ class TransportProperties:
 
         # Updates the selection properties dict with values from the transport profile
         if property_profile:
-            #self.selection_properties.update(property_profile.value)
-            self.selection_properties = property_profile.value
+            self.selection_properties.update(property_profile.value)
+            #self.selection_properties = property_profile.value
+
 
     def filter_protocols(self, protocol_level, preference_level, candidates):
         remove_list = []
@@ -113,9 +115,12 @@ class TransportProperties:
             properties = json.dumps({"transport": {"value": candidates.pop(0).name, "precedence": 1}})
 
         # "...then sort candidates according to Preferred properties" [Cite]
+
         elif len(candidates) > 1:
             ranking_dict = dict(zip(candidates, [0] * len(candidates)))
+
             for prop, preference in self.selection_properties.items():
+                shim_print(f"{prop} - {preference}")
                 if preference.value == PreferenceLevel.PREFER.value:
                     for protocol in candidates:
                         if protocols_services[protocol][prop].value >= ServiceLevel.OPTIONAL.value:
@@ -125,6 +130,12 @@ class TransportProperties:
             ranking_string = Fore.BLUE + f'{Fore.RESET} --> {Fore.BLUE}'.join(map(lambda x: str(x[0].name), ranking))
             shim_print(f"Ranking after filtering: {ranking_string}")
             candidates = [item[0].name for item in ranking]
+
+            if SupportedProtocolStacks.TCP.name in candidates and self.selection_properties[SelectionProperties.MULTIPATH] and self.selection_properties[SelectionProperties.MULTIPATH].value >= PreferenceLevel.IGNORE.value:
+                if SupportedProtocolStacks.check_for_mptcp():
+                    candidates.append(SupportedProtocolStacks.MPTCP.name)
+                    shim_print("MPTCP enabled on system")
+
             properties = json.dumps({"transport": {"value": candidates, "precedence": 2}})
 
             # properties = json.dumps({"transport": {"value": candidates, "precedence": 2},

@@ -1,5 +1,8 @@
+import sys
 from enum import Enum, auto
-import math
+import math, os
+
+from utils import shim_print
 
 
 class InterfaceTypes(Enum):
@@ -20,8 +23,24 @@ class SupportedProtocolStacks(Enum):
     TCP = 3
     MPTCP = 4
     SCTP = 5
+
     # SCTP_UDP = "SCTP/UDP"
     # UDP_LITE = "UDP-Lite"
+
+    @staticmethod
+    def get_protocol_stack_on_system():
+        # Base candidates
+        ret = [SupportedProtocolStacks.TCP, SupportedProtocolStacks.UDP]
+        if os.path.exists("/usr/include/netinet/sctp.h"):
+            ret.append(SupportedProtocolStacks.SCTP)
+            shim_print("SCTP supported on system")
+
+    @staticmethod
+    def check_for_mptcp():
+        if os.path.exists("/proc/sys/net/mptcp/mptcp_enabled"):
+            with open('mptcp_enabled') as f:
+                status = int(f.readline().strip())
+                return status > 0
 
 
 class ServiceLevel(Enum):

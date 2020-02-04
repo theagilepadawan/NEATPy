@@ -15,7 +15,7 @@ Batch_struct = List[Message_queue_object]
 
 
 class Connection:
-    connection_list= {}
+    connection_list = {}
     receive_buffer_size = 32 * 1024 * 1024  # 32MB
 
     def __init__(self, ops, preconnection, connection_type, listener=None):
