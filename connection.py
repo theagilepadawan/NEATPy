@@ -105,7 +105,7 @@ class Connection:
         return self.__props
 
     def clone(self):
-        backend.clone(self.__context, self.__flow, self.preconnection.remote_endpoint.address, self.preconnection.remote_endpoint.port)
+        backend.clone(self.__context, self.preconnection.remote_endpoint.address, self.preconnection.remote_endpoint.port)
         return NotImplementedError
 
     def stop_listener(self):
