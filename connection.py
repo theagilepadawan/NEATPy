@@ -117,7 +117,6 @@ class Connection:
         fd = backend.get_flow_fd(ops.flow)
         return Connection.connection_list[fd]
 
-
 def handle_writable(ops):
     try:
         shim_print("ON WRITABLE CALLBACK")
@@ -192,6 +191,7 @@ def handle_readable(ops):
             handler, min_length, max_length = connection.receive_request_queue.pop(0)
             msg = backend.read(ops, connection.receive_buffer_size)
 
+            shim_print(f'Message received from stream: {ops.stream_id}')
             # UDP delivers complete messages, ignore length specifiers
             if connection.transport_stack is SupportedProtocolStacks.UDP or (min_length is None and max_length is None): # TODO: SCTP here?
                 handler(connection, msg)

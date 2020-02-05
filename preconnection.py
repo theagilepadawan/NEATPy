@@ -66,13 +66,8 @@ class Preconnection:
         self.__ops.on_close = handle_closed
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
-        if neat_open(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, None, 0):
-            # Todo: should this just return None to application?
-            sys.exit("neat_open failed")
-
-        shim_print("CLIENT RUNNING NEAT INITIATED FROM PYTHON")
-
-        neat_start_event_loop(self.__context, NEAT_RUN_DEFAULT)
+        backend.initiate(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, 100)
+        backend.start(self.__context)
         backend.clean_up(self.__context)
     """
     []

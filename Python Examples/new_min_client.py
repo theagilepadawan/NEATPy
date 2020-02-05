@@ -25,8 +25,6 @@ def handle_closed(connection):
 
 
 def ready_handler(connection):
-    connection.clone()
-    import time; time.sleep(10)
     connection.send("You're NEAT 😍".encode('UTF-8'))
 
     # Handler to be passed to receive

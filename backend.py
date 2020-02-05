@@ -35,6 +35,10 @@ def bootstrap_backend():
 #         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
 
 
+def start(context):
+    neat_start_event_loop(context, NEAT_RUN_DEFAULT)
+
+
 def stop(context):
     neat_stop_event_loop(context)
 
@@ -46,6 +50,23 @@ def clean_up(context):
 def clone(ctx, endpoint, port):
     flow = neat_new_flow(ctx)
     neat_open(ctx, flow, endpoint, port)
+
+
+def initiate(context, flow, address, port, stream_count=None):
+    options = None
+    opt_count = 0
+    if stream_count:
+        options = neat_tlv()
+        opt_count = 1
+        options.tag = NEAT_TAG_STREAM_COUNT
+        options.type = NEAT_TYPE_INTEGER
+        options.value.integer = 100
+
+    if neat_open(context, flow, address, port, options, opt_count):
+        # Todo: should this just return None to application?
+        sys.exit("neat_open failed")
+
+    shim_print("CLIENT RUNNING NEAT INITIATED FROM PYTHON")
 
 
 def abort(context, flow):
