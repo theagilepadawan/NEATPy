@@ -49,7 +49,7 @@ def clean_up(context):
 
 def clone(ctx, endpoint, port):
     flow = neat_new_flow(ctx)
-    neat_open(ctx, flow, endpoint, port)
+    neat_open(ctx, flow, endpoint, port, None, 0)
 
 
 def initiate(context, flow, address, port, stream_count=None):
