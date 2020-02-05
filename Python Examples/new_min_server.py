@@ -19,14 +19,16 @@ from enumerations import *
 
 
 def sent_event_handler(connection):
-    connection.close()
+#    connection.close()
+    pass
 
 
 def connection_received_handler(connection):
     def test(connection, message):
         connection.send("No, you're NEAT 😘".encode('UTF-8'))
-        shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
-
+#        shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
+        shim_print("Read {} bytes:".format(len(message)), level="msg")
+        connection.receive(test)
     connection.receive(test)
 
 

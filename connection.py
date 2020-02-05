@@ -101,6 +101,9 @@ class Connection:
     def abort(self):
         backend.abort(self.__context, self.__flow)
 
+    def get_properties(self):
+        return NotImplementedError
+
     def get_transport_properties(self):
         return self.__props
 
@@ -116,6 +119,7 @@ class Connection:
     def get_connection_by_operations_struct(ops):
         fd = backend.get_flow_fd(ops.flow)
         return Connection.connection_list[fd]
+
 
 def handle_writable(ops):
     try:
@@ -136,7 +140,8 @@ def handle_writable(ops):
                 ops.on_writable = None
                 neat_set_operations(ops.ctx, ops.flow, ops)
     except:
-        pass
+        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        backend.stop(ops.ctx)
     return NEAT_OK
 
 
@@ -146,6 +151,7 @@ def message_passed(ops):
         neat_set_operations(ops.ctx, ops.flow, ops)
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        backend.stop(ops.ctx)
     return NEAT_OK
 
 
@@ -155,6 +161,7 @@ def received_called(ops):
         neat_set_operations(ops.ctx, ops.flow, ops)
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        backend.stop(ops.ctx)
     return NEAT_OK
 
 
@@ -178,6 +185,7 @@ def handle_all_written(ops):
             connection.event_handler_list[ConnectionEvents.SENT](connection)
     except:
         shim_print("An error occurred: {}".format(sys.exc_info()[0]))
+        backend.stop(ops.ctx)
 
     return NEAT_OK
 
@@ -208,6 +216,7 @@ def handle_readable(ops):
                     handler(connection, msg)  # TODO: MessageContext
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        backend.stop(ops.ctx)
 
     return NEAT_OK
 
@@ -233,11 +242,13 @@ def handle_closed(ops):
         if connection.connection_type == 'active': # should check if there is any cloned connections etc...
             backend.stop(ops.ctx)
     except:
-        pass
+        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        backend.stop(ops.ctx)
     return NEAT_OK
 
 
 class ConnectionState(Enum):
-    CREATED = auto()
+    ESTABLISHING = auto()
     ESTABLISHED = auto()
+    CLOSING = auto()
     CLOSED = auto()

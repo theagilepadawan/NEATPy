@@ -14,21 +14,21 @@ protocols_services = {
         SelectionProperties.PER_MSG_RELIABILITY: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.PRESERVE_ORDER: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.ZERO_RTT_MSG: ServiceLevel.OPTIONAL,
-        SelectionProperties.MULTISTREAMING: ServiceLevel.OPTIONAL,
+        SelectionProperties.MULTISTREAMING: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.PER_MSG_CHECKSUM_LEN_SEND: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.CONGESTION_CONTROL: ServiceLevel.INTRINSIC_SERVICE,
-        SelectionProperties.MULTIPATH: ServiceLevel.OPTIONAL,
-        SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE,
+        SelectionProperties.MULTIPATH: ServiceLevel.OPTIONAL, # should be not provided and add MTPCP as standalone stack?
+        SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE, # add proper defaults
         SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
     },
 
     SupportedProtocolStacks.SCTP: {
-        SelectionProperties.RELIABILITY: ServiceLevel.OPTIONAL,
+        SelectionProperties.RELIABILITY: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.PRESERVE_MSG_BOUNDARIES: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.PER_MSG_RELIABILITY: ServiceLevel.INTRINSIC_SERVICE,
-        SelectionProperties.PRESERVE_ORDER: ServiceLevel.INTRINSIC_SERVICE,
+        SelectionProperties.PRESERVE_ORDER: ServiceLevel.OPTIONAL,
         SelectionProperties.ZERO_RTT_MSG: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.MULTISTREAMING: ServiceLevel.OPTIONAL,
         SelectionProperties.PER_MSG_CHECKSUM_LEN_SEND: ServiceLevel.NOT_PROVIDED,
