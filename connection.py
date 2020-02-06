@@ -45,7 +45,7 @@ class Connection:
 
         self.preconnection = preconnection
         self.listener = listener
-        self.props: TransportProperties = copy.deepcopy(self.preconnection.transport_properties)
+        self.transport_properties: TransportProperties = copy.deepcopy(self.preconnection.transport_properties)
         self.set_read_only_connection_properties()
 
         self.event_handler_list = preconnection.event_handler_list
@@ -63,13 +63,17 @@ class Connection:
     def set_read_only_connection_properties(self):
         try:
             (max_send, max_recv) = neat_get_max_buffer_sizes(self.__flow)
-            self.props.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND] = max_send
-            self.props.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE] = max_recv
-            shim_print(f"Send buffer: {self.props.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND]} - Receive buffer: {self.props.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]}")
+            self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND] = max_send
+            self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE] = max_recv
+            shim_print(f"Send buffer: {self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND]} - Receive buffer: {self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]}")
         except:
             shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
 
     def set_property(self, property: GenericConnectionProperties, value):
+        if property in GenericConnectionProperties.read_only_properties():
+            shim_print("Given property is read-only, ignoring....")
+
+        self.transport_properties.connection_properties[property] = value
 
 
     def send(self, message_data, message_context=MessageContext(), end_of_message=True):
