@@ -90,7 +90,6 @@ class TransportProperties:
             self.selection_properties.update(property_profile.value)
             #self.selection_properties = property_profile.value
 
-
     def filter_protocols(self, protocol_level, preference_level, candidates):
         remove_list = []
         for prop, preference in self.selection_properties.items():

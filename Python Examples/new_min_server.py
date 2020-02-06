@@ -40,8 +40,19 @@ if __name__ == "__main__":
     local_specifier = LocalEndpoint()
     local_specifier.with_port(5000)
 
-    tp = TransportProperties()
-    preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=None)
+    profiles_dict = {
+        "udp": TransportPropertyProfiles.UNRELIABLE_DATAGRAM,
+        "tcp": TransportPropertyProfiles.RELIABLE_INORDER_STREAM,
+        "sctp": TransportPropertyProfiles.RELIABLE_MESSAGE
+    }
+
+    profile = None
+    if len(sys.argv) > 1:
+        profile = profiles_dict[sys.argv[1]]
+
+    tp = TransportProperties(profile)
+
+    preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=tp)
 
     preconnection.set_event_handler(ConnectionEvents.SENT, sent_event_handler)
     preconnection.set_event_handler(ConnectionEvents.CONNECTION_RECEIVED, connection_received_handler)
