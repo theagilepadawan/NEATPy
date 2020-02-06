@@ -18,8 +18,9 @@ protocols_services = {
         SelectionProperties.PER_MSG_CHECKSUM_LEN_SEND: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV: ServiceLevel.NOT_PROVIDED,
         SelectionProperties.CONGESTION_CONTROL: ServiceLevel.INTRINSIC_SERVICE,
-        SelectionProperties.MULTIPATH: ServiceLevel.OPTIONAL, # should be not provided and add MTPCP as standalone stack?
-        SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE, # add proper defaults
+        SelectionProperties.MULTIPATH: ServiceLevel.OPTIONAL,
+        # should be not provided and add MTPCP as standalone stack?
+        SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE,  # add proper defaults
         SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
         SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
     },
@@ -60,22 +61,9 @@ protocols_services = {
 
 
 class TransportPropertyProfiles(Enum):
-    RELIABLE_INORDER_STREAM = {SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
-                               SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
-                               SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
-                               SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.IGNORE}
-
-    RELIABLE_MESSAGE = {SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
-                        SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
-                        SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
-                        SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE}
-
-    UNRELIABLE_DATAGRAM = {SelectionProperties.RELIABILITY: PreferenceLevel.IGNORE,
-                           SelectionProperties.PRESERVE_ORDER: PreferenceLevel.IGNORE,
-                           SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.IGNORE,
-                           SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE}
-    # Todo: Final layout of transport, selection and messageproperties
-    # MessageContextProperties.IDEMPOTENT: True}
+    RELIABLE_INORDER_STREAM = auto()
+    RELIABLE_MESSAGE = auto()
+    UNRELIABLE_DATAGRAM = auto()
 
 
 class TransportProperties:
@@ -87,8 +75,27 @@ class TransportProperties:
 
         # Updates the selection properties dict with values from the transport profile
         if property_profile:
-            self.selection_properties.update(property_profile.value)
-            #self.selection_properties = property_profile.value
+            if property_profile is TransportPropertyProfiles.RELIABLE_INORDER_STREAM:
+                self.selection_properties.update(
+                    {SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
+                     SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
+                     SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
+                     SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.IGNORE
+                     })
+            elif property_profile is TransportPropertyProfiles.RELIABLE_MESSAGE:
+                self.selection_properties.update({
+                    SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
+                    SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
+                    SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
+                    SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE
+                })
+            elif property_profile is TransportPropertyProfiles.UNRELIABLE_DATAGRAM:
+                self.selection_properties.update({
+                    SelectionProperties.RELIABILITY: PreferenceLevel.IGNORE,
+                    SelectionProperties.PRESERVE_ORDER: PreferenceLevel.IGNORE,
+                    SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.IGNORE,
+                    SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE})
+                self.message_properties.update({MessageProperties.IDEMPOTENT: True})
 
     def filter_protocols(self, protocol_level, preference_level, candidates):
         remove_list = []
@@ -104,6 +111,11 @@ class TransportProperties:
     def select_protocol_stacks_with_selection_properties(self):
         properties = None
         candidates = SupportedProtocolStacks.get_protocol_stacks_on_system()
+
+        # If idempotent property is not set, UDP is not a valid candidate
+        if not self.message_properties[MessageProperties.IDEMPOTENT]:
+            shim_print("UDP is removed as message property Idempotent is not true")
+            candidates.remove(SupportedProtocolStacks.UDP)
 
         # "Internally, the transport system will first exclude all protocols and paths that match a Prohibit..."
         candidates = self.filter_protocols(ServiceLevel.INTRINSIC_SERVICE, PreferenceLevel.PROHIBIT, candidates)
@@ -129,7 +141,9 @@ class TransportProperties:
             shim_print(f"Ranking after filtering: {ranking_string}")
             candidates = [item[0] for item in ranking]
 
-        if SupportedProtocolStacks.TCP.name in candidates and self.selection_properties[SelectionProperties.MULTIPATH] and self.selection_properties[SelectionProperties.MULTIPATH].value >= PreferenceLevel.IGNORE.value:
+        if SupportedProtocolStacks.TCP.name in candidates and self.selection_properties[
+            SelectionProperties.MULTIPATH] and self.selection_properties[
+            SelectionProperties.MULTIPATH].value >= PreferenceLevel.IGNORE.value:
             if SupportedProtocolStacks.check_for_mptcp():
                 candidates.append(SupportedProtocolStacks.MPTCP)
                 shim_print("MPTCP enabled on system")
