@@ -5,7 +5,8 @@ import datetime
 
 colors = {
     None: Fore.YELLOW,
-    "msg": Fore.BLUE
+    "msg": Fore.BLUE,
+    "error": Fore.RED,
 }
 
 

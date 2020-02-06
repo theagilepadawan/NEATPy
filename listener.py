@@ -21,10 +21,6 @@ class Listener():
         self.number_of_connections = 0
         self.connection_limit = math.inf
 
-        self.stopped_event_handler = None
-        self.listen_error_handler = None
-        self.ready_handler = preconnection.ready_handler
-
         # Todo: Find a more sophisticated way to keep track of listeners (or is it necessary?)
         Listener.listener_list[0] = self
 

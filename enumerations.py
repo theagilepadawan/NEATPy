@@ -89,7 +89,7 @@ class ConnectionEvents(Enum):
     EXPIRED = auto()
     CLOSED = auto()
 
-    INITIATE_ERROR = auto()
+    INITIATE_ERROR = 'Initiate error'
     CONNECTION_ERROR = auto()
     SOFT_ERROR = auto()
     SEND_ERROR = auto()

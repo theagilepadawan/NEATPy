@@ -64,11 +64,7 @@ def initiate(context, flow, address, port, stream_count=None):
         options.type = NEAT_TYPE_INTEGER
         options.value.integer = 100
 
-    if neat_open(context, flow, address, port, options, opt_count):
-        # Todo: should this just return None to application?
-        sys.exit("neat_open failed")
-
-    shim_print("CLIENT RUNNING NEAT INITIATED FROM PYTHON")
+    return neat_open(context, flow, address, port, options, opt_count)
 
 
 def abort(context, flow):
