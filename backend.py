@@ -1,3 +1,5 @@
+import json
+
 from neat import *
 from neat import charArr, new_uint32_tp, neat_read, uint32_tp_value
 from utils import *
@@ -123,3 +125,12 @@ class NeatCallbacks(Enum):
     @staticmethod
     def set_ops(member, value):
         member = value
+
+
+def pass_candidates_to_back_end(candidates, context, flow):
+    if len(candidates) is 1:
+        candiates_to_backend = json.dumps({"transport": {"value": candidates.pop(0).name, "precedence": 1}})
+    else:
+        candiates_to_backend = json.dumps({"transport": {"value": [candidate.name for candidate in candidates], "precedence": 2}})
+    shim_print(candiates_to_backend)
+    neat_set_property(context, flow, candiates_to_backend)

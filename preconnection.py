@@ -34,15 +34,9 @@ class Preconnection:
         self.connection_limit = None
 
         self.event_handler_list = {event: None for name, event in ConnectionEvents.__members__.items()}
-
-        if self.transport_properties is not None:
-            json_representation = self.transport_properties.to_json()
-            if json_representation is None:
-                shim_print("No protocols support given properties")
-                exit(1)
-            shim_print(json_representation)
-            neat_set_property(self.__context, self.__flow, json_representation)
-        return
+        self.transport_properties = transport_properties
+        if not self.transport_properties:
+            self.transport_properties = TransportProperties()
 
     def set_event_handler(self, event: ConnectionEvents, handler):
         if isinstance(event, ConnectionEvents):
@@ -66,6 +60,9 @@ class Preconnection:
         self.__ops.on_close = handle_closed
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
+        candidates = self.transport_properties.select_protocol_stacks_with_selection_properties()
+        backend.pass_candidates_to_back_end(candidates, self.__context, self.__flow)
+
         backend.initiate(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, 100)
         backend.start(self.__context)
         backend.clean_up(self.__context)
@@ -80,6 +77,9 @@ class Preconnection:
         if not self.local_endpoint:
             shim_print("Local Endpoint MUST be specified if when calling listen on the preconnection")
             sys.exit(1)
+
+        candidates = self.transport_properties.select_protocol_stacks_with_selection_properties()
+        backend.pass_candidates_to_back_end(candidates, self.__context, self.__flow)
 
         shim_print("LISTEN!")
         listner = Listener(self.__context, self.__flow, self.__ops, self)

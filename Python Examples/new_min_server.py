@@ -19,7 +19,7 @@ from enumerations import *
 
 
 def sent_event_handler(connection):
-#    connection.close()
+    connection.close()
     pass
 
 

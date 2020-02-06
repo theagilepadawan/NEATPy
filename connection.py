@@ -4,6 +4,7 @@ from message_context import *
 from neat import *
 import sys
 import copy
+from transport_properties import *
 
 import backend
 from utils import *
@@ -44,7 +45,8 @@ class Connection:
 
         self.preconnection = preconnection
         self.listener = listener
-        self.__props = copy.deepcopy(self.preconnection.transport_properties)
+        self.props: TransportProperties = copy.deepcopy(self.preconnection.transport_properties)
+        self.set_read_only_connection_properties()
 
         self.event_handler_list = preconnection.event_handler_list
 
@@ -57,6 +59,18 @@ class Connection:
         ops.on_close = handle_closed
 
         neat_set_operations(ops.ctx, ops.flow, ops)
+
+    def set_read_only_connection_properties(self):
+        try:
+            (max_send, max_recv) = neat_get_max_buffer_sizes(self.__flow)
+            self.props.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND] = max_send
+            self.props.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE] = max_recv
+            shim_print(f"Send buffer: {self.props.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND]} - Receive buffer: {self.props.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]}")
+        except:
+            shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+
+    def set_property(self, property: GenericConnectionProperties, value):
+
 
     def send(self, message_data, message_context=MessageContext(), end_of_message=True):
         shim_print("SEND CALLED")
@@ -108,7 +122,8 @@ class Connection:
         return self.__props
 
     def clone(self):
-        backend.clone(self.__context, self.preconnection.remote_endpoint.address, self.preconnection.remote_endpoint.port)
+        backend.clone(self.__context, self.preconnection.remote_endpoint.address,
+                      self.preconnection.remote_endpoint.port)
         return NotImplementedError
 
     def stop_listener(self):
@@ -201,7 +216,8 @@ def handle_readable(ops):
 
             shim_print(f'Message received from stream: {ops.stream_id}')
             # UDP delivers complete messages, ignore length specifiers
-            if connection.transport_stack is SupportedProtocolStacks.UDP or (min_length is None and max_length is None): # TODO: SCTP here?
+            if connection.transport_stack is SupportedProtocolStacks.UDP or (
+                min_length is None and max_length is None):  # TODO: SCTP here?
                 handler(connection, msg)
             elif connection.transport_stack is SupportedProtocolStacks.TCP or connection.transport_stack is SupportedProtocolStacks.MPTCP:
                 if connection.tcp_to_small_queue:
@@ -233,13 +249,15 @@ def handle_closed(ops):
         # the implementation should deliver any partial Message content outstanding..."
         if connection.receive_request_queue:
             if connection.tcp_to_small_queue:
-                handler = connection.receive_request_queue.pop(0)[0] # Should check if there is more than one request in the queue
+                handler = connection.receive_request_queue.pop(0)[
+                    0]  # Should check if there is more than one request in the queue
                 shim_print("Sending leftovers")
                 handler(connection, connection.tcp_to_small_queue.pop())
             # "...or if none is available, an indication that there will be no more received Messages."
             else:
-                shim_print("Connection closed, there will be no more received messages")    # TODO: Should this be thrown as an error (error event?)
-        if connection.connection_type == 'active': # should check if there is any cloned connections etc...
+                shim_print(
+                    "Connection closed, there will be no more received messages")  # TODO: Should this be thrown as an error (error event?)
+        if connection.connection_type == 'active':  # should check if there is any cloned connections etc...
             backend.stop(ops.ctx)
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))

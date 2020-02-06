@@ -83,7 +83,7 @@ class TransportProperties:
     def __init__(self, property_profile=None):
         self.selection_properties = SelectionProperties.get_default()
         self.message_properties = MessageProperties.get_default()
-        self.connection_properties = ConnectionProperties.get_default()
+        self.connection_properties = GenericConnectionProperties.get_default()
 
         # Updates the selection properties dict with values from the transport profile
         if property_profile:
@@ -102,7 +102,7 @@ class TransportProperties:
                         remove_list.append(protocol)
         return [protocol for protocol in candidates if protocol not in remove_list]
 
-    def to_json(self):
+    def select_protocol_stacks_with_selection_properties(self):
         properties = None
         candidates = SupportedProtocolStacks.get_protocol_stacks_on_system()
 
@@ -111,11 +111,11 @@ class TransportProperties:
 
         # "...then exclude all protocols and paths that do not match a Require"
         candidates = self.filter_protocols(ServiceLevel.NOT_PROVIDED, PreferenceLevel.REQUIRE, candidates)
-        if len(candidates) == 1:
-            properties = json.dumps({"transport": {"value": candidates.pop(0).name, "precedence": 1}})
+
+        if not candidates:
+            return None
 
         # "...then sort candidates according to Preferred properties" [Cite]
-
         elif len(candidates) > 1:
             ranking_dict = dict(zip(candidates, [0] * len(candidates)))
 
@@ -128,19 +128,10 @@ class TransportProperties:
             ranking = sorted(ranking_dict.items(), key=lambda f: f[1], reverse=True)
             ranking_string = Fore.BLUE + f'{Fore.RESET} --> {Fore.BLUE}'.join(map(lambda x: str(x[0].name), ranking))
             shim_print(f"Ranking after filtering: {ranking_string}")
-            candidates = [item[0].name for item in ranking]
+            candidates = [item[0] for item in ranking]
 
-            if SupportedProtocolStacks.TCP.name in candidates and self.selection_properties[SelectionProperties.MULTIPATH] and self.selection_properties[SelectionProperties.MULTIPATH].value >= PreferenceLevel.IGNORE.value:
-                if SupportedProtocolStacks.check_for_mptcp():
-                    candidates.append(SupportedProtocolStacks.MPTCP.name)
-                    shim_print("MPTCP enabled on system")
-
-            properties = json.dumps({"transport": {"value": candidates, "precedence": 2}})
-
-            # properties = json.dumps({"transport": {"value": candidates, "precedence": 2},
-            #                          "SO/SOL_SOCKET/TCP_NODELAY": {"value": 1, "precedence": 1}})
-
-        else:
-            properties = None
-
-        return properties
+        if SupportedProtocolStacks.TCP.name in candidates and self.selection_properties[SelectionProperties.MULTIPATH] and self.selection_properties[SelectionProperties.MULTIPATH].value >= PreferenceLevel.IGNORE.value:
+            if SupportedProtocolStacks.check_for_mptcp():
+                candidates.append(SupportedProtocolStacks.MPTCP)
+                shim_print("MPTCP enabled on system")
+        return candidates
