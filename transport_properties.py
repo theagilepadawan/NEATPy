@@ -69,32 +69,33 @@ class TransportPropertyProfiles(Enum):
 class TransportProperties:
 
     def __init__(self, property_profile=None):
+        self.selection_properties = SelectionProperties.get_default()
+        self.message_properties = MessageProperties.get_default()
+        self.connection_properties = GenericConnectionProperties.get_default()
 
         # Updates the selection properties dict with values from the transport profile
         if property_profile:
             if property_profile is TransportPropertyProfiles.RELIABLE_INORDER_STREAM:
-                self.selection_properties = {SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
-                                             SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
-                                             SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
-                                             SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.IGNORE
-                                             }
+                self.selection_properties.update(
+                    {SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
+                     SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
+                     SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
+                     SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.IGNORE
+                     })
             elif property_profile is TransportPropertyProfiles.RELIABLE_MESSAGE:
-                self.selection_properties = {SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
-                                             SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
-                                             SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
-                                             SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE
-                                             }
+                self.selection_properties.update({
+                    SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
+                    SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
+                    SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
+                    SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE
+                })
             elif property_profile is TransportPropertyProfiles.UNRELIABLE_DATAGRAM:
-                self.selection_properties = {SelectionProperties.RELIABILITY: PreferenceLevel.IGNORE,
-                                             SelectionProperties.PRESERVE_ORDER: PreferenceLevel.IGNORE,
-                                             SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.IGNORE,
-                                             SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE
-                                             }
-                self.message_properties = {MessageProperties.IDEMPOTENT: True}
-        else:
-            self.selection_properties = SelectionProperties.get_default()
-            self.message_properties = MessageProperties.get_default()
-            self.connection_properties = GenericConnectionProperties.get_default()
+                self.selection_properties.update({
+                    SelectionProperties.RELIABILITY: PreferenceLevel.IGNORE,
+                    SelectionProperties.PRESERVE_ORDER: PreferenceLevel.IGNORE,
+                    SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.IGNORE,
+                    SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE})
+                self.message_properties.update({MessageProperties.IDEMPOTENT: True})
 
     def filter_protocols(self, protocol_level, preference_level, candidates):
         remove_list = []
