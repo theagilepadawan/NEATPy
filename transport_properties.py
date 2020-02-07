@@ -80,7 +80,7 @@ class TransportProperties:
                     {SelectionProperties.RELIABILITY: PreferenceLevel.REQUIRE,
                      SelectionProperties.PRESERVE_ORDER: PreferenceLevel.REQUIRE,
                      SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
-                     SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.IGNORE
+                     SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.PROHIBIT
                      })
             elif property_profile is TransportPropertyProfiles.RELIABLE_MESSAGE:
                 self.selection_properties.update({
@@ -91,7 +91,7 @@ class TransportProperties:
                 })
             elif property_profile is TransportPropertyProfiles.UNRELIABLE_DATAGRAM:
                 self.selection_properties.update({
-                    SelectionProperties.RELIABILITY: PreferenceLevel.IGNORE,
+                    SelectionProperties.RELIABILITY: PreferenceLevel.PROHIBIT,
                     SelectionProperties.PRESERVE_ORDER: PreferenceLevel.IGNORE,
                     SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.IGNORE,
                     SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE})
