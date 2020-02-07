@@ -155,7 +155,7 @@ class TransportProperties:
             shim_print("Property given is not a selection property - ignoring", level='error')
         else:
             self.add(prop, SelectionProperties.get_default(prop))
-            
+
     def select_protocol_stacks_with_selection_properties(self):
         properties = None
         candidates = SupportedProtocolStacks.get_protocol_stacks_on_system()

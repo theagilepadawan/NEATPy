@@ -47,6 +47,7 @@ class Connection:
         self.listener = listener
         self.transport_properties: TransportProperties = copy.deepcopy(self.preconnection.transport_properties)
         self.set_read_only_connection_properties()
+        self.state = ConnectionState.ESTABLISHED
 
         self.event_handler_list = preconnection.event_handler_list
 
@@ -59,6 +60,10 @@ class Connection:
         ops.on_close = handle_closed
 
         neat_set_operations(ops.ctx, ops.flow, ops)
+        res, res_json = neat_get_stats(self.__context)
+        json_rep = json.loads(res_json)
+        shim_print(json_rep['flow-1']['tcpstats'])
+
 
     def set_read_only_connection_properties(self):
         try:
@@ -71,8 +76,6 @@ class Connection:
 
     def set_property(self, property: GenericConnectionProperties, value):
         GenericConnectionProperties.set_property(self.transport_properties.connection_properties, property, value)
-
-
 
     def send(self, message_data, message_context=MessageContext(), end_of_message=True):
         shim_print("SEND CALLED")
@@ -107,12 +110,16 @@ class Connection:
         bacth_block()
         self.batch_in_session = False
 
+
+
     def close(self):
         # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
         if self.msg_list or self.messages_passed_to_back_end:
             self.close_called = True
+            self.state = ConnectionState.CLOSING
         else:
             neat_close(self.__ops.ctx, self.__ops.flow)
+            self.state = ConnectionState.CLOSED
 
     def abort(self):
         backend.abort(self.__context, self.__flow)
