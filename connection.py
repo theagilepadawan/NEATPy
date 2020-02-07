@@ -249,7 +249,12 @@ def handle_readable(ops):
 def handle_closed(ops):
     try:
         shim_print("HANDLE CLOSED")
+
+
         connection = Connection.get_connection_by_operations_struct(ops)
+        res, res_json = neat_get_stats(ops.ctx)
+        json_rep = json.loads(res_json)
+        shim_print(json_rep)
         if connection.event_handler_list[ConnectionEvents.CLOSED] is not None:
             shim_print("CLOSED HANDLER")
             connection.event_handler_list[ConnectionEvents.CLOSED](connection)
