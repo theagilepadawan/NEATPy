@@ -42,6 +42,7 @@ class Connection:
 
         self.close_called = False
         self.batch_in_session = False
+        self.final_message_received = False
 
         self.preconnection = preconnection
         self.listener = listener
@@ -124,21 +125,40 @@ class Connection:
     def abort(self):
         backend.abort(self.__context, self.__flow)
 
-    def get_properties(self):
-        return NotImplementedError
+    def stop_listener(self):
+        self.listener.stop()
 
-    def get_transport_properties(self):
-        return self.__props
+    def can_be_used_for_sending(self):
+        ret = True
+        if self.transport_properties.selection_properties[SelectionProperties.DIRECTION] is CommunicationDirections.UNIDIRECTIONAL_RECEIVE:
+            ret = False
+        elif self.final_message_received:
+            ret = False
+        # If close is called on the connection?
+        return ret
+
+    def can_be_used_for_receive_data(self):
+        ret = True
+        if self.transport_properties.selection_properties[SelectionProperties.DIRECTION] is CommunicationDirections.UNIDIRECTIONAL_SEND:
+            ret = False
+        elif self.final_message_received:
+            ret = False
+        # If close is called on the connection?
+        return ret
+
+    def get_properties(self):
+        return {'state': self.state,
+                'send': self.can_be_used_for_sending(),
+                'receive': self.can_be_used_for_receive_data(),
+                'props': self.transport_properties}
+
+    # Static methods
 
     def clone(self):
         backend.clone(self.__context, self.preconnection.remote_endpoint.address,
                       self.preconnection.remote_endpoint.port)
         return NotImplementedError
 
-    def stop_listener(self):
-        self.listener.stop()
-
-    # Static methods
     @staticmethod
     def get_connection_by_operations_struct(ops):
         fd = backend.get_flow_fd(ops.flow)
