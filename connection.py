@@ -62,7 +62,7 @@ class Connection:
         neat_set_operations(ops.ctx, ops.flow, ops)
         res, res_json = neat_get_stats(self.__context)
         json_rep = json.loads(res_json)
-        shim_print(json_rep['flow-1']['tcpstats'])
+        shim_print(json_rep['flow-1'])
 
 
     def set_read_only_connection_properties(self):
