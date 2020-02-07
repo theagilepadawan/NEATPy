@@ -41,3 +41,11 @@ class MessageProperties(Enum):
             return defaults[prop]
         else:
             return defaults
+
+    @staticmethod
+    def set_property(given_props, prop, value):
+        if not isinstance(value, type(MessageProperties.get_default(prop))):
+            shim_print(
+                f"Incompatible value type provided - Needed {type(MessageProperties.get_default(prop))}, got {type(value)}", level='error')
+        else:
+            given_props[prop] = value

@@ -35,9 +35,9 @@ class SelectionProperties(Enum):
             SelectionProperties.PER_MSG_CHECKSUM_LEN_SEND: PreferenceLevel.IGNORE,
             SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV: PreferenceLevel.IGNORE,
             SelectionProperties.CONGESTION_CONTROL: PreferenceLevel.REQUIRE,
-           # SelectionProperties.INTERFACE: (),  # TODO: Settle on a reasoable default
-           # SelectionProperties.PVD: (),  # TODO: Settle on a reasoable default
-           # SelectionProperties.LOCAL_ADDRESS_PREFERENCE: AddressPreference.STABLE, # TODO: Need to dynamically set default (Listeners/Redezvous vs. others)
+            # SelectionProperties.INTERFACE: (),  # TODO: Settle on a reasoable default
+            # SelectionProperties.PVD: (),  # TODO: Settle on a reasoable default
+            # SelectionProperties.LOCAL_ADDRESS_PREFERENCE: AddressPreference.STABLE, # TODO: Need to dynamically set default (Listeners/Redezvous vs. others)
             SelectionProperties.MULTIPATH: PreferenceLevel.PREFER,
             SelectionProperties.DIRECTION: CommunicationDirections.BIDIRECTIONAL,
             SelectionProperties.RETRANSMIT_NOTIFY: PreferenceLevel.IGNORE,
@@ -47,3 +47,11 @@ class SelectionProperties(Enum):
             return defaults[prop]
         else:
             return defaults
+
+    @staticmethod
+    def set_property(given_props, prop, value):
+        if not isinstance(value, PreferenceLevel):
+            shim_print("Not a valid preference level provided - Aborting", level='error')
+        else:
+            given_props[prop] = value
+

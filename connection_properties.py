@@ -42,13 +42,19 @@ class GenericConnectionProperties(Enum):
             return defaults
 
     @staticmethod
-    def read_only_properties():
-        return [
+    def set_property(given_props, prop_to_set, value):
+        read_only_props = [
             GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND,
             GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE,
             GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_BEFORE_FRAGMENTATION_OR_SEGMENTATION,
             GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_CONCURRENT_WITH_CONNECTION_ESTABLISHMENT
         ]
+        if prop_to_set in read_only_props:
+            shim_print("Given property is read-only - Ignoring...", level='error')
+        elif not isinstance(prop_to_set, GenericConnectionProperties):
+            shim_print("Given property not valid - Ignoring...", level='error')
+        else:
+            given_props[prop_to_set] = value
 
 
 class TCPUserTimeout(Enum):

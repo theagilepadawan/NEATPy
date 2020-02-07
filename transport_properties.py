@@ -97,7 +97,7 @@ class TransportProperties:
                     SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE})
                 self.message_properties.update({MessageProperties.IDEMPOTENT: True})
 
-    def filter_protocols(self, protocol_level, preference_level, candidates):
+    def __filter_protocols(self, protocol_level, preference_level, candidates):
         remove_list = []
         for prop, preference in self.selection_properties.items():
             if preference == preference_level:
@@ -108,6 +108,54 @@ class TransportProperties:
                         remove_list.append(protocol)
         return [protocol for protocol in candidates if protocol not in remove_list]
 
+    def add(self, prop, value):
+        if isinstance(prop, SelectionProperties):
+            shim_print("Setting selection property...")
+            SelectionProperties.set_property(self.selection_properties, prop, value)
+        elif isinstance(prop, GenericConnectionProperties):
+            shim_print("Setting connection property...")
+            GenericConnectionProperties.set_property(self.connection_properties, prop, value)
+        elif isinstance(prop, MessageProperties):
+            MessageProperties.set_property(self.message_properties, prop, value)
+        else:
+            shim_print("No valid property given - ignoring", level='error')
+
+    def avoid(self, prop):
+        if not isinstance(prop, SelectionProperties):
+            shim_print("Property given is not a selection property - ignoring", level='error')
+        else:
+            self.add(prop, PreferenceLevel.AVOID)
+
+    def require(self, prop):
+        if not isinstance(prop, SelectionProperties):
+            shim_print("Property given is not a selection property - ignoring", level='error')
+        else:
+            self.add(prop, PreferenceLevel.REQUIRE)
+
+    def prefer(self, prop):
+        if not isinstance(prop, SelectionProperties):
+            shim_print("Property given is not a selection property - ignoring", level='error')
+        else:
+            self.add(prop, PreferenceLevel.PREFER)
+
+    def ignore(self, prop):
+        if not isinstance(prop, SelectionProperties):
+            shim_print("Property given is not a selection property - ignoring", level='error')
+        else:
+            self.add(prop, PreferenceLevel.IGNORE)
+
+    def prohibit(self, prop):
+        if not isinstance(prop, SelectionProperties):
+            shim_print("Property given is not a selection property - ignoring", level='error')
+        else:
+            self.add(prop, PreferenceLevel.PROHIBIT)
+
+    def default(self, prop):
+        if not isinstance(prop, SelectionProperties):
+            shim_print("Property given is not a selection property - ignoring", level='error')
+        else:
+            self.add(prop, SelectionProperties.get_default(prop))
+            
     def select_protocol_stacks_with_selection_properties(self):
         properties = None
         candidates = SupportedProtocolStacks.get_protocol_stacks_on_system()
@@ -118,10 +166,10 @@ class TransportProperties:
             candidates.remove(SupportedProtocolStacks.UDP)
 
         # "Internally, the transport system will first exclude all protocols and paths that match a Prohibit..."
-        candidates = self.filter_protocols(ServiceLevel.INTRINSIC_SERVICE, PreferenceLevel.PROHIBIT, candidates)
+        candidates = self.__filter_protocols(ServiceLevel.INTRINSIC_SERVICE, PreferenceLevel.PROHIBIT, candidates)
 
         # "...then exclude all protocols and paths that do not match a Require"
-        candidates = self.filter_protocols(ServiceLevel.NOT_PROVIDED, PreferenceLevel.REQUIRE, candidates)
+        candidates = self.__filter_protocols(ServiceLevel.NOT_PROVIDED, PreferenceLevel.REQUIRE, candidates)
 
         if not candidates:
             return None
@@ -148,3 +196,9 @@ class TransportProperties:
                 candidates.append(SupportedProtocolStacks.MPTCP)
                 shim_print("MPTCP enabled on system")
         return candidates
+
+
+
+
+
+

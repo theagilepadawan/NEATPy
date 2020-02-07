@@ -70,10 +70,8 @@ class Connection:
             shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
 
     def set_property(self, property: GenericConnectionProperties, value):
-        if property in GenericConnectionProperties.read_only_properties():
-            shim_print("Given property is read-only, ignoring....")
+        GenericConnectionProperties.set_property(self.transport_properties.connection_properties, property, value)
 
-        self.transport_properties.connection_properties[property] = value
 
 
     def send(self, message_data, message_context=MessageContext(), end_of_message=True):
