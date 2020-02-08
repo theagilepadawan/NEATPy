@@ -20,6 +20,11 @@ class MessageProperties(Enum):
     MESSAGE_CAPACITY_PROFILE_OVERRIDE = 'msg-capacity-profile'
     SINGULAR_TRANSMISSION = 'singular-transmission'
 
+    # Ready-only, receive message properties:
+    ECN = 'ecn'
+    EARLY_DATA = 'early-data'
+    RECEIVING_FINAL_MESSAGE = 'receiving-final-messages'
+
     def __str__(self):
         return self.value
 
@@ -35,6 +40,9 @@ class MessageProperties(Enum):
             MessageProperties.RELIABLE_DATA_TRANSFER: True,
             MessageProperties.MESSAGE_CAPACITY_PROFILE_OVERRIDE: CapacityProfiles.DEFAULT,
             MessageProperties.SINGULAR_TRANSMISSION: False,
+            MessageProperties.ECN: None,
+            MessageProperties.EARLY_DATA: None,
+            MessageProperties.RECEIVING_FINAL_MESSAGE: None
         }
 
         if prop:

@@ -2,7 +2,7 @@ from enum import Enum, auto
 import math
 from enumerations import *
 from message_properties import *
-from framer import *
+from framer import Framer
 
 
 class MessageContext:

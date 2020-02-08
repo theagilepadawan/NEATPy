@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from message_framer import *
 
 
 class Framer(ABC):

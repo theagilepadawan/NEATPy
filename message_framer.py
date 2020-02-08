@@ -1,4 +1,4 @@
-from message_context import *
+from message_context import MessageContext
 
 
 class MessageFramer():
