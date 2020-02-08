@@ -28,8 +28,8 @@ def ready_handler(connection):
     connection.send(f"Start - {'a' * 9200} - End".encode('UTF-8'))
 
     # Handler to be passed to receive
-    def test(connection, message):
-        shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
+    def test(connection, message_data, message_context):
+        shim_print("Read {} bytes: {}".format(len(message_data), message_data), level="msg")
         connection.close()
 
     connection.receive(test)

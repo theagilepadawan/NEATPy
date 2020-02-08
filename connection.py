@@ -63,7 +63,9 @@ class Connection:
         neat_set_operations(ops.ctx, ops.flow, ops)
         res, res_json = neat_get_stats(self.__context)
         json_rep = json.loads(res_json)
-        shim_print(json_rep['flow-1'])
+        shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
+
+        # Todo: Create local and remote endpoint from JSON (should be its own function)
 
 
     def set_read_only_connection_properties(self):
@@ -247,7 +249,8 @@ def handle_readable(ops):
             # UDP delivers complete messages, ignore length specifiers
             if connection.transport_stack is SupportedProtocolStacks.UDP or (
                 min_length is None and max_length is None):  # TODO: SCTP here?
-                handler(connection, msg)
+                message_context = MessageContext() # Todo:
+                handler(connection, msg, message_context)
             elif connection.transport_stack is SupportedProtocolStacks.TCP or connection.transport_stack is SupportedProtocolStacks.MPTCP:
                 if connection.tcp_to_small_queue:
                     msg = connection.tcp_to_small_queue.pop() + msg
@@ -258,7 +261,8 @@ def handle_readable(ops):
                     # TODO: Received partial handler should be called, how should it be registered?
                     raise NotImplementedError
                 else:
-                    handler(connection, msg)  # TODO: MessageContext
+                    message_context = MessageContext()  # Todo:
+                    handler(connection, msg, message_context)  # TODO: MessageContext
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
         backend.stop(ops.ctx)
@@ -269,12 +273,10 @@ def handle_readable(ops):
 def handle_closed(ops):
     try:
         shim_print("HANDLE CLOSED")
-
-
         connection = Connection.get_connection_by_operations_struct(ops)
         res, res_json = neat_get_stats(ops.ctx)
         json_rep = json.loads(res_json)
-        shim_print(json_rep)
+        shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
         if connection.event_handler_list[ConnectionEvents.CLOSED] is not None:
             shim_print("CLOSED HANDLER")
             connection.event_handler_list[ConnectionEvents.CLOSED](connection)

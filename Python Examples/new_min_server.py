@@ -24,10 +24,10 @@ def sent_event_handler(connection):
 
 
 def connection_received_handler(connection):
-    def test(connection, message):
+    def test(connection, message_data, message_context):
         connection.send("No, you're NEAT 😘".encode('UTF-8'))
 #        shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
-        shim_print("Read {} bytes:".format(len(message)), level="msg")
+        shim_print("Read {} bytes:".format(len(message_data)), level="msg")
         connection.receive(test)
     connection.receive(test)
 
