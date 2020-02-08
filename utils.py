@@ -11,6 +11,12 @@ colors = {
 
 
 def shim_print(main_msg, additional_msg="",  level=None):
+    """
+Utility function used for printing / debugging
+    :param main_msg:
+    :param additional_msg:
+    :param level:
+    """
     cols, rows = shutil.get_terminal_size()
     stars = round((cols - len(" NEAT PYTHON SHIM ")) / 2)
     minusen = False

@@ -28,6 +28,7 @@ class Preconnection:
         self.transport_properties = transport_properties
         self.number_of_connections = 0  # Is this really needed for the preconnecntion? Maybe regarding rendezvous?
         self.connection_limit = None
+        self.framer_list = []
 
         self.event_handler_list = {event: None for name, event in ConnectionEvents.__members__.items()}
         self.transport_properties = transport_properties
@@ -126,6 +127,9 @@ class Preconnection:
             sys.exit("neat_accept failed")
 
         shim_print("Rendezvous started! 🤩")
+
+    def add_framer(self, framer):
+        self.framer_list.append(framer)
 
     @staticmethod
     def handle_connected_rendezvous(ops):
