@@ -71,7 +71,7 @@ def clone(ctx, endpoint, port, clone_connected_handler):
         return NEAT_OK
 
     ops.on_error = on_clone_error
-    ops.on_connected = clone_connected_handler
+    ops.on_writable = clone_connected_handler
     neat_set_operations(ctx, flow, ops)
 
     neat_open(ctx, flow, endpoint, port, None, 0)

@@ -26,6 +26,7 @@ def handle_closed(connection):
 
 def ready_handler(connection):
     connection.send(f"Start - {'a' * 9200} - End".encode('UTF-8'))
+    connection.clone()
 
     # Handler to be passed to receive
     def test(connection, message_data, message_context):

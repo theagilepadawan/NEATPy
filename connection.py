@@ -340,6 +340,7 @@ def handle_clone_ready(ops):
     res, res_json = neat_get_stats(ops.ctx)
     json_rep = json.loads(res_json)
     shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
+    return NEAT_OK
 
 
 class ConnectionState(Enum):
