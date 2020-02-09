@@ -30,18 +30,18 @@ def ready_handler(connection):  # Handler to be passed to receive
         shim_print("Read {} bytes: {}".format(len(message_data), message_data), level="msg")
         # connection.close()
     if Connection.clone_count == 0:
-        connection.receive(test, min_incomplete_length=70000)
+        connection.receive(test)
 
     def clone_test(connection, message_data, message_context):
-        shim_print("CLONE Read {} bytes: {}".format(len(message_data), message_data), level="msg")
+        shim_print("CLONE read {} bytes: {}".format(len(message_data), message_data), level="msg")
 
     def clone_handler(con):
-        con.send(b"GET / HTTP/1.1\r\nHost: weevil.info\r\nUser-agent: libneat\r\nConnection: close\r\n\r\n")
-        con.receive(clone_test, min_incomplete_length=70000)
+        con.send("Hello from cloned connection 😅".encode('UTF-8'))
+        con.receive(clone_test)
 
     if Connection.clone_count == 0:
         connection.clone(clone_handler)
-        connection.send(b"GET / HTTP/1.1\r\nHost: weevil.info\r\nUser-agent: libneat\r\nConnection: close\r\n\r\n")
+        connection.send("Hello from first connection 😏".encode('UTF-8'))
 
 
 if __name__ == "__main__":
@@ -53,8 +53,8 @@ if __name__ == "__main__":
     }
 
     ep = RemoteEndpoint()
-    ep.with_address("weevil.info")
-    ep.with_port(80)
+    ep.with_address("127.0.0.1")
+    ep.with_port(5000)
 
     profile = None
     if len(sys.argv) > 1:

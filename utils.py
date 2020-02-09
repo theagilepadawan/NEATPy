@@ -8,7 +8,7 @@ colors = {
     "msg": Fore.BLUE,
     "error": Fore.RED,
 }
-
+debug = 0
 
 def shim_print(main_msg, additional_msg="",  level=None):
     """
@@ -17,6 +17,9 @@ Utility function used for printing / debugging
     :param additional_msg:
     :param level:
     """
+    if not debug and not level:
+        return
+
     cols, rows = shutil.get_terminal_size()
     stars = round((cols - len(" NEAT PYTHON SHIM ")) / 2)
     minusen = False
