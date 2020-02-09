@@ -72,7 +72,8 @@ class Preconnection:
             return
 
         backend.pass_candidates_to_back_end(candidates, self.__context, self.__flow)
-        backend.initiate(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, 100)
+        if backend.initiate(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, 100):
+            ""
         backend.start(self.__context)
         backend.clean_up(self.__context)
 

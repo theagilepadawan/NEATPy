@@ -15,6 +15,9 @@ class MessageContext:
         self.remote_endpoint = None
         self.local_endpoint = None
 
+    def get_original_request(self):
+        return NotImplementedError
+
     def get_remote_endpoint(self):
         return self.remote_endpoint
 

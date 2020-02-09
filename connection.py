@@ -140,6 +140,8 @@ class Connection:
         bacth_block()
         self.batch_in_session = False
 
+
+
     def close(self):
         # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
         if self.msg_list or self.messages_passed_to_back_end:
@@ -179,13 +181,12 @@ class Connection:
                 'receive': self.can_be_used_for_receive_data(),
                 'props': self.transport_properties}
 
-    # Static methods
-
     def clone(self):
         backend.clone(self.__context, self.preconnection.remote_endpoint.address,
-                      self.preconnection.remote_endpoint.port)
+                      self.preconnection.remote_endpoint.port, handle_clone_ready)
         return NotImplementedError
 
+    # Static methods
     @staticmethod
     def get_connection_by_operations_struct(ops):
         fd = backend.get_flow_fd(ops.flow)
@@ -273,7 +274,16 @@ def handle_readable(ops):
             shim_print(f'Message received from stream: {ops.stream_id}')
             # UDP delivers complete messages, ignore length specifiers
             if connection.transport_stack is SupportedProtocolStacks.UDP or (min_length is None and max_length is None):  # TODO: SCTP here?
+                # Create a message context to pass to the receive handler
                 message_context = MessageContext()  # Todo:
+                message_context.remote_endpoint = connection.remote_endpoint
+                message_context.local_endpoint = connection.local_endpoint
+                # TODO: Framer logic here...?
+
+
+
+
+
                 handler(connection, msg, message_context)
             elif connection.transport_stack is SupportedProtocolStacks.TCP or connection.transport_stack is SupportedProtocolStacks.MPTCP:
                 if connection.tcp_to_small_queue:
@@ -323,6 +333,13 @@ def handle_closed(ops):
         shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
     return NEAT_OK
+
+
+def handle_clone_ready(ops):
+    shim_print("CLONE IS READY TO GO BABY!!")
+    res, res_json = neat_get_stats(ops.ctx)
+    json_rep = json.loads(res_json)
+    shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
 
 
 class ConnectionState(Enum):
