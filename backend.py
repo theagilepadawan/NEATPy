@@ -62,19 +62,19 @@ def clean_up(context):
     neat_free_ctx(context)
 
 
-def clone(ctx, endpoint, port, clone_connected_handler):
-    flow = neat_new_flow(ctx)
-    ops = neat_flow_operations()
-
-    def on_clone_error(op):
-        shim_print("Clone opertion at back end", level="error")
-        return NEAT_OK
-
-    ops.on_error = on_clone_error
-    ops.on_writable = clone_connected_handler
-    neat_set_operations(ctx, flow, ops)
-
-    neat_open(ctx, flow, endpoint, port, None, 0)
+# def clone(ctx, endpoint, port, clone_connected_handler):
+#     flow = neat_new_flow(ctx)
+#     ops = neat_flow_operations()
+#
+#     def on_clone_error(op):
+#         shim_print("Clone opertion at back end", level="error")
+#         return NEAT_OK
+#
+#     ops.on_error = on_clone_error
+#     ops.on_writable = clone_connected_handler
+#     neat_set_operations(ctx, flow, ops)
+#
+#     neat_open(ctx, flow, endpoint, port, None, 0)
 
 
 def initiate(context, flow, address, port, stream_count=None):

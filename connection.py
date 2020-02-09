@@ -17,10 +17,11 @@ from enumerations import *
 Message_queue_object = Tuple[bytes, MessageContext]
 Batch_struct = List[Message_queue_object]
 
-
 class Connection:
     connection_list = {}
     receive_buffer_size = 32 * 1024 * 1024  # 32MB
+    tmp_clone_obj = None
+    clone_count = 0
 
     def __init__(self, ops, preconnection, connection_type, listener=None):
         # NEAT specific
@@ -140,8 +141,6 @@ class Connection:
         bacth_block()
         self.batch_in_session = False
 
-
-
     def close(self):
         # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
         if self.msg_list or self.messages_passed_to_back_end:
@@ -181,10 +180,23 @@ class Connection:
                 'receive': self.can_be_used_for_receive_data(),
                 'props': self.transport_properties}
 
-    def clone(self):
-        backend.clone(self.__context, self.preconnection.remote_endpoint.address,
-                      self.preconnection.remote_endpoint.port, handle_clone_ready)
-        return NotImplementedError
+    def clone(self, clone_handler):
+        flow = neat_new_flow(self.__context)
+        ops = neat_flow_operations()
+        Connection.clone_count += 1
+
+        Connection.tmp_clone_obj = (self.preconnection, clone_handler)
+
+        ops.on_error = on_clone_error
+        if self.transport_stack is SupportedProtocolStacks.SCTP:
+            ops.on_writable = handle_clone_ready
+        else:
+            ops.on_connected = handle_clone_ready
+        neat_set_operations(self.__context, flow, ops)
+        backend.pass_candidates_to_back_end([self.transport_stack], self.__context, flow)
+
+        neat_open(self.__context, flow, self.preconnection.remote_endpoint.address,
+                  self.preconnection.remote_endpoint.port, None, 0)
 
     # Static methods
     @staticmethod
@@ -195,8 +207,8 @@ class Connection:
 
 def handle_writable(ops):
     try:
-        shim_print("ON WRITABLE CALLBACK")
         connection = Connection.get_connection_by_operations_struct(ops)
+        shim_print(f"ON WRITABLE CALLBACK - {connection}")
 
         # Socket is writable, write if any messages passed to the transport system
         if connection.msg_list:
@@ -264,8 +276,8 @@ def handle_all_written(ops):
 
 def handle_readable(ops):
     try:
-        shim_print("HANDLE READABLE")
         connection: Connection = Connection.get_connection_by_operations_struct(ops)
+        shim_print(f"HANDLE READABLE - connection {connection}")
 
         if connection.receive_request_queue:
             handler, min_length, max_length = connection.receive_request_queue.pop(0)
@@ -279,11 +291,6 @@ def handle_readable(ops):
                 message_context.remote_endpoint = connection.remote_endpoint
                 message_context.local_endpoint = connection.local_endpoint
                 # TODO: Framer logic here...?
-
-
-
-
-
                 handler(connection, msg, message_context)
             elif connection.transport_stack is SupportedProtocolStacks.TCP or connection.transport_stack is SupportedProtocolStacks.MPTCP:
                 if connection.tcp_to_small_queue:
@@ -297,6 +304,9 @@ def handle_readable(ops):
                 else:
                     message_context = MessageContext()  # Todo:
                     handler(connection, msg, message_context)  # TODO: MessageContext
+        else:
+            ops.on_readable = None
+            neat_set_operations(ops.ctx, ops.flow, ops)
     except:
         shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
@@ -308,9 +318,7 @@ def handle_closed(ops):
     try:
         shim_print("HANDLE CLOSED")
         connection = Connection.get_connection_by_operations_struct(ops)
-        res, res_json = neat_get_stats(ops.ctx)
-        json_rep = json.loads(res_json)
-        shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
+
         if connection.event_handler_list[ConnectionEvents.CLOSED] is not None:
             shim_print("CLOSED HANDLER")
             connection.event_handler_list[ConnectionEvents.CLOSED](connection)
@@ -322,25 +330,36 @@ def handle_closed(ops):
                 handler = connection.receive_request_queue.pop(0)[
                     0]  # Should check if there is more than one request in the queue
                 shim_print("Sending leftovers")
-                handler(connection, connection.tcp_to_small_queue.pop())
+                message_context = MessageContext()
+                handler(connection, connection.tcp_to_small_queue.pop(), message_context)
             # "...or if none is available, an indication that there will be no more received Messages."
             else:
                 shim_print(
                     "Connection closed, there will be no more received messages")  # TODO: Should this be thrown as an error (error event?)
-        if connection.connection_type == 'active':  # should check if there is any cloned connections etc...
-            backend.stop(ops.ctx)
+        #if connection.connection_type == 'active':  # should check if there is any cloned connections etc...
+        #    backend.stop(ops.ctx)
     except:
         shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
     return NEAT_OK
 
 
-def handle_clone_ready(ops):
-    shim_print("CLONE IS READY TO GO BABY!!")
-    res, res_json = neat_get_stats(ops.ctx)
-    json_rep = json.loads(res_json)
-    shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
+def on_clone_error(op):
+    shim_print("Clone operation at back end", level="error")
     return NEAT_OK
+
+
+def handle_clone_ready(op):
+    shim_print("CLONE IS READY TO GO BABY!!")
+
+    pre_con, handler = Connection.tmp_clone_obj
+    cloned_connection = Connection(op, pre_con, 'active')
+    op.on_writable = handle_writable
+    neat_set_operations(op.ctx, op.flow, op)
+
+    handler(cloned_connection)
+    return NEAT_OK
+
 
 
 class ConnectionState(Enum):

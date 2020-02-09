@@ -19,7 +19,7 @@ from enumerations import *
 
 
 def sent_event_handler(connection):
-    connection.close()
+    #connection.close()
     pass
 
 
@@ -33,7 +33,8 @@ def connection_received_handler(connection):
 
 
 def closed_handler(connection):
-    connection.stop_listener()
+    pass
+    #connection.stop_listener()
 
 
 if __name__ == "__main__":
