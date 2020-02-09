@@ -1,5 +1,8 @@
 # coding=utf-8
 # !/usr/bin/env python3
+import inspect
+
+from endpoint import LocalEndpoint, RemoteEndpoint
 from message_context import *
 from neat import *
 import sys
@@ -65,8 +68,32 @@ class Connection:
         json_rep = json.loads(res_json)
         shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
 
-        # Todo: Create local and remote endpoint from JSON (should be its own function)
+        self.local_endpoint = self.crate_and_populate_endpoint()
+        self.remote_endpoint = self.crate_and_populate_endpoint(local=False)
 
+    def crate_and_populate_endpoint(self, local=True):
+        if local:
+            ret = LocalEndpoint()
+            local_ip = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.LOCAL_IP)
+            if local_ip:
+                ret.with_address(local_ip)
+            else:
+                address = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.ADDRESS)
+                if address: ret.with_address(address)
+
+            interface = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.INTERFACE)
+            if interface: ret.with_interface(interface)
+
+            port = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.PORT)
+            if port: ret.with_port(port)
+            return ret
+        else:
+            ret = RemoteEndpoint()
+            hostname = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.DOMAIN_NAME)
+            if hostname: ret.with_hostname(hostname)
+            remote_ip = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.REMOTE_IP)
+            if remote_ip: ret.with_address(remote_ip)
+            return ret
 
     def set_read_only_connection_properties(self):
         try:
@@ -75,7 +102,7 @@ class Connection:
             self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE] = max_recv
             shim_print(f"Send buffer: {self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND]} - Receive buffer: {self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]}")
         except:
-            shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+            shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
 
     def set_property(self, property: GenericConnectionProperties, value):
         GenericConnectionProperties.set_property(self.transport_properties.connection_properties, property, value)
@@ -112,8 +139,6 @@ class Connection:
         self.batch_in_session = True
         bacth_block()
         self.batch_in_session = False
-
-
 
     def close(self):
         # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
@@ -186,7 +211,7 @@ def handle_writable(ops):
                 ops.on_writable = None
                 neat_set_operations(ops.ctx, ops.flow, ops)
     except:
-        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
     return NEAT_OK
 
@@ -196,7 +221,7 @@ def message_passed(ops):
         ops.on_writable = handle_writable
         neat_set_operations(ops.ctx, ops.flow, ops)
     except:
-        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
     return NEAT_OK
 
@@ -206,7 +231,7 @@ def received_called(ops):
         ops.on_readable = handle_readable
         neat_set_operations(ops.ctx, ops.flow, ops)
     except:
-        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
     return NEAT_OK
 
@@ -247,9 +272,8 @@ def handle_readable(ops):
 
             shim_print(f'Message received from stream: {ops.stream_id}')
             # UDP delivers complete messages, ignore length specifiers
-            if connection.transport_stack is SupportedProtocolStacks.UDP or (
-                min_length is None and max_length is None):  # TODO: SCTP here?
-                message_context = MessageContext() # Todo:
+            if connection.transport_stack is SupportedProtocolStacks.UDP or (min_length is None and max_length is None):  # TODO: SCTP here?
+                message_context = MessageContext()  # Todo:
                 handler(connection, msg, message_context)
             elif connection.transport_stack is SupportedProtocolStacks.TCP or connection.transport_stack is SupportedProtocolStacks.MPTCP:
                 if connection.tcp_to_small_queue:
@@ -264,7 +288,7 @@ def handle_readable(ops):
                     message_context = MessageContext()  # Todo:
                     handler(connection, msg, message_context)  # TODO: MessageContext
     except:
-        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
 
     return NEAT_OK
@@ -296,7 +320,7 @@ def handle_closed(ops):
         if connection.connection_type == 'active':  # should check if there is any cloned connections etc...
             backend.stop(ops.ctx)
     except:
-        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+        shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
     return NEAT_OK
 

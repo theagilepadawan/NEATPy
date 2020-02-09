@@ -1,11 +1,8 @@
 import json
-
 from neat import *
 from neat import charArr, new_uint32_tp, neat_read, uint32_tp_value
-from utils import *
 import sys
 from enum import Enum, auto
-
 from utils import shim_print
 
 DEBUG = 0
@@ -21,20 +18,36 @@ def bootstrap_backend():
     return ctx, flow, ops
 
 
-# Not in used at the moment, but could be generalized to get a given property with neat_get_property
-# def get_transport_stack_used(ctx, flow):
-#     buffer = charArr(4)
-#     bytes_read = new_size_tp()
-#     size_tp_assign(bytes_read, 4)
-#
-#     try:
-#         neat_get_stack(flow, buffer, bytes_read)
-#         byte_array = bytearray(size_tp_value(bytes_read))
-#         for i in range(size_tp_value(bytes_read)):
-#             byte_array[i] = buffer[i]
-#         return byte_array.decode()
-#     except:
-#         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
+class BackendProperties(Enum):
+    DOMAIN_NAME = 'domain_name'
+    INTERFACE = 'interface'
+    PORT = 'port'
+    REMOTE_IP = 'remote_ip'
+    LOCAL_IP = 'local_ip'
+    ADDRESS = 'address'
+
+    # Not in used at the moment, but could be generalized to get a given property with neat_get_property
+
+
+def get_backend_prop(ctx, flow, back_end_prop: BackendProperties):
+    buffer = charArr(1000)
+    bytes_read = new_size_tp()
+    size_tp_assign(bytes_read, 1000)
+
+    try:
+        # neat_get_stack(flow, buffer, bytes_read)
+        ret = neat_get_property(ctx, flow, back_end_prop.value, buffer, bytes_read)
+        if ret is NEAT_ERROR_UNABLE:
+            return None
+        byte_array = bytearray(size_tp_value(bytes_read))
+        for i in range(size_tp_value(bytes_read)):
+            byte_array[i] = buffer[i]
+        return byte_array.decode()
+    except UnicodeDecodeError:
+        shim_print(f"PORT: {int.from_bytes(byte_array, byteorder='little', signed=False)}")
+        return int.from_bytes(byte_array, byteorder='little', signed=False)
+    except:
+        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]), level='error')
 
 
 def start(context):
@@ -127,6 +140,7 @@ def pass_candidates_to_back_end(candidates, context, flow):
     if len(candidates) is 1:
         candiates_to_backend = json.dumps({"transport": {"value": candidates.pop(0).name, "precedence": 1}})
     else:
-        candiates_to_backend = json.dumps({"transport": {"value": [candidate.name for candidate in candidates], "precedence": 2}})
+        candiates_to_backend = json.dumps(
+            {"transport": {"value": [candidate.name for candidate in candidates], "precedence": 2}})
     shim_print(candiates_to_backend)
     neat_set_property(context, flow, candiates_to_backend)
