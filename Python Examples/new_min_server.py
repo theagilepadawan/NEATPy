@@ -28,7 +28,7 @@ def connection_received_handler(connection):
         connection.send("No, you're NEAT 🤩".encode('UTF-8'))
 #        shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
         shim_print("Read {} bytes: {}".format(len(message_data), message_data), level="msg")
-        #connection.receive(test)
+        connection.receive(test)
     connection.receive(test)
 
 
