@@ -18,12 +18,17 @@ Message_queue_object = Tuple[bytes, MessageContext]
 Batch_struct = List[Message_queue_object]
 
 class Connection:
+    new_connection_list = {}
     connection_list = {}
     receive_buffer_size = 32 * 1024 * 1024  # 32MB
-    tmp_clone_obj = None
     clone_count = 0
+    indirect = None
+    static_counter = 0
 
-    def __init__(self, ops, preconnection, connection_type, listener=None):
+    clone_callbacks = {}
+
+    def __init__(self, ops, preconnection, connection_type, listener=None, parent=None):
+
         # NEAT specific
         self.__ops = ops
         self.__context = ops.ctx
@@ -31,18 +36,31 @@ class Connection:
         self.transport_stack = SupportedProtocolStacks(ops.transport_protocol)
 
         # Map connection for later callbacks fired
+        Connection.static_counter += 1
+        self.connection_id = Connection.static_counter
+        self.__ops.connection_id = self.connection_id
+        Connection.new_connection_list[self.connection_id] = self
         fd = backend.get_flow_fd(self.__flow)
         Connection.connection_list[fd] = self
 
-        shim_print(f"Connection established - transport used: {self.transport_stack.name}")
+        shim_print(f"Connection [ID: {self.connection_id}] established - transport used: {self.transport_stack.name}", level='msg')
 
         # Python specific
         self.connection_type = connection_type
+        self.clone_counter = 0
         self.test_counter = 0
         self.msg_list = []
         self.messages_passed_to_back_end = []
         self.receive_request_queue = []
         self.tcp_to_small_queue: List[bytes] = []
+        self.connection_group = []
+
+        # if this connection is a result from a clone, add parent
+        if parent:
+            shim_print(f"Connection is a result of cloning - Parent {parent}")
+            self.connection_group.append(parent)
+
+
 
         self.close_called = False
         self.batch_in_session = False
@@ -181,22 +199,35 @@ class Connection:
                 'props': self.transport_properties}
 
     def clone(self, clone_handler):
-        flow = neat_new_flow(self.__context)
-        ops = neat_flow_operations()
-        Connection.clone_count += 1
+        try:
+            shim_print("CLONE")
+            flow = neat_new_flow(self.__context)
+            ops = neat_flow_operations()
 
-        Connection.tmp_clone_obj = (self.preconnection, clone_handler)
+            Connection.clone_count += 1
+            self.clone_counter += 1
+            ops.clone_id = self.clone_counter
+            ops.parent_id = self.connection_id
 
-        ops.on_error = on_clone_error
-        if self.transport_stack is SupportedProtocolStacks.SCTP:
-            ops.on_writable = handle_clone_ready
-        else:
+            if self.connection_id in Connection.clone_callbacks:
+                Connection.clone_callbacks[self.connection_id][self.clone_counter] = clone_handler
+            else:
+                Connection.clone_callbacks[self.connection_id] = {self.clone_counter: clone_handler}
+
+            ops.on_error = on_clone_error
             ops.on_connected = handle_clone_ready
-        neat_set_operations(self.__context, flow, ops)
-        backend.pass_candidates_to_back_end([self.transport_stack], self.__context, flow)
+            neat_set_operations(self.__context, flow, ops)
+            backend.pass_candidates_to_back_end([self.transport_stack], self.__context, flow)
 
-        neat_open(self.__context, flow, self.preconnection.remote_endpoint.address,
+            neat_open(self.__context, flow, self.preconnection.remote_endpoint.address,
                   self.preconnection.remote_endpoint.port, None, 0)
+        except:
+            shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name),level='error')
+            backend.stop(self.__context)
+
+    def add_child(self, child):
+        shim_print("ADDING CHILD IN CONNECTION GROUP")
+        self.connection_group.append(child)
 
     # Static methods
     @staticmethod
@@ -349,17 +380,19 @@ def on_clone_error(op):
     return NEAT_OK
 
 
-def handle_clone_ready(op):
+def handle_clone_ready(ops):
     shim_print("CLONE IS READY TO GO BABY!!")
 
-    pre_con, handler = Connection.tmp_clone_obj
-    cloned_connection = Connection(op, pre_con, 'active')
-    op.on_writable = handle_writable
-    neat_set_operations(op.ctx, op.flow, op)
+    parent = Connection.new_connection_list[ops.parent_id]
+    cloned_connection = Connection(ops, parent.preconnection, 'active', parent=parent)
+    parent.add_child(cloned_connection)
 
+    ops.on_writable = handle_writable
+    neat_set_operations(ops.ctx, ops.flow, ops)
+
+    handler = Connection.clone_callbacks[ops.parent_id][ops.clone_id]
     handler(cloned_connection)
     return NEAT_OK
-
 
 
 class ConnectionState(Enum):
