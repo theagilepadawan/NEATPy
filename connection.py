@@ -22,10 +22,7 @@ class Connection:
     connection_list = {}
     receive_buffer_size = 32 * 1024 * 1024  # 32MB
     clone_count = 0
-    indirect = None
     static_counter = 0
-
-    clone_callbacks = {}
 
     def __init__(self, ops, preconnection, connection_type, listener=None, parent=None):
 
@@ -53,14 +50,13 @@ class Connection:
         self.messages_passed_to_back_end = []
         self.receive_request_queue = []
         self.tcp_to_small_queue: List[bytes] = []
+        self.clone_callbacks = {}
         self.connection_group = []
 
         # if this connection is a result from a clone, add parent
         if parent:
             shim_print(f"Connection is a result of cloning - Parent {parent}")
             self.connection_group.append(parent)
-
-
 
         self.close_called = False
         self.batch_in_session = False
@@ -209,10 +205,7 @@ class Connection:
             ops.clone_id = self.clone_counter
             ops.parent_id = self.connection_id
 
-            if self.connection_id in Connection.clone_callbacks:
-                Connection.clone_callbacks[self.connection_id][self.clone_counter] = clone_handler
-            else:
-                Connection.clone_callbacks[self.connection_id] = {self.clone_counter: clone_handler}
+            self.clone_callbacks[self.clone_counter] = clone_handler
 
             ops.on_error = on_clone_error
             ops.on_connected = handle_clone_ready
@@ -239,7 +232,7 @@ class Connection:
 def handle_writable(ops):
     try:
         connection = Connection.get_connection_by_operations_struct(ops)
-        shim_print(f"ON WRITABLE CALLBACK - {connection}")
+        shim_print(f"ON WRITABLE CALLBACK - connection {connection.connection_id}")
 
         # Socket is writable, write if any messages passed to the transport system
         if connection.msg_list:
@@ -250,10 +243,11 @@ def handle_writable(ops):
                 # Todo: Elegant error handling
             # Keep message until NEAT confirms sending with all_written
             connection.messages_passed_to_back_end.append((message_to_be_sent, context))
-            if not connection.msg_list:
-                # neat_utils.set_neat_callbacks(ops, (NeatCallbacks.ON_WRITABLE, None))
-                ops.on_writable = None
-                neat_set_operations(ops.ctx, ops.flow, ops)
+        else:
+            shim_print("WHAT")
+            # neat_utils.set_neat_callbacks(ops, (NeatCallbacks.ON_WRITABLE, None))
+            ops.on_writable = None
+            neat_set_operations(ops.ctx, ops.flow, ops)
     except:
         shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
@@ -298,6 +292,7 @@ def handle_all_written(ops):
 
         if connection.event_handler_list[ConnectionEvents.SENT] is not None:
             connection.event_handler_list[ConnectionEvents.SENT](connection)
+
     except:
         shim_print("An error occurred: {}".format(sys.exc_info()[0]))
         backend.stop(ops.ctx)
@@ -308,7 +303,7 @@ def handle_all_written(ops):
 def handle_readable(ops):
     try:
         connection: Connection = Connection.get_connection_by_operations_struct(ops)
-        shim_print(f"HANDLE READABLE - connection {connection}")
+        shim_print(f"HANDLE READABLE - connection {connection.connection_id}")
 
         if connection.receive_request_queue:
             handler, min_length, max_length = connection.receive_request_queue.pop(0)
@@ -336,6 +331,8 @@ def handle_readable(ops):
                     message_context = MessageContext()  # Todo:
                     handler(connection, msg, message_context)  # TODO: MessageContext
         else:
+            shim_print("READABLE SET TO NONE - receive queue empty", level='error')
+            import time; time.sleep(2)
             ops.on_readable = None
             neat_set_operations(ops.ctx, ops.flow, ops)
     except:
@@ -390,7 +387,7 @@ def handle_clone_ready(ops):
     ops.on_writable = handle_writable
     neat_set_operations(ops.ctx, ops.flow, ops)
 
-    handler = Connection.clone_callbacks[ops.parent_id][ops.clone_id]
+    handler = parent.clone_callbacks[ops.clone_id]
     handler(cloned_connection)
     return NEAT_OK
 

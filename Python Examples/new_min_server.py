@@ -18,23 +18,26 @@ from transport_properties import *
 from enumerations import *
 
 
+def test(connection, message_data, message_context):
+    connection.send("No, you're NEAT 🤩".encode('UTF-8'))
+    #        shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
+    shim_print("Read {} bytes: {}".format(len(message_data), message_data), level="msg")
+    connection.receive(test)
+
+
 def sent_event_handler(connection):
-    #connection.close()
+    connection.close()
+    #connection.receive(test)
     pass
 
 
 def connection_received_handler(connection):
-    def test(connection, message_data, message_context):
-        connection.send("No, you're NEAT 🤩".encode('UTF-8'))
-#        shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
-        shim_print("Read {} bytes: {}".format(len(message_data), message_data), level="msg")
-        connection.receive(test)
     connection.receive(test)
 
 
 def closed_handler(connection):
     pass
-    #connection.stop_listener()
+    # connection.stop_listener()
 
 
 if __name__ == "__main__":
