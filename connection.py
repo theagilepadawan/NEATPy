@@ -17,8 +17,8 @@ from enumerations import *
 Message_queue_object = Tuple[bytes, MessageContext]
 Batch_struct = List[Message_queue_object]
 
+
 class Connection:
-    new_connection_list = {}
     connection_list = {}
     receive_buffer_size = 32 * 1024 * 1024  # 32MB
     clone_count = 0
@@ -36,9 +36,7 @@ class Connection:
         Connection.static_counter += 1
         self.connection_id = Connection.static_counter
         self.__ops.connection_id = self.connection_id
-        Connection.new_connection_list[self.connection_id] = self
-        fd = backend.get_flow_fd(self.__flow)
-        Connection.connection_list[fd] = self
+        Connection.connection_list[self.connection_id] = self
 
         shim_print(f"Connection [ID: {self.connection_id}] established - transport used: {self.transport_stack.name}", level='msg')
 
@@ -222,16 +220,11 @@ class Connection:
         shim_print("ADDING CHILD IN CONNECTION GROUP")
         self.connection_group.append(child)
 
-    # Static methods
-    @staticmethod
-    def get_connection_by_operations_struct(ops):
-        fd = backend.get_flow_fd(ops.flow)
-        return Connection.connection_list[fd]
-
 
 def handle_writable(ops):
     try:
-        connection = Connection.get_connection_by_operations_struct(ops)
+        connection = Connection.connection_list[ops.connection_id]
+
         shim_print(f"ON WRITABLE CALLBACK - connection {connection.connection_id}")
 
         # Socket is writable, write if any messages passed to the transport system
@@ -278,7 +271,7 @@ def handle_all_written(ops):
     try:
         shim_print("ALL WRITTEN")
         close = False
-        connection = Connection.get_connection_by_operations_struct(ops)
+        connection = Connection.connection_list[ops.connection_id]
         message, message_context = connection.messages_passed_to_back_end.pop(0)
 
         if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
@@ -302,7 +295,7 @@ def handle_all_written(ops):
 
 def handle_readable(ops):
     try:
-        connection: Connection = Connection.get_connection_by_operations_struct(ops)
+        connection = Connection.connection_list[ops.connection_id]
         shim_print(f"HANDLE READABLE - connection {connection.connection_id}")
 
         if connection.receive_request_queue:
@@ -345,7 +338,7 @@ def handle_readable(ops):
 def handle_closed(ops):
     try:
         shim_print("HANDLE CLOSED")
-        connection = Connection.get_connection_by_operations_struct(ops)
+        connection = Connection.connection_list[ops.connection_id]
 
         if connection.event_handler_list[ConnectionEvents.CLOSED] is not None:
             shim_print("CLOSED HANDLER")
@@ -380,7 +373,7 @@ def on_clone_error(op):
 def handle_clone_ready(ops):
     shim_print("CLONE IS READY TO GO BABY!!")
 
-    parent = Connection.new_connection_list[ops.parent_id]
+    parent = Connection.connection_list[ops.parent_id]
     cloned_connection = Connection(ops, parent.preconnection, 'active', parent=parent)
     parent.add_child(cloned_connection)
 
