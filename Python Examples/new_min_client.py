@@ -28,7 +28,7 @@ def ready_handler(connection):  # Handler to be passed to receive
 
     def test(con, message_data, message_context):
         shim_print("Read {} bytes: {}".format(len(message_data), message_data), level="msg")
-        # connection.close()
+        #connection.close()
     if Connection.clone_count == 0:
         connection.receive(test)
 

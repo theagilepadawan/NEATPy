@@ -285,9 +285,9 @@ def received_called(ops):
 
 def handle_all_written(ops):
     try:
-        shim_print("ALL WRITTEN")
         close = False
         connection = Connection.connection_list[ops.connection_id]
+        shim_print(f"ALL WRITTEN - connection {ops.connection_id}")
         message, message_context = connection.messages_passed_to_back_end.pop(0)
 
         if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
@@ -353,8 +353,8 @@ def handle_readable(ops):
 
 def handle_closed(ops):
     try:
-        shim_print("HANDLE CLOSED")
         connection = Connection.connection_list[ops.connection_id]
+        shim_print(f"HANDLE CLOSED - connection {ops.connection_id}")
 
         if connection.event_handler_list[ConnectionEvents.CLOSED] is not None:
             shim_print("CLOSED HANDLER")

@@ -8,7 +8,7 @@ colors = {
     "msg": Fore.BLUE,
     "error": Fore.RED,
 }
-debug = 1 
+debug = 1
 
 def shim_print(main_msg, additional_msg="",  level=None):
     """

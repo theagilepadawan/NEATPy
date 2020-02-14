@@ -22,11 +22,11 @@ def test(connection, message_data, message_context):
     connection.send("No, you're NEAT 🤩".encode('UTF-8'))
     #        shim_print("Read {} bytes: {}".format(len(message), message), level="msg")
     shim_print("Read {} bytes: {}".format(len(message_data), message_data), level="msg")
-    connection.receive(test)
+    #connection.receive(test)
 
 
 def sent_event_handler(connection):
-    connection.close()
+    #connection.close()
     #connection.receive(test)
     pass
 
