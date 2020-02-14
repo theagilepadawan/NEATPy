@@ -65,18 +65,18 @@ class GenericConnectionProperties(Enum):
         else:
             if prop_to_set is GenericConnectionProperties.USER_TIMEOUT_TCP:
                 GenericConnectionProperties.set_tcp_uto(connection_props, value)
-
-            connection_props[prop_to_set] = value
+            else:
+                connection_props[prop_to_set] = value
 
     @staticmethod
     def set_tcp_uto(connection_props, values):
         prev_timeout_val = connection_props[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.ADVERTISED_USER_TIMEOUT]
         prev_enabled_bool = connection_props[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.USER_TIMEOUT_ENABLED]
 
-        if sys.platform is not 'linux':
+        if sys.platform != 'linux':
             shim_print("TCP UTO is only available on Linux", level='error')
             return
-        for tcp_uto_parameter, tcp_uto_value in values:
+        for tcp_uto_parameter, tcp_uto_value in values.items():
             if tcp_uto_parameter is TCPUserTimeout.ADVERTISED_USER_TIMEOUT:
                 connection_props[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.ADVERTISED_USER_TIMEOUT] = tcp_uto_value
             elif tcp_uto_parameter is TCPUserTimeout.USER_TIMEOUT_ENABLED:

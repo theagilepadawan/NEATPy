@@ -87,7 +87,7 @@ class Connection:
         # Protocol stack specific logic
         # Set TCP UTO if enabled
         if self.transport_stack is SupportedProtocolStacks.TCP:
-            is_linux = sys.platform is 'linux'
+            is_linux = sys.platform == 'linux'
             uto_enabled = self.transport_properties.connection_properties[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.USER_TIMEOUT_ENABLED]
             if is_linux and uto_enabled:
                 new_timeout = self.transport_properties.connection_properties[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.ADVERTISED_USER_TIMEOUT]
