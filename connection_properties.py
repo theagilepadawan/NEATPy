@@ -16,12 +16,7 @@ class GenericConnectionProperties(Enum):
     BOUNDS_ON_SEND_OR_RECEIVE_RATE = 'max-send-rate / max-recv-rate'
     USER_TIMEOUT_TCP = 'tcp-uto'  # Add three members here?
 
-    read_only_props = [
-        MAXIMUM_MESSAGE_SIZE_ON_SEND,
-        MAXIMUM_MESSAGE_SIZE_ON_RECEIVE,
-        MAXIMUM_MESSAGE_SIZE_BEFORE_FRAGMENTATION_OR_SEGMENTATION,
-        MAXIMUM_MESSAGE_SIZE_CONCURRENT_WITH_CONNECTION_ESTABLISHMENT
-    ]
+
 
     def __str__(self):
         return self.value
@@ -53,7 +48,13 @@ class GenericConnectionProperties(Enum):
 
     @staticmethod
     def is_read_only(connection_property):
-        return connection_property in GenericConnectionProperties.read_only_props
+        read_only_props = [
+            GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND,
+            GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE,
+            GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_BEFORE_FRAGMENTATION_OR_SEGMENTATION,
+            GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_CONCURRENT_WITH_CONNECTION_ESTABLISHMENT
+        ]
+        return connection_property in read_only_props
 
     @staticmethod
     def set_property(connection_props, prop_to_set, value):

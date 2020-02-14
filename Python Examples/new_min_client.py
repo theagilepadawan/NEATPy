@@ -64,12 +64,13 @@ if __name__ == "__main__":
         profile = profiles_dict[sys.argv[1]]
 
     tp = TransportProperties(profile)
+    tp.add(GenericConnectionProperties.USER_TIMEOUT_TCP, {TCPUserTimeout.USER_TIMEOUT_ENABLED: True})
 
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
 
     preconnection.set_event_handler(ConnectionEvents.RECEIVED, handle_received)
     preconnection.set_event_handler(ConnectionEvents.READY, ready_handler)
-    
+
 
     preconnection.initiate()
     print(f'Seconds elapsed: {time.time() - start}')
