@@ -45,7 +45,7 @@ def ready_handler(connection):  # Handler to be passed to receive
 
     if Connection.clone_count == 0:
         connection.clone(clone_handler)
-        connection.clone(clone_handler_2)
+        #connection.clone(clone_handler_2)
         connection.send("Hello from first connection 😏".encode('UTF-8'))
 
 

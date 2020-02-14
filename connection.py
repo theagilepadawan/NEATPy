@@ -79,7 +79,7 @@ class Connection:
         neat_set_operations(ops.ctx, ops.flow, ops)
         res, res_json = neat_get_stats(self.__context)
         json_rep = json.loads(res_json)
-        shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
+#        shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
 
         self.local_endpoint = self.crate_and_populate_endpoint()
         self.remote_endpoint = self.crate_and_populate_endpoint(local=False)
@@ -344,8 +344,10 @@ def handle_readable(ops):
             import time; time.sleep(2)
             ops.on_readable = None
             neat_set_operations(ops.ctx, ops.flow, ops)
-    except:
-        shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
+    except SystemError:
+        return NEAT_OK
+    except Exception as es:
+        shim_print("An error occurred in the Python callback: {}  {} - {}".format(sys.exc_info()[0], es.args, inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
 
     return NEAT_OK

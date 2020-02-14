@@ -14,7 +14,6 @@ def bootstrap_backend():
     ops = neat_flow_operations()
     neat_log_level(ctx, NEAT_LOG_INFO)
     neat_set_operations(ctx, flow, ops)
-
     return ctx, flow, ops
 
 
