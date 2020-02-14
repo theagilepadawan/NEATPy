@@ -137,7 +137,7 @@ class Connection:
         # Then set the property for the given connection
         GenericConnectionProperties.set_property(self.transport_properties.connection_properties, connection_property, value)
 
-    def send(self, message_data, message_context=MessageContext(), end_of_message=True):
+    def send(self, message_data, sent_handler, message_context=MessageContext(), end_of_message=True):
         shim_print("SEND CALLED")
 
         # If the connection is closed, prohibit further sending
@@ -152,7 +152,7 @@ class Connection:
             else:
                 self.msg_list.append([message_data, message_context])
         else:
-            self.msg_list.append((message_data, message_context))
+            self.msg_list.append((message_data, message_context, sent_handler))
         message_passed(self.__ops)
 
     def receive(self, handler, min_incomplete_length=None, max_length=None):
@@ -247,12 +247,12 @@ def handle_writable(ops):
         # Socket is writable, write if any messages passed to the transport system
         if connection.msg_list:
             # Todo: Should we do coalescing of batch sends here?
-            message_to_be_sent, context = connection.msg_list.pop(0)
+            message_to_be_sent, context, handler = connection.msg_list.pop(0)
             if backend.write(ops, message_to_be_sent):
                 shim_print("Neat failed while writing")
                 # Todo: Elegant error handling
             # Keep message until NEAT confirms sending with all_written
-            connection.messages_passed_to_back_end.append((message_to_be_sent, context))
+            connection.messages_passed_to_back_end.append((message_to_be_sent, context, handler))
         else:
             shim_print("WHAT")
             ops.on_writable = None
@@ -288,7 +288,7 @@ def handle_all_written(ops):
         close = False
         connection = Connection.connection_list[ops.connection_id]
         shim_print(f"ALL WRITTEN - connection {ops.connection_id}")
-        message, message_context = connection.messages_passed_to_back_end.pop(0)
+        message, message_context, handler = connection.messages_passed_to_back_end.pop(0)
 
         if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
             shim_print("All messages passed down to the network layer - calling close")
@@ -299,8 +299,8 @@ def handle_all_written(ops):
         if close:
             neat_close(connection.__ops.ctx, connection.__ops.flow)
 
-        if connection.event_handler_list[ConnectionEvents.SENT] is not None:
-            connection.event_handler_list[ConnectionEvents.SENT](connection)
+        if handler:
+            handler(connection)
 
     except:
         shim_print("An error occurred: {}".format(sys.exc_info()[0]))
