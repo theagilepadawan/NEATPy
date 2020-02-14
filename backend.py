@@ -150,3 +150,9 @@ def pass_candidates_to_back_end(candidates, context, flow):
             {"transport": {"value": [candidate.name for candidate in candidates], "precedence": 2}})
     shim_print(candiates_to_backend)
     neat_set_property(context, flow, candiates_to_backend)
+
+
+def set_timeout(context, flow, new_timeout):
+    if neat_change_timeout(context, flow, new_timeout):
+        shim_print("Changing timeout failed at back-end", level='error')
+    shim_print(f"Timeout changed to {new_timeout} seconds")

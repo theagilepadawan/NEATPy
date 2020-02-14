@@ -63,7 +63,7 @@ class Connection:
         self.preconnection = preconnection
         self.listener = listener
         self.transport_properties: TransportProperties = copy.deepcopy(self.preconnection.transport_properties)
-        self.set_read_only_connection_properties()
+        self.set_connection_properties()
         self.state = ConnectionState.ESTABLISHED
 
         self.event_handler_list = preconnection.event_handler_list
@@ -83,6 +83,16 @@ class Connection:
 
         self.local_endpoint = self.crate_and_populate_endpoint()
         self.remote_endpoint = self.crate_and_populate_endpoint(local=False)
+
+        # Protocol stack specific logic
+        # Set TCP UTO if enabled
+        if self.transport_stack is SupportedProtocolStacks.TCP:
+            is_linux = sys.platform is 'linux'
+            uto_enabled = self.transport_properties.connection_properties[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.USER_TIMEOUT_ENABLED]
+            if is_linux and uto_enabled:
+                new_timeout = self.transport_properties.connection_properties[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.ADVERTISED_USER_TIMEOUT]
+                backend.set_timeout(self.__context, self.__flow, new_timeout)
+
 
     def crate_and_populate_endpoint(self, local=True):
         if local:
@@ -108,17 +118,24 @@ class Connection:
             if remote_ip: ret.with_address(remote_ip)
             return ret
 
-    def set_read_only_connection_properties(self):
+    def set_connection_properties(self):
         try:
             (max_send, max_recv) = neat_get_max_buffer_sizes(self.__flow)
             self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND] = max_send
             self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE] = max_recv
+
+
             shim_print(f"Send buffer: {self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND]} - Receive buffer: {self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]}")
         except:
             shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
 
-    def set_property(self, property: GenericConnectionProperties, value):
-        GenericConnectionProperties.set_property(self.transport_properties.connection_properties, property, value)
+    def set_property(self, connection_property: GenericConnectionProperties, value):
+        # If the connection is part of a connection group set the property for all of the entangled connections
+        if self.connection_group:
+            for connection in self.connection_group:
+                GenericConnectionProperties.set_property(connection.transport_properties.connection_properties, connection_property, value)
+        # Then set the property for the given connection
+        GenericConnectionProperties.set_property(self.transport_properties.connection_properties, connection_property, value)
 
     def send(self, message_data, message_context=MessageContext(), end_of_message=True):
         shim_print("SEND CALLED")
@@ -238,7 +255,6 @@ def handle_writable(ops):
             connection.messages_passed_to_back_end.append((message_to_be_sent, context))
         else:
             shim_print("WHAT")
-            # neat_utils.set_neat_callbacks(ops, (NeatCallbacks.ON_WRITABLE, None))
             ops.on_writable = None
             neat_set_operations(ops.ctx, ops.flow, ops)
     except:
