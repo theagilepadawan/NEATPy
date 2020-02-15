@@ -28,6 +28,7 @@ def ready_handler(connection):  # Handler to be passed to receive
 
     def test(con, message_data, message_context):
         shim_print("Read {} bytes: {}".format(len(message_data), message_data), level="msg")
+        con.receive(test)
 
     def clone_test(connection, message_data, message_context):
         shim_print("CLONE read {} bytes: {}".format(len(message_data), message_data), level="msg")
@@ -56,8 +57,9 @@ if __name__ == "__main__":
     }
 
     ep = RemoteEndpoint()
-    ep.with_address("127.0.0.1")
-    ep.with_port(5000)
+    ep.with_address("192.168.0.120")
+    ep.with_port(6000)
+    ep.with_interface("lo0")
 
     profile = None
     if len(sys.argv) > 1:
@@ -71,5 +73,5 @@ if __name__ == "__main__":
     preconnection.set_event_handler(ConnectionEvents.RECEIVED, handle_received)
     preconnection.set_event_handler(ConnectionEvents.READY, ready_handler)
 
-    preconnection.initiate(timeout=0.0012)
+    preconnection.initiate()
     print(f'Seconds elapsed: {time.time() - start}')

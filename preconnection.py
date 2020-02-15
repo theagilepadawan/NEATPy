@@ -85,6 +85,9 @@ class Preconnection:
         if timeout:
             set_initiate_timer(self.__context, self.__flow, self.__ops, timeout)
 
+        if self.remote_endpoint.interface:
+            send = json.dumps({"interface": {"value": self.remote_endpoint.interface, "precedence": 1}})
+            neat_set_property(self.__context, self.__flow, send)
         backend.start(self.__context)
         backend.clean_up(self.__context)
 
@@ -96,7 +99,7 @@ class Preconnection:
     """
     def listen(self):
         if not self.local_endpoint:
-            shim_print("Initiate error - Local Endpoint MUST be specified if when calling listen on the preconnection", level="error")
+            shim_print("Listen error - Local Endpoint MUST be specified if when calling listen on the preconnection", level="error")
             backend.clean_up(self.__context)
             sys.exit(1)
 
@@ -104,7 +107,7 @@ class Preconnection:
         if candidates is None:
             # "An InitiateError occurs either when the set of transport properties and security
             #  parameters cannot be fulfilled on a connection
-            shim_print("Initiate error - No stacks meeting the given constraints by properties", level="error")
+            shim_print("Listen error - No stacks meeting the given constraints by properties", level="error")
             # Todo: call eventual event handler
             return
 
