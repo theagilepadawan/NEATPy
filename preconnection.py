@@ -1,4 +1,5 @@
 # coding=utf-8
+import threading
 
 from neat import *
 from connection import *
@@ -47,7 +48,7 @@ class Preconnection:
     Connection requests. Active open is used by clients in client-server interactions.
     """
 
-    def initiate(self):
+    def initiate(self, timeout=None):
         if not self.remote_endpoint:
             shim_print("Initiate error - Remote Endpoint MUST be specified if when calling initiate on the preconnection", level="error")
             backend.clean_up(self.__context)
@@ -58,9 +59,16 @@ class Preconnection:
             backend.stop(self.__context)
             return NEAT_OK
 
+        def on_initiate_timeout(ops):
+            shim_print("Timeout - aborting Active open", level="error")
+            backend.stop(self.__context)
+            return NEAT_OK
+
         self.__ops.on_error = on_initiate_error
+        self.__ops.on_timeout = on_initiate_timeout
         self.__ops.on_connected = self.client_on_connected
         neat_set_operations(self.__context, self.__flow, self.__ops)
+
 
         candidates = self.transport_properties.select_protocol_stacks_with_selection_properties()
 
@@ -73,7 +81,10 @@ class Preconnection:
 
         backend.pass_candidates_to_back_end(candidates, self.__context, self.__flow)
         if backend.initiate(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, 100):
-            ""
+            pass
+        if timeout:
+            set_initiate_timer(self.__context, self.__flow, self.__ops, timeout)
+
         backend.start(self.__context)
         backend.clean_up(self.__context)
 

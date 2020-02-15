@@ -42,8 +42,8 @@ def ready_handler(connection):  # Handler to be passed to receive
 
     if Connection.clone_count == 0:
         connection.receive(test)
-       # connection.clone(clone_handler)
-       # connection.clone(clone_handler_2)
+        # connection.clone(clone_handler)
+        # connection.clone(clone_handler_2)
         connection.send("Hello from first connection 😏".encode('UTF-8'), None)
 
 
@@ -71,6 +71,5 @@ if __name__ == "__main__":
     preconnection.set_event_handler(ConnectionEvents.RECEIVED, handle_received)
     preconnection.set_event_handler(ConnectionEvents.READY, ready_handler)
 
-
-    preconnection.initiate()
+    preconnection.initiate(timeout=0.0012)
     print(f'Seconds elapsed: {time.time() - start}')
