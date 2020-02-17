@@ -30,7 +30,7 @@ def test(connection, message, message_context):
 
 
 def ready_handler(connection):
-    connection.send(b"GET / HTTP/1.1\r\nHost: weevil.info\r\nUser-agent: libneat\r\nConnection: close\r\n\r\n")
+    connection.send(b"GET / HTTP/1.1\r\nHost: weevil.info\r\nUser-agent: libneat\r\nConnection: close\r\n\r\n", None)
     connection.receive(test, min_incomplete_length=50000)
 
 

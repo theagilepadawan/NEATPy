@@ -57,8 +57,8 @@ if __name__ == "__main__":
     }
 
     ep = RemoteEndpoint()
-    ep.with_address("192.168.0.120")
-    ep.with_port(6000)
+    ep.with_address("127.0.0.1")
+    ep.with_port(5000)
     ep.with_interface("lo0")
 
     profile = None
