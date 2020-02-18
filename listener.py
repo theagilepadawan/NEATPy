@@ -51,6 +51,7 @@ class Listener():
         listener = Listener.listener_list[0]
         if listener.connection_limit > listener.number_of_connections:
             listener.number_of_connections += 1
+
             new_connection = Connection(ops, listener.preconnection, 'passive', listener)
         else:
             shim_print("Connection limit is reached!")

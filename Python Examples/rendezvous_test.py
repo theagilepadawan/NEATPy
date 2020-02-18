@@ -50,28 +50,20 @@ def ready_handler(connection):  # Handler to be passed to receive
 
 if __name__ == "__main__":
     start = int(time.time())
-    profiles_dict = {
-        "udp": TransportPropertyProfiles.UNRELIABLE_DATAGRAM,
-        "tcp": TransportPropertyProfiles.RELIABLE_INORDER_STREAM,
-        "sctp": TransportPropertyProfiles.RELIABLE_MESSAGE
-    }
+
+    local_specifier = LocalEndpoint()
+    local_specifier.with_port(5000)
 
     ep = RemoteEndpoint()
-    ep.with_address("127.0.0.1")
-    ep.with_port(5000)
-    ep.with_interface("lo0")
+    ep.with_address("weevil.info")
+    ep.with_port(80)
 
-    profile = None
-    if len(sys.argv) > 1:
-        profile = profiles_dict[sys.argv[1]]
+    tp = TransportProperties('tcp')
 
-    tp = TransportProperties(profile)
-    tp.add(GenericConnectionProperties.USER_TIMEOUT_TCP, {TCPUserTimeout.USER_TIMEOUT_ENABLED: True})
-
-    preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
+    preconnection = Preconnection(local_endpoint=local_specifier, remote_endpoint=ep, transport_properties=tp)
 
     preconnection.set_event_handler(ConnectionEvents.RECEIVED, handle_received)
     preconnection.set_event_handler(ConnectionEvents.READY, ready_handler)
 
-    preconnection.initiate()
+    preconnection.rendezvous()
     print(f'Seconds elapsed: {time.time() - start}')

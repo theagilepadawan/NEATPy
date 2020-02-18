@@ -14,7 +14,6 @@ def bootstrap_backend():
     ops = neat_flow_operations()
     neat_log_level(ctx, NEAT_LOG_DEBUG)
     neat_set_operations(ctx, flow, ops)
-
     return ctx, flow, ops
 
 
@@ -62,19 +61,19 @@ def clean_up(context):
     neat_free_ctx(context)
 
 
-def clone(ctx, endpoint, port, clone_connected_handler):
-    flow = neat_new_flow(ctx)
-    ops = neat_flow_operations()
-
-    def on_clone_error(op):
-        shim_print("Clone opertion at back end", level="error")
-        return NEAT_OK
-
-    ops.on_error = on_clone_error
-    ops.on_writable = clone_connected_handler
-    neat_set_operations(ctx, flow, ops)
-
-    neat_open(ctx, flow, endpoint, port, None, 0)
+# def clone(ctx, endpoint, port, clone_connected_handler):
+#     flow = neat_new_flow(ctx)
+#     ops = neat_flow_operations()
+#
+#     def on_clone_error(op):
+#         shim_print("Clone opertion at back end", level="error")
+#         return NEAT_OK
+#
+#     ops.on_error = on_clone_error
+#     ops.on_writable = clone_connected_handler
+#     neat_set_operations(ctx, flow, ops)
+#
+#     neat_open(ctx, flow, endpoint, port, None, 0)
 
 
 def initiate(context, flow, address, port, stream_count=None):
@@ -92,10 +91,6 @@ def initiate(context, flow, address, port, stream_count=None):
 
 def abort(context, flow):
     neat_abort(context, flow)
-
-
-def get_flow_fd(flow):
-    return neat_get_socket_fd(flow)
 
 
 def read(ops, size):
@@ -154,3 +149,9 @@ def pass_candidates_to_back_end(candidates, context, flow):
             {"transport": {"value": [candidate.name for candidate in candidates], "precedence": 2}})
     shim_print(candiates_to_backend)
     neat_set_property(context, flow, candiates_to_backend)
+
+
+def set_timeout(context, flow, new_timeout):
+    if neat_change_timeout(context, flow, new_timeout):
+        shim_print("Changing timeout failed at back-end", level='error')
+    shim_print(f"Timeout changed to {new_timeout} seconds")

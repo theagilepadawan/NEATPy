@@ -28,24 +28,25 @@ def ready_handler(connection):  # Handler to be passed to receive
 
     def test(con, message_data, message_context):
         shim_print("Read {} bytes: {}".format(len(message_data), message_data), level="msg")
-        con.receive(test)
+        # connection.close()
+    if Connection.clone_count == 0:
+        connection.receive(test)
 
     def clone_test(connection, message_data, message_context):
         shim_print("CLONE read {} bytes: {}".format(len(message_data), message_data), level="msg")
 
     def clone_handler(con):
-        con.send("Hello from cloned connection 😅".encode('UTF-8'), None)
+        con.send("Hello from cloned connection 😅".encode('UTF-8'))
         con.receive(clone_test)
 
     def clone_handler_2(con):
-        con.send("Hello from another cloned connection 😅".encode('UTF-8'), None)
+        con.send("Hello from another cloned connection 😅".encode('UTF-8'))
         con.receive(clone_test)
 
     if Connection.clone_count == 0:
-        connection.receive(test)
-        # connection.clone(clone_handler)
-        # connection.clone(clone_handler_2)
-        connection.send("Hello from first connection 😏".encode('UTF-8'), None)
+        connection.clone(clone_handler)
+        connection.clone(clone_handler_2)
+        connection.send("Hello from first connection 😏".encode('UTF-8'))
 
 
 if __name__ == "__main__":
@@ -59,14 +60,12 @@ if __name__ == "__main__":
     ep = RemoteEndpoint()
     ep.with_address("127.0.0.1")
     ep.with_port(5000)
-    ep.with_interface("lo0")
 
     profile = None
     if len(sys.argv) > 1:
         profile = profiles_dict[sys.argv[1]]
 
     tp = TransportProperties(profile)
-    tp.add(GenericConnectionProperties.USER_TIMEOUT_TCP, {TCPUserTimeout.USER_TIMEOUT_ENABLED: True})
 
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
 

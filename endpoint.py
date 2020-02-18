@@ -14,6 +14,7 @@ class LocalEndpoint:
         self.interface = None
         self.port = None
         self.address = None
+        self.interface = None
 
     def with_interface(self, interface):
         """Specifies which interface the local endpoint should use.
@@ -51,6 +52,7 @@ class RemoteEndpoint:
         self.address = None
         self.port = None
         self.host_name = None
+        self.interface = None
 
     def with_address(self, address):
         """Specifies which address the remote endpoint should have.
@@ -77,3 +79,5 @@ class RemoteEndpoint:
         """
         self.port = portNumber
 
+    def with_interface(self, interface):
+        self.interface = interface
