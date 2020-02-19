@@ -19,6 +19,10 @@ class AddressPreference(Enum):
     TEMPORARY = auto()
 
 
+class AdditionalServices(Enum):
+    PROTECTION_AGAINST_DUPLICATED_MESSAGES = auto()
+
+
 class SupportedProtocolStacks(Enum):
     UDP = 1
     TCP = 3
@@ -45,6 +49,7 @@ class SupportedProtocolStacks(Enum):
                 SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE,  # add proper defaults
                 SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
                 SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
+                AdditionalServices.PROTECTION_AGAINST_DUPLICATED_MESSAGES: ServiceLevel.INTRINSIC_SERVICE
             },
 
             SupportedProtocolStacks.SCTP: {
@@ -61,6 +66,7 @@ class SupportedProtocolStacks(Enum):
                 SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE,
                 SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
                 SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.OPTIONAL,
+                AdditionalServices.PROTECTION_AGAINST_DUPLICATED_MESSAGES: ServiceLevel.INTRINSIC_SERVICE
             },
 
             SupportedProtocolStacks.UDP: {
@@ -77,6 +83,7 @@ class SupportedProtocolStacks(Enum):
                 SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE,
                 SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.NOT_PROVIDED,
                 SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
+                AdditionalServices.PROTECTION_AGAINST_DUPLICATED_MESSAGES: ServiceLevel.NOT_PROVIDED
             }
         }
         return protocols_services[stack][service].value
@@ -110,8 +117,6 @@ class PreferenceLevel(Enum):
     IGNORE = 0
     AVOID = -1
     PROHIBIT = -2
-
-
 
 
 class CapacityProfiles(Enum):

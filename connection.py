@@ -68,6 +68,7 @@ class Connection:
         self.close_called = False
         self.batch_in_session = False
         self.final_message_received = False
+        self.final_message_passed = False
 
         self.preconnection = preconnection
         self.listener = listener
@@ -88,7 +89,7 @@ class Connection:
         neat_set_operations(ops.ctx, ops.flow, ops)
         res, res_json = neat_get_stats(self.__context)
         json_rep = json.loads(res_json)
-#        shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
+        shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
 
         self.local_endpoint = self.crate_and_populate_endpoint()
         self.remote_endpoint = self.crate_and_populate_endpoint(local=False)
@@ -153,11 +154,23 @@ class Connection:
             shim_print("Closed is called, no further sending is possible")
             return
 
+        # "If another Message is sent after a Message marked as Final has already been sent on a Connection
+        #  the Send Action for the new Message will cause a SendError Event"
+        if self.final_message_passed:
+            shim_print("Send error - Message marked final already sent", level='error')
+
         # Check if lifetime is set
         expired_epoch = None
         if message_context.props[MessageProperties.LIFETIME] < math.inf:
             expired_epoch = int(time.time()) + message_context.props[MessageProperties.LIFETIME]
             shim_print(f"Send Actions expires {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expired_epoch))}")
+
+        # "A final message must always be sorted to the end of the list
+        if message_context.props[MessageProperties.FINAL]:
+            priority = math.inf
+            self.final_message_passed = True
+        else:
+            priority = -message_context.props[MessageProperties.PRIORITY]
 
         if self.batch_in_session:
             # Check if batch_struct is already present (i.e if this is the first send in batch or not)
@@ -166,7 +179,7 @@ class Connection:
             else:
                 self.msg_list.append([message_data, message_context])   # TODO: Remember handler
         else:
-            item = MessageQueueObject(-message_context.props[MessageProperties.PRIORITY], (message_data, message_context, sent_handler, expired_epoch))
+            item = MessageQueueObject(priority, (message_data, message_context, sent_handler, expired_epoch))
             self.msg_list.put(item)
         message_passed(self.__ops)
 
@@ -256,7 +269,11 @@ class Connection:
         inconsistencies = ""
         # Check if lifetime is infinite, if so, check if stack provides reliability
         if props[MessageProperties.LIFETIME] == math.inf and SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.RELIABILITY) < ServiceLevel.OPTIONAL.value:
-            inconsistencies += "\n- Protocol stack does not provide a reliable service - message lifetime set to infinity"
+            inconsistencies += "\n- Protocol stack does not provide a reliable service while message lifetime set to infinity"
+        if props[MessageProperties.IDEMPOTENT] is False and SupportedProtocolStacks.get_service_level(self.transport_stack, AdditionalServices.PROTECTION_AGAINST_DUPLICATED_MESSAGES) == ServiceLevel.NOT_PROVIDED.value:
+            inconsistencies += "\n- Message property idempotent is disabled while the connection does not protect against duplicated messages"
+        if props[MessageProperties.RELIABLE_DATA_TRANSFER] is True and self.transport_properties.selection_properties[SelectionProperties.RELIABILITY] != PreferenceLevel.REQUIRE:
+            inconsistencies += "\n- Reliable data transfer for message set to true - Reliability for connection was not enabled for connection"
         return inconsistencies
 
 
@@ -335,7 +352,7 @@ def handle_all_written(ops):
             shim_print("All messages passed down to the network layer - calling close")
             close = True
         elif message_context.props[MessageProperties.FINAL] is True:
-            shim_print("Message is marked final, closing connection")
+            shim_print("Message marked final has been completely sent, closing connection / sending FIN")
             close = True
         if close:
             neat_close(connection.__ops.ctx, connection.__ops.flow)
