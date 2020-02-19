@@ -2,6 +2,7 @@ import sys
 from enum import Enum, auto
 import math, os
 
+from selection_properties import SelectionProperties
 from utils import shim_print
 
 
@@ -23,9 +24,62 @@ class SupportedProtocolStacks(Enum):
     TCP = 3
     MPTCP = 4
     SCTP = 5
-
     # SCTP_UDP = "SCTP/UDP"
     # UDP_LITE = "UDP-Lite"
+
+    @staticmethod
+    def get_service_level(stack, service):
+        protocols_services = {
+            SupportedProtocolStacks.TCP: {
+                SelectionProperties.RELIABILITY: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.PRESERVE_MSG_BOUNDARIES: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.PER_MSG_RELIABILITY: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.PRESERVE_ORDER: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.ZERO_RTT_MSG: ServiceLevel.OPTIONAL,
+                SelectionProperties.MULTISTREAMING: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.PER_MSG_CHECKSUM_LEN_SEND: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.CONGESTION_CONTROL: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.MULTIPATH: ServiceLevel.OPTIONAL,
+                # should be not provided and add MTPCP as standalone stack?
+                SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE,  # add proper defaults
+                SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
+            },
+
+            SupportedProtocolStacks.SCTP: {
+                SelectionProperties.RELIABILITY: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.PRESERVE_MSG_BOUNDARIES: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.PER_MSG_RELIABILITY: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.PRESERVE_ORDER: ServiceLevel.OPTIONAL,
+                SelectionProperties.ZERO_RTT_MSG: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.MULTISTREAMING: ServiceLevel.OPTIONAL,
+                SelectionProperties.PER_MSG_CHECKSUM_LEN_SEND: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.CONGESTION_CONTROL: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.MULTIPATH: ServiceLevel.OPTIONAL,
+                SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.OPTIONAL,
+            },
+
+            SupportedProtocolStacks.UDP: {
+                SelectionProperties.RELIABILITY: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.PRESERVE_MSG_BOUNDARIES: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.PER_MSG_RELIABILITY: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.PRESERVE_ORDER: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.ZERO_RTT_MSG: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.MULTISTREAMING: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.PER_MSG_CHECKSUM_LEN_SEND: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.CONGESTION_CONTROL: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.MULTIPATH: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.DIRECTION: ServiceLevel.INTRINSIC_SERVICE,
+                SelectionProperties.RETRANSMIT_NOTIFY: ServiceLevel.NOT_PROVIDED,
+                SelectionProperties.SOFT_ERROR_NOTIFY: ServiceLevel.INTRINSIC_SERVICE,
+            }
+        }
+        return protocols_services[stack][service].value
 
     @staticmethod
     def get_protocol_stacks_on_system():
@@ -58,23 +112,6 @@ class PreferenceLevel(Enum):
     PROHIBIT = -2
 
 
-class CommunicationDirections(Enum):
-    """
-    [From draft-ietf-taps-interface-latest - https://ietf-tapswg.github.io/api-drafts/draft-ietf-taps-interface.html]
-    << This property specifies whether an application wants to use the connection for sending and/or receiving data.
-    Possible values are: Bidirectional: The connection must support sending and receiving data
-
-    Unidirectional send:
-    The connection must support sending data, and the application cannot use the connection to receive any data
-
-    Unidirectional receive: The connection must support receiving data, and the application cannot use the connection
-    to send any data The default is bidirectional. Since unidirectional communication can be supported by transports
-    offering bidirectional communication, specifying unidirectional communication may cause a transport stack that
-    supports bidirectional communication to be selected. >>
-    """
-    BIDIRECTIONAL = auto()
-    UNIDIRECTIONAL_SEND = auto()
-    UNIDIRECTIONAL_RECEIVE = auto()
 
 
 class CapacityProfiles(Enum):

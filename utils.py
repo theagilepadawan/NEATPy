@@ -34,9 +34,9 @@ Utility function used for printing / debugging
     print(f'{"*" * stars} NEAT PYTHON SHIM {starsRight}')
     print()
     print(f"🐍 ({datetime.datetime.now()}) - [{main_msg}{Fore.RESET}{color}]")
-    print()
     if additional_msg:
-        print(f'{additional_msg}')
+        print(f'{Fore.LIGHTMAGENTA_EX}{additional_msg}{Fore.RESET}{color}')
+    print()
     print("*" * cols)
     print(Fore.RESET)
     #mport time; time.sleep(5)
