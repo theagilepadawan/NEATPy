@@ -1,3 +1,4 @@
+import inspect
 import json
 from neat import *
 from neat import charArr, new_uint32_tp, neat_read, uint32_tp_value
@@ -110,11 +111,10 @@ def read(ops, size):
 
 def write(ops, message):
     try:
-        neat_write(ops.ctx, ops.flow, message, len(message), None, 0)
+        return neat_write(ops.ctx, ops.flow, message, len(message), None, 0)
     except:
-        shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
-        return 1
-    return 0
+        shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
+        stop(ops.ctx)
 
 
 def set_neat_callbacks(ops, *callbacks):

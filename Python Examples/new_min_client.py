@@ -45,7 +45,9 @@ def ready_handler(connection):  # Handler to be passed to receive
         connection.receive(test)
         # connection.clone(clone_handler)
         # connection.clone(clone_handler_2)
-        connection.send("Hello from first connection 😏".encode('UTF-8'), None)
+        msg_ctx = MessageContext()
+        #msg_ctx.add(MessageProperties.LIFETIME, 10)
+        connection.send("Hello from first connection 😏".encode('UTF-8'), None, message_context=msg_ctx)
 
 
 if __name__ == "__main__":

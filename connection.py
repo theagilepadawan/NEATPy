@@ -1,6 +1,7 @@
 # coding=utf-8
 # !/usr/bin/env python3
 import inspect
+import time
 
 from endpoint import LocalEndpoint, RemoteEndpoint
 from message_context import *
@@ -93,7 +94,6 @@ class Connection:
                 new_timeout = self.transport_properties.connection_properties[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.ADVERTISED_USER_TIMEOUT]
                 backend.set_timeout(self.__context, self.__flow, new_timeout)
 
-
     def crate_and_populate_endpoint(self, local=True):
         if local:
             ret = LocalEndpoint()
@@ -145,14 +145,20 @@ class Connection:
             shim_print("Closed is called, no further sending is possible")
             return
 
+        # Check if lifetime is set
+        expired_epoch = None
+        if message_context.props[MessageProperties.LIFETIME] < math.inf:
+            expired_epoch = int(time.time()) + message_context.props[MessageProperties.LIFETIME]
+            shim_print(f"Send Actions expires {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expired_epoch))}")
+
         if self.batch_in_session:
             # Check if batch_struct is already present (i.e if this is the first send in batch or not)
             if isinstance(self.msg_list[-1], List):
-                self.msg_list[-1].append(message_data, message_context)
+                self.msg_list[-1].append(message_data, message_context) # TODO: Remember handler
             else:
-                self.msg_list.append([message_data, message_context])
+                self.msg_list.append([message_data, message_context])   # TODO: Remember handler
         else:
-            self.msg_list.append((message_data, message_context, sent_handler))
+            self.msg_list.append((message_data, message_context, sent_handler, expired_epoch))
         message_passed(self.__ops)
 
     def receive(self, handler, min_incomplete_length=None, max_length=None):
@@ -237,18 +243,44 @@ class Connection:
         shim_print("ADDING CHILD IN CONNECTION GROUP")
         self.connection_group.append(child)
 
+    def check_message_properties(self, props):
+        inconsistencies = ""
+        # Check if lifetime is infinite, if so, check if stack provides reliability
+        if props[MessageProperties.LIFETIME] == math.inf and SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.RELIABILITY) < ServiceLevel.OPTIONAL.value:
+            inconsistencies += "\n- Protocol stack does not provide a reliable service - message lifetime set to infinity"
+        return inconsistencies
+
 
 def handle_writable(ops):
     try:
-        connection = Connection.connection_list[ops.connection_id]
+        connection: Connection = Connection.connection_list[ops.connection_id]
 
         shim_print(f"ON WRITABLE CALLBACK - connection {connection.connection_id}")
 
         # Socket is writable, write if any messages passed to the transport system
         if connection.msg_list:
             # Todo: Should we do coalescing of batch sends here?
-            message_to_be_sent, context, handler = connection.msg_list.pop(0)
-            if backend.write(ops, message_to_be_sent):
+            message_to_be_sent, context, handler, expired_epoch = connection.msg_list.pop(0)
+
+            # If lifetime was set, check if send action has expired
+            if expired_epoch and expired_epoch < int(time.time()):
+                shim_print("""Send action expired: Expired: {} - Now: {}""".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expired_epoch)),
+                                                                              time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(time.time())))), level='error')
+                # Todo: Call event handler if present
+                return NEAT_OK
+
+            # Check for inconsistency between message properties and the connection's transport properties
+            inconsistencies = connection.check_message_properties(context.props)
+            if inconsistencies:
+                shim_print(f"SendError - inconsistencies in message properties:", level='error', additional_msg=inconsistencies)
+                return NEAT_OK
+
+            res = backend.write(ops, message_to_be_sent)
+            if res:
+                if res == NEAT_ERROR_MESSAGE_TOO_BIG:
+                    reason = "The message is too large for the system to handle"
+                elif res == NEAT_ERROR_IO:
+                    reason = "Failure of processing message in the protocol stack"
                 shim_print("Neat failed while writing")
                 # Todo: Elegant error handling
             # Keep message until NEAT confirms sending with all_written
@@ -384,7 +416,7 @@ def handle_closed(ops):
 
 
 def on_clone_error(op):
-    shim_print("Clone operation at back end", level="error")
+    shim_print("Clone operation failed at back end", level="error")
     return NEAT_OK
 
 

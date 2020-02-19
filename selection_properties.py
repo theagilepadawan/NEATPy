@@ -2,6 +2,33 @@ from enum import Enum, auto
 from enumerations import *
 
 
+class CommunicationDirections(Enum):
+    """
+    [From draft-ietf-taps-interface-latest - https://ietf-tapswg.github.io/api-drafts/draft-ietf-taps-interface.html]
+    << This property specifies whether an application wants to use the connection for sending and/or receiving data.
+    Possible values are: Bidirectional: The connection must support sending and receiving data
+
+    Unidirectional send:
+    The connection must support sending data, and the application cannot use the connection to receive any data
+
+    Unidirectional receive: The connection must support receiving data, and the application cannot use the connection
+    to send any data The default is bidirectional. Since unidirectional communication can be supported by transports
+    offering bidirectional communication, specifying unidirectional communication may cause a transport stack that
+    supports bidirectional communication to be selected. >>
+    """
+    BIDIRECTIONAL = auto()
+    UNIDIRECTIONAL_SEND = auto()
+    UNIDIRECTIONAL_RECEIVE = auto()
+
+
+class PreferenceLevel(Enum):
+    REQUIRE = 2
+    PREFER = 1
+    IGNORE = 0
+    AVOID = -1
+    PROHIBIT = -2
+
+
 class SelectionProperties(Enum):
     RELIABILITY = 'reliability'
     PRESERVE_MSG_BOUNDARIES = 'preserve-msg-boundaries'
