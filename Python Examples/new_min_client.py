@@ -46,8 +46,16 @@ def ready_handler(connection):  # Handler to be passed to receive
         # connection.clone(clone_handler)
         # connection.clone(clone_handler_2)
         msg_ctx = MessageContext()
-        #msg_ctx.add(MessageProperties.LIFETIME, 10)
-        connection.send("Hello from first connection 😏".encode('UTF-8'), None, message_context=msg_ctx)
+        msg_ctx.add(MessageProperties.LIFETIME, 10)
+        connection.send("Hello - I'm the first message to be sent".encode('UTF-8'), None, message_context=msg_ctx)
+        msg_ctx = MessageContext()
+        msg_ctx.add(MessageProperties.PRIORITY, 200)
+        msg_ctx.add(MessageProperties.LIFETIME, 10)
+        connection.send("I'm the second message, but have a higher priority 😏".encode('UTF-8'), None, message_context=msg_ctx)
+        msg_ctx = MessageContext()
+        msg_ctx.add(MessageProperties.LIFETIME, 10)
+
+        connection.send("Hello - I'm the third message, but with same priority as the first, so I should really be third".encode('UTF-8'), None, message_context=msg_ctx)
 
 
 if __name__ == "__main__":

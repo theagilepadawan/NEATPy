@@ -1,7 +1,9 @@
 # coding=utf-8
 # !/usr/bin/env python3
 import inspect
+import queue
 import time
+from dataclasses import dataclass, field
 
 from endpoint import LocalEndpoint, RemoteEndpoint
 from message_context import *
@@ -12,11 +14,17 @@ from transport_properties import *
 
 import backend
 from utils import *
-from typing import Callable, List, Tuple
+from typing import Callable, List, Tuple, Any
 from enumerations import *
 
 Message_queue_object = Tuple[bytes, MessageContext]
 Batch_struct = List[Message_queue_object]
+
+
+@dataclass(order=True)
+class MessageQueueObject:
+    priority: int
+    item: Any = field(compare=False)
 
 
 class Connection:
@@ -45,7 +53,7 @@ class Connection:
         self.connection_type = connection_type
         self.clone_counter = 0
         self.test_counter = 0
-        self.msg_list = []
+        self.msg_list: queue.PriorityQueue = queue.PriorityQueue()
         self.messages_passed_to_back_end = []
         self.receive_request_queue = []
         self.tcp_to_small_queue: List[bytes] = []
@@ -158,7 +166,8 @@ class Connection:
             else:
                 self.msg_list.append([message_data, message_context])   # TODO: Remember handler
         else:
-            self.msg_list.append((message_data, message_context, sent_handler, expired_epoch))
+            item = MessageQueueObject(-message_context.props[MessageProperties.PRIORITY], (message_data, message_context, sent_handler, expired_epoch))
+            self.msg_list.put(item)
         message_passed(self.__ops)
 
     def receive(self, handler, min_incomplete_length=None, max_length=None):
@@ -178,7 +187,7 @@ class Connection:
 
     def close(self):
         # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
-        if self.msg_list or self.messages_passed_to_back_end:
+        if self.msg_list.empty() or self.messages_passed_to_back_end:
             self.close_called = True
             self.state = ConnectionState.CLOSING
         else:
@@ -258,9 +267,9 @@ def handle_writable(ops):
         shim_print(f"ON WRITABLE CALLBACK - connection {connection.connection_id}")
 
         # Socket is writable, write if any messages passed to the transport system
-        if connection.msg_list:
+        if not connection.msg_list.empty():
             # Todo: Should we do coalescing of batch sends here?
-            message_to_be_sent, context, handler, expired_epoch = connection.msg_list.pop(0)
+            message_to_be_sent, context, handler, expired_epoch = connection.msg_list.get().item
 
             # If lifetime was set, check if send action has expired
             if expired_epoch and expired_epoch < int(time.time()):
