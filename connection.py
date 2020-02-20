@@ -159,6 +159,14 @@ class Connection:
         if self.final_message_passed:
             shim_print("Send error - Message marked final already sent", level='error')
 
+        # Check for inconsistency between message properties and the connection's transport properties
+        inconsistencies = self.check_message_properties(message_context.props)
+
+        if inconsistencies:
+            shim_print(f"SendError - inconsistencies in message properties:", level='error',
+                       additional_msg=inconsistencies)
+            return
+
         # Check if lifetime is set
         expired_epoch = None
         if message_context.props[MessageProperties.LIFETIME] < math.inf:
@@ -295,11 +303,6 @@ def handle_writable(ops):
                 # Todo: Call event handler if present
                 return NEAT_OK
 
-            # Check for inconsistency between message properties and the connection's transport properties
-            inconsistencies = connection.check_message_properties(context.props)
-            if inconsistencies:
-                shim_print(f"SendError - inconsistencies in message properties:", level='error', additional_msg=inconsistencies)
-                return NEAT_OK
 
             res = backend.write(ops, message_to_be_sent)
             if res:
