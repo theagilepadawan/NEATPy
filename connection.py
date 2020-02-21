@@ -146,12 +146,12 @@ class Connection:
         # Then set the property for the given connection
         GenericConnectionProperties.set_property(self.transport_properties.connection_properties, connection_property, value)
 
-    def send(self, message_data, sent_handler, message_context=MessageContext(), end_of_message=True):
+    def send(self, message_data, sent_handler, message_context=None, end_of_message=True):
         shim_print("SEND CALLED")
 
-        # If the connection is closed, prohibit further sending
+        # If the connection is closed, further sending will result in an SendError
         if self.close_called:
-            shim_print("Closed is called, no further sending is possible")
+            shim_print("SendError - Closed is called, no further sending is possible")
             return
 
         # "If another Message is sent after a Message marked as Final has already been sent on a Connection
@@ -282,6 +282,8 @@ class Connection:
             inconsistencies += "\n- Message property idempotent is disabled while the connection does not protect against duplicated messages"
         if props[MessageProperties.RELIABLE_DATA_TRANSFER] is True and self.transport_properties.selection_properties[SelectionProperties.RELIABILITY] != PreferenceLevel.REQUIRE:
             inconsistencies += "\n- Reliable data transfer for message set to true - Reliability for connection was not enabled for connection"
+        if props[MessageProperties.ORDERED] is True and self.transport_properties.selection_properties[SelectionProperties.PRESERVE_ORDER] == PreferenceLevel.PROHIBIT:
+            inconsistencies += "\n- Message property 'ordered' is true while connection does not provide preservation of order"
         return inconsistencies
 
 
@@ -303,14 +305,13 @@ def handle_writable(ops):
                 # Todo: Call event handler if present
                 return NEAT_OK
 
-
             res = backend.write(ops, message_to_be_sent)
             if res:
                 if res == NEAT_ERROR_MESSAGE_TOO_BIG:
                     reason = "The message is too large for the system to handle"
                 elif res == NEAT_ERROR_IO:
                     reason = "Failure of processing message in the protocol stack"
-                shim_print("Neat failed while writing")
+                shim_print(f"SendError - Neat failed while writing - {reason}")
                 # Todo: Elegant error handling
             # Keep message until NEAT confirms sending with all_written
             connection.messages_passed_to_back_end.append((message_to_be_sent, context, handler))
