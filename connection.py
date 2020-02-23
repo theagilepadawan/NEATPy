@@ -14,17 +14,10 @@ from transport_properties import *
 
 import backend
 from utils import *
-from typing import Callable, List, Tuple, Any
+from typing import Callable, List, Tuple, Any, Optional
+#from typeAliases import ReceiveHandlerTypeSignature, SentHandlerTypeSignature
+
 from enumerations import *
-
-Message_queue_object = Tuple[bytes, MessageContext]
-Batch_struct = List[Message_queue_object]
-
-
-@dataclass(order=True)
-class MessageQueueObject:
-    priority: int
-    item: Any = field(compare=False)
 
 
 class Connection:
@@ -33,21 +26,18 @@ class Connection:
     clone_count = 0
     static_counter = 0
 
-    def __init__(self, ops, preconnection, connection_type, listener=None, parent=None):
+    def __init__(self, preconnection, connection_type, listener=None, parent=None):
 
         # NEAT specific
-        self.__ops = ops
-        self.__context = ops.ctx
-        self.__flow = ops.flow
-        self.transport_stack = SupportedProtocolStacks(ops.transport_protocol)
+        self.ops = None
+        self.context = None
+        self.flow = None
+        self.transport_stack = None
 
         # Map connection for later callbacks fired
         Connection.static_counter += 1
         self.connection_id = Connection.static_counter
-        self.__ops.connection_id = self.connection_id
         Connection.connection_list[self.connection_id] = self
-
-        shim_print(f"Connection [ID: {self.connection_id}] established - transport used: {self.transport_stack.name}", level='msg')
 
         # Python specific
         self.connection_type = connection_type
@@ -59,6 +49,9 @@ class Connection:
         self.tcp_to_small_queue: List[bytes] = []
         self.clone_callbacks = {}
         self.connection_group = []
+        self.state_handler: ConnectionStateHandler = None
+        self.local_endpoint = None
+        self.remote_endpoint = None
 
         # if this connection is a result from a clone, add parent
         if parent:
@@ -73,26 +66,33 @@ class Connection:
         self.preconnection = preconnection
         self.listener = listener
         self.transport_properties: TransportProperties = copy.deepcopy(self.preconnection.transport_properties)
-        self.set_connection_properties()
-        self.state = ConnectionState.ESTABLISHED
+        self.state = ConnectionState.ESTABLISHING
 
-        self.event_handler_list = preconnection.event_handler_list
+    def established_routine(self, ops):
+        self.ops = ops
+        self.context = ops.ctx
+        self.flow = ops.flow
+        self.transport_stack = SupportedProtocolStacks(ops.transport_protocol)
+
+        self.ops.connection_id = self.connection_id
+        shim_print(f"Connection [ID: {self.connection_id}] established - transport used: {self.transport_stack.name}", level='msg')
+        self.set_connection_properties()
 
         # Fire off appropriate event handler (if present)
-        if connection_type is "passive" and self.event_handler_list[ConnectionEvents.CONNECTION_RECEIVED]:
-            self.event_handler_list[ConnectionEvents.CONNECTION_RECEIVED](self)
-        if connection_type == 'active' and self.event_handler_list[ConnectionEvents.READY]:
-            self.event_handler_list[ConnectionEvents.READY](self)
+        if self.state_handler and self.state_handler.HANDLE_STATE_READY:
+            self.state_handler.HANDLE_STATE_READY(self)
+
         ops.on_all_written = handle_all_written
         ops.on_close = handle_closed
 
         neat_set_operations(ops.ctx, ops.flow, ops)
-        res, res_json = neat_get_stats(self.__context)
+        res, res_json = neat_get_stats(self.context)
         json_rep = json.loads(res_json)
         shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
 
         self.local_endpoint = self.crate_and_populate_endpoint()
         self.remote_endpoint = self.crate_and_populate_endpoint(local=False)
+        self.state = ConnectionState.ESTABLISHED
 
         # Protocol stack specific logic
         # Set TCP UTO if enabled
@@ -101,38 +101,37 @@ class Connection:
             uto_enabled = self.transport_properties.connection_properties[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.USER_TIMEOUT_ENABLED]
             if is_linux and uto_enabled:
                 new_timeout = self.transport_properties.connection_properties[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.ADVERTISED_USER_TIMEOUT]
-                backend.set_timeout(self.__context, self.__flow, new_timeout)
+                backend.set_timeout(self.context, self.flow, new_timeout)
 
     def crate_and_populate_endpoint(self, local=True):
         if local:
             ret = LocalEndpoint()
-            local_ip = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.LOCAL_IP)
+            local_ip = backend.get_backend_prop(self.context, self.flow, backend.BackendProperties.LOCAL_IP)
             if local_ip:
                 ret.with_address(local_ip)
             else:
-                address = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.ADDRESS)
+                address = backend.get_backend_prop(self.context, self.flow, backend.BackendProperties.ADDRESS)
                 if address: ret.with_address(address)
 
-            interface = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.INTERFACE)
+            interface = backend.get_backend_prop(self.context, self.flow, backend.BackendProperties.INTERFACE)
             if interface: ret.with_interface(interface)
 
-            port = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.PORT)
+            port = backend.get_backend_prop(self.context, self.flow, backend.BackendProperties.PORT)
             if port: ret.with_port(port)
             return ret
         else:
             ret = RemoteEndpoint()
-            hostname = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.DOMAIN_NAME)
+            hostname = backend.get_backend_prop(self.context, self.flow, backend.BackendProperties.DOMAIN_NAME)
             if hostname: ret.with_hostname(hostname)
-            remote_ip = backend.get_backend_prop(self.__context, self.__flow, backend.BackendProperties.REMOTE_IP)
+            remote_ip = backend.get_backend_prop(self.context, self.flow, backend.BackendProperties.REMOTE_IP)
             if remote_ip: ret.with_address(remote_ip)
             return ret
 
     def set_connection_properties(self):
         try:
-            (max_send, max_recv) = neat_get_max_buffer_sizes(self.__flow)
+            (max_send, max_recv) = neat_get_max_buffer_sizes(self.flow)
             self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND] = max_send
             self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE] = max_recv
-
 
             shim_print(f"Send buffer: {self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND]} - Receive buffer: {self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]}")
         except:
@@ -146,8 +145,12 @@ class Connection:
         # Then set the property for the given connection
         GenericConnectionProperties.set_property(self.transport_properties.connection_properties, connection_property, value)
 
-    def send(self, message_data, sent_handler, message_context=None, end_of_message=True):
+    def send(self, message_data, sent_handler=None, message_context=None, end_of_message=True):
         shim_print("SEND CALLED")
+
+        if not message_context:
+            message_context = MessageContext()
+            message_context.props = self.transport_properties.message_properties
 
         # If the connection is closed, further sending will result in an SendError
         if self.close_called:
@@ -189,7 +192,7 @@ class Connection:
         else:
             item = MessageQueueObject(priority, (message_data, message_context, sent_handler, expired_epoch))
             self.msg_list.put(item)
-        message_passed(self.__ops)
+        message_passed(self.ops)
 
     def receive(self, handler, min_incomplete_length=None, max_length=None):
         shim_print("RECEIVED CALLED")
@@ -199,7 +202,7 @@ class Connection:
         self.receive_request_queue.append((handler, min_incomplete_length, max_length))
         # If there is only one request in the queue, this means it was empty and we need to set callback
         if len(self.receive_request_queue) is 1:
-            received_called(self.__ops)
+            received_called(self.ops)
 
     def batch(self, bacth_block: Callable[[], None]):
         self.batch_in_session = True
@@ -212,11 +215,11 @@ class Connection:
             self.close_called = True
             self.state = ConnectionState.CLOSING
         else:
-            neat_close(self.__ops.ctx, self.__ops.flow)
+            neat_close(self.ops.ctx, self.ops.flow)
             self.state = ConnectionState.CLOSED
 
     def abort(self):
-        backend.abort(self.__context, self.__flow)
+        backend.abort(self.context, self.flow)
 
     def stop_listener(self):
         self.listener.stop()
@@ -248,7 +251,7 @@ class Connection:
     def clone(self, clone_handler):
         try:
             shim_print("CLONE")
-            flow = neat_new_flow(self.__context)
+            flow = neat_new_flow(self.context)
             ops = neat_flow_operations()
 
             Connection.clone_count += 1
@@ -260,14 +263,14 @@ class Connection:
 
             ops.on_error = on_clone_error
             ops.on_connected = handle_clone_ready
-            neat_set_operations(self.__context, flow, ops)
-            backend.pass_candidates_to_back_end([self.transport_stack], self.__context, flow)
+            neat_set_operations(self.context, flow, ops)
+            backend.pass_candidates_to_back_end([self.transport_stack], self.context, flow)
 
-            neat_open(self.__context, flow, self.preconnection.remote_endpoint.address,
-                  self.preconnection.remote_endpoint.port, None, 0)
+            neat_open(self.context, flow, self.preconnection.remote_endpoint.address,
+                      self.preconnection.remote_endpoint.port, None, 0)
         except:
             shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name),level='error')
-            backend.stop(self.__context)
+            backend.stop(self.context)
 
     def add_child(self, child):
         shim_print("ADDING CHILD IN CONNECTION GROUP")
@@ -382,13 +385,13 @@ def handle_readable(ops):
 
             shim_print(f'Message received from stream: {ops.stream_id}')
             # UDP delivers complete messages, ignore length specifiers
-            if connection.transport_stack is SupportedProtocolStacks.UDP or (min_length is None and max_length is None):  # TODO: SCTP here?
+            if connection.transport_stack is SupportedProtocolStacks.UDP or (min_length is None and max_length is None): # TODO: SCTP here?
                 # Create a message context to pass to the receive handler
                 message_context = MessageContext()  # Todo:
                 message_context.remote_endpoint = connection.remote_endpoint
                 message_context.local_endpoint = connection.local_endpoint
                 # TODO: Framer logic here...?
-                handler(connection, msg, message_context)
+                handler(connection, msg, message_context, True, None)
             elif connection.transport_stack is SupportedProtocolStacks.TCP or connection.transport_stack is SupportedProtocolStacks.MPTCP:
                 if connection.tcp_to_small_queue:
                     msg = connection.tcp_to_small_queue.pop() + msg
@@ -400,7 +403,7 @@ def handle_readable(ops):
                     raise NotImplementedError
                 else:
                     message_context = MessageContext()  # Todo:
-                    handler(connection, msg, message_context)  # TODO: MessageContext
+                    handler(connection, msg, message_context, True, None)  # TODO: MessageContext
         else:
             shim_print("READABLE SET TO NONE - receive queue empty", level='error')
             import time; time.sleep(2)
@@ -420,9 +423,7 @@ def handle_closed(ops):
         connection = Connection.connection_list[ops.connection_id]
         shim_print(f"HANDLE CLOSED - connection {ops.connection_id}")
 
-        if connection.event_handler_list[ConnectionEvents.CLOSED] is not None:
-            shim_print("CLOSED HANDLER")
-            connection.event_handler_list[ConnectionEvents.CLOSED](connection)
+        # TODO: Check if state handler has closed handler
 
         # If a Connection becomes finished before a requested Receive action can be satisfied,
         # the implementation should deliver any partial Message content outstanding..."
@@ -454,7 +455,8 @@ def handle_clone_ready(ops):
     shim_print("CLONE IS READY TO GO BABY!!")
 
     parent = Connection.connection_list[ops.parent_id]
-    cloned_connection = Connection(ops, parent.preconnection, 'active', parent=parent)
+    cloned_connection = Connection(parent.preconnection, 'active', parent=parent)
+    cloned_connection.established_routine(ops)
     parent.add_child(cloned_connection)
 
     ops.on_writable = handle_writable
@@ -465,8 +467,36 @@ def handle_clone_ready(ops):
     return NEAT_OK
 
 
+@dataclass(order=True)
+class MessageQueueObject:
+    priority: int
+    item: Any = field(compare=False)
+
+
+@dataclass()
+class SendError:
+    description: str
+
+
+@dataclass()
+class ReceiveError:
+    description: str
+
+
 class ConnectionState(Enum):
     ESTABLISHING = auto()
     ESTABLISHED = auto()
     CLOSING = auto()
     CLOSED = auto()
+
+
+@dataclass()
+class ConnectionStateHandler:
+    HANDLE_STATE_READY: Callable[[], None] = None  # Connection to be passed, if no design change?
+    HANDLE_STATE_CLOSED: Callable[[], None] = None
+    HANDLE_STATE_CONNECTION_ERROR: Callable[[], None] = None
+
+
+Message_queue_object = Tuple[bytes, MessageContext]
+Batch_struct = List[Message_queue_object]
+

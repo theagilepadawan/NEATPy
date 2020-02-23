@@ -125,9 +125,6 @@ class CapacityProfiles(Enum):
 
 
 class ConnectionEvents(Enum):
-    READY = auto()
-    CONNECTION_RECEIVED = auto()
-    RENDEZVOUS_DONE = auto()
     EXPIRED = auto()
     CLOSED = auto()
 
@@ -147,9 +144,11 @@ class ConnectionEvents(Enum):
 class PreconnectionEvents(Enum):
     RENDEZVOUS_DONE = auto()
     RENDEZVOUS_ERROR = auto()
+    READY = auto()
 
 
 class ListenerEvents(Enum):
+    CONNECTION_RECEIVED = auto()
     STOPPED = auto()
     LISTEN_ERROR = auto()
 

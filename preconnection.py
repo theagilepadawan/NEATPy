@@ -33,6 +33,7 @@ class RendezvousObject:
 class Preconnection:
     preconnection_list = {}
     listener_list = {}
+    initiated_connection_list = {}
     preconnection_counter = 1
     rendezvous_counter = 1
 
@@ -112,6 +113,12 @@ class Preconnection:
         if self.remote_endpoint.interface:
             send = json.dumps({"interface": {"value": self.remote_endpoint.interface, "precedence": 1}})
             neat_set_property(self.__context, self.__flow, send)
+
+        new_con = Connection(self, 'active')
+        Preconnection.initiated_connection_list[self.id] = new_con
+        return new_con
+
+    def start(self):
         backend.start(self.__context)
         backend.clean_up(self.__context)
 
@@ -137,8 +144,9 @@ class Preconnection:
 
         backend.pass_candidates_to_back_end(candidates, self.__context, self.__flow)
         shim_print("LISTEN!")
-        listner = Listener(self.__context, self.__flow, self.__ops, self)
-        return NEAT_OK
+        listener = Listener(self.__context, self.__flow, self.__ops, self)
+        return listener
+
 
     """
     []
@@ -204,12 +212,8 @@ class Preconnection:
         backend.start(self.__context)
         backend.clean_up(self.__context)
 
-
-
     def add_framer(self, framer):
         self.framer_list.append(framer)
-
-
 
     @staticmethod
     def handle_connected_rendezvous(ops):
@@ -230,5 +234,6 @@ class Preconnection:
         shim_print("ON CONNECTED RAN (CLIENT)")
         precon: Preconnection = Preconnection.preconnection_list[ops.preconnection_id]
         precon.number_of_connections += 1
-        new_connection = Connection(ops, precon, 'active')
+        con: Connection = Preconnection.initiated_connection_list[ops.preconnection_id]
+        con.established_routine(ops)
         return NEAT_OK

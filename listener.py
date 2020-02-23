@@ -8,7 +8,15 @@ from connection import *
 from utils import *
 
 
-class Listener():
+@dataclass()
+class ListenerStateHandler:
+    HANDLE_STATE_LISTENING: Callable[[], None] = None
+    HANDLE_STATE_LISTEN_ERROR: Callable[[], None] = None
+    HANDLE_STATE_STOPPED: Callable[[], None] = None
+    HANDLE_CONNECTION_RECEIVED: Callable[[Connection], None] = None
+
+
+class Listener:
     listener_list = {}
 
     def __init__(self, context, flow, ops, preconnection):
@@ -20,6 +28,7 @@ class Listener():
         self.props = copy.deepcopy(preconnection.transport_properties)
         self.number_of_connections = 0
         self.connection_limit = math.inf
+        self.state_handler: ListenerStateHandler = None
 
         # Todo: Find a more sophisticated way to keep track of listeners (or is it necessary?)
         Listener.listener_list[0] = self
@@ -33,8 +42,6 @@ class Listener():
             sys.exit("neat_accept failed")
 
         shim_print("A SERVER RUNNING NEAT STARTING FROM PYTHON 🎊")
-        backend.start(self.__context)
-        backend.clean_up(self.__context)
 
     def stop(self):
         shim_print("LISTENER STOP")
@@ -52,7 +59,11 @@ class Listener():
         if listener.connection_limit > listener.number_of_connections:
             listener.number_of_connections += 1
 
-            new_connection = Connection(ops, listener.preconnection, 'passive', listener)
+            new_connection = Connection(listener.preconnection, 'passive', listener)
+            new_connection.established_routine(ops)
+
+            if listener.state_handler and listener.state_handler.HANDLE_CONNECTION_RECEIVED:
+                listener.state_handler.HANDLE_CONNECTION_RECEIVED(new_connection)
         else:
             shim_print("Connection limit is reached!")
 

@@ -12,29 +12,20 @@ from transport_properties import *
 from enumerations import *
 
 
-def sent_event_handler(connection):
-    pass
 
 
-def handle_received(connection):
-    pass
 
+def ready_handler(connection: Connection):  # Handler to be passed to receive
 
-def handle_closed(connection):
-    pass
-
-
-def ready_handler(connection):  # Handler to be passed to receive
-
-    def test(con, message_data, message_context):
+    def test_receive_handler(con, message_data, d, dd, ddd):
         shim_print("Read {} bytes: {}".format(len(message_data), message_data), level="msg")
-        con.receive(test)
+        con.receive(test_receive_handler)
 
-    def clone_test(connection, message_data, message_context):
+    def clone_test(connection: int, message_data, message_context):
         shim_print("CLONE read {} bytes: {}".format(len(message_data), message_data), level="msg")
 
-    def clone_handler(con):
-        con.send("Hello from cloned connection 😅".encode('UTF-8'), None)
+    def clone_handler(con: Connection):
+        con.send("Hello from cloned connection 😅".encode('UTF-8'), sent_event_handler)
         con.receive(clone_test)
 
     def clone_handler_2(con):
@@ -42,23 +33,26 @@ def ready_handler(connection):  # Handler to be passed to receive
         con.receive(clone_test)
 
     if Connection.clone_count == 0:
-        connection.receive(test)
+        connection.receive(test_receive_handler)
         # connection.clone(clone_handler)
         # connection.clone(clone_handler_2)
         msg_ctx = MessageContext()
-        #msg_ctx.add(MessageProperties.RELIABLE_DATA_TRANSFER, True)
-        #msg_ctx.add(MessageProperties.LIFETIME, 10)
+        # msg_ctx.add(MessageProperties.RELIABLE_DATA_TRANSFER, True)
+        # msg_ctx.add(MessageProperties.LIFETIME, 10)
         connection.send("Hello - I'm the first message to be sent".encode('UTF-8'), None, message_context=msg_ctx)
         msg_ctx = MessageContext()
         msg_ctx.add(MessageProperties.IDEMPOTENT, True)
         msg_ctx.add(MessageProperties.RELIABLE_DATA_TRANSFER, False)
         msg_ctx.add(MessageProperties.PRIORITY, 200)
         msg_ctx.add(MessageProperties.LIFETIME, 10)
-        connection.send(("I'm the second message, but have a higher priority"*180).encode('UTF-8'), None, message_context=msg_ctx)
+        connection.send(("I'm the second message, but have a higher priority" * 180).encode('UTF-8'), None,
+                        message_context=msg_ctx)
         msg_ctx = MessageContext()
         msg_ctx.add(MessageProperties.LIFETIME, 10)
 
-        connection.send("Hello - I'm the third message, but with same priority as the first, so I should really be third".encode('UTF-8'), None, message_context=msg_ctx)
+        connection.send(
+            "Hello - I'm the third message, but with same priority as the first, so I should really be third".encode(
+                'UTF-8'), None, message_context=msg_ctx)
 
 
 if __name__ == "__main__":

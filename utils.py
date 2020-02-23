@@ -1,4 +1,5 @@
 # coding=utf-8
+import inspect
 import shutil
 from colorama import Fore, Back, Style
 import datetime
@@ -9,6 +10,14 @@ colors = {
     "error": Fore.RED,
 }
 debug = 1
+
+
+def log_wrapper(func):
+    def wrapped_with_log(*args, **kwargs):
+        shim_print(func.__name__)
+        return func(*args, **kwargs)
+    return wrapped_with_log
+
 
 def shim_print(main_msg, additional_msg="",  level=None):
     """
