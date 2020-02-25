@@ -103,8 +103,7 @@ def read(ops, size):
         byte_array = bytearray(uint32_tp_value(bytes_read))
         for i in range(uint32_tp_value(bytes_read)):
             byte_array[i] = buffer[i]
-        message = byte_array.decode()
-        return message
+        return byte_array
     except:
         shim_print("An error occurred in the Python callback: {}".format(sys.exc_info()[0]))
 

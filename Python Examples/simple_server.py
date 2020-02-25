@@ -29,7 +29,7 @@ if __name__ == "__main__":
     tp = TransportProperties(profile)
 
     def new_connection_received(connection: Connection):
-        connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg: {msg}", level='msg'))
+        connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg: {msg.data.decode()}", level='msg'))
         connection.send(b"Simple server hello", None)
 
     preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=tp)

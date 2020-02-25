@@ -46,12 +46,14 @@ class Connection:
         self.msg_list: queue.PriorityQueue = queue.PriorityQueue()
         self.messages_passed_to_back_end = []
         self.receive_request_queue = []
-        self.tcp_to_small_queue: List[bytes] = []
+        self.buffered_message_data_object: MessageDataObject = None
+        self.partitioned_message_data_object: MessageDataObject = None
         self.clone_callbacks = {}
         self.connection_group = []
         self.state_handler: ConnectionStateHandler = None
         self.local_endpoint = None
         self.remote_endpoint = None
+        self.stack_supports_message_boundary_preservation = False
 
         # if this connection is a result from a clone, add parent
         if parent:
@@ -65,7 +67,7 @@ class Connection:
 
         self.preconnection = preconnection
         self.listener = listener
-        self.transport_properties: TransportProperties = copy.deepcopy(self.preconnection.transport_properties)
+        self.transport_properties: TransportProperties = None
         self.state = ConnectionState.ESTABLISHING
 
     def established_routine(self, ops):
@@ -73,6 +75,10 @@ class Connection:
         self.context = ops.ctx
         self.flow = ops.flow
         self.transport_stack = SupportedProtocolStacks(ops.transport_protocol)
+        self.transport_properties = copy.deepcopy(self.preconnection.transport_properties)
+
+        if SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.PRESERVE_MSG_BOUNDARIES) == ServiceLevel.INTRINSIC_SERVICE:
+            self.stack_supports_message_boundary_preservation = True
 
         self.ops.connection_id = self.connection_id
         shim_print(f"Connection [ID: {self.connection_id}] established - transport used: {self.transport_stack.name}", level='msg')
@@ -194,15 +200,27 @@ class Connection:
             self.msg_list.put(item)
         message_passed(self.ops)
 
-    def receive(self, handler, min_incomplete_length=None, max_length=None):
+    def receive(self, handler, min_incomplete_length=None, max_length=math.inf):
         shim_print("RECEIVED CALLED")
-        if self.close_called:
-            shim_print("Closed is called, no further reception is possible")
-            return
-        self.receive_request_queue.append((handler, min_incomplete_length, max_length))
-        # If there is only one request in the queue, this means it was empty and we need to set callback
-        if len(self.receive_request_queue) is 1:
-            received_called(self.ops)
+
+        if self.partitioned_message_data_object:
+            if self.partitioned_message_data_object.length > max_length:
+                new_partitioned_message_object = self.partitioned_message_data_object.partition(max_length)
+                to_be_sent = self.partitioned_message_data_object
+                self.partitioned_message_data_object = new_partitioned_message_object
+                handler(self, to_be_sent, False, None)
+            else:
+                to_be_sent = self.partitioned_message_data_object
+                self.partitioned_message_data_object = None
+                handler(self, to_be_sent, True, None)
+        else:
+            if self.close_called:
+                shim_print("Closed is called, no further reception is possible")
+                return
+            self.receive_request_queue.append((handler, min_incomplete_length, max_length))
+            # If there is only one request in the queue, this means it was empty and we need to set callback
+            if len(self.receive_request_queue) is 1:
+                received_called(self.ops)
 
     def batch(self, bacth_block: Callable[[], None]):
         self.batch_in_session = True
@@ -248,7 +266,7 @@ class Connection:
                 'receive': self.can_be_used_for_receive_data(),
                 'props': self.transport_properties}
 
-    def clone(self, clone_handler):
+    def clone(self, clone_handler: Callable[[object, object], None]):
         try:
             shim_print("CLONE")
             flow = neat_new_flow(self.context)
@@ -376,34 +394,54 @@ def handle_all_written(ops):
 
 def handle_readable(ops):
     try:
-        connection = Connection.connection_list[ops.connection_id]
+        connection: Connection = Connection.connection_list[ops.connection_id]
         shim_print(f"HANDLE READABLE - connection {connection.connection_id}")
 
         if connection.receive_request_queue:
             handler, min_length, max_length = connection.receive_request_queue.pop(0)
             msg = backend.read(ops, connection.receive_buffer_size)
+            message_data_object = MessageDataObject(msg, len(msg))
 
             shim_print(f'Message received from stream: {ops.stream_id}')
-            # UDP delivers complete messages, ignore length specifiers
-            if connection.transport_stack is SupportedProtocolStacks.UDP or (min_length is None and max_length is None): # TODO: SCTP here?
-                # Create a message context to pass to the receive handler
-                message_context = MessageContext()  # Todo:
-                message_context.remote_endpoint = connection.remote_endpoint
-                message_context.local_endpoint = connection.local_endpoint
-                # TODO: Framer logic here...?
-                handler(connection, msg, message_context, True, None)
-            elif connection.transport_stack is SupportedProtocolStacks.TCP or connection.transport_stack is SupportedProtocolStacks.MPTCP:
-                if connection.tcp_to_small_queue:
-                    msg = connection.tcp_to_small_queue.pop() + msg
-                if min_length and min_length > len(msg):
-                    connection.tcp_to_small_queue.append(msg)
-                    connection.receive(handler, min_length, max_length)
-                elif max_length and max_length < len(msg):
-                    # TODO: Received partial handler should be called, how should it be registered?
-                    raise NotImplementedError
+
+            # Create a message context to pass to the receive handler
+            message_context = MessageContext()
+            message_context.remote_endpoint = connection.remote_endpoint
+            message_context.local_endpoint = connection.local_endpoint
+
+            if connection.stack_supports_message_boundary_preservation:
+                # "If an incoming Message is larger than the minimum of this size and
+                # the maximum Message size on receive for the Connection's Protocol Stack,
+                #  it will be delivered via ReceivedPartial events"
+                if len(msg) > min(max_length, connection.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]):
+                    partition_size = min(max_length, connection.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE])
+                    partitioned_message_data_object = MessageDataObject(partition_size)
+                    connection.partitioned_message_data_object = partitioned_message_data_object
+                    handler(connection, message_data_object, message_data_object, False, None)
                 else:
-                    message_context = MessageContext()  # Todo:
-                    handler(connection, msg, message_context, True, None)  # TODO: MessageContext
+                    handler(connection, message_data_object, message_context, None, None)
+                # Min length does not need to be checked with stacks that deliver complete messages
+                # TODO: Check if there possibly could be scenarios with SCTP where partial messages is delivered
+            else:
+                # If a framer, pass the message
+                if False:
+                    NotImplementedError
+                # No message boundary preservation and no framer yields a receive partial event
+                else:
+                    # TODO: Now, a handler must be sent, but should it be possible to pass None, i.e no handler and just discard bytes/message?
+                    if connection.buffered_message_data_object:
+                        message_data_object.combine_message_data_objects(connection.buffered_message_data_object)
+                    if min_length and min_length > message_data_object.length:
+                        connection.buffered_message_data_object = message_data_object
+                        connection.receive(handler, min_length, max_length)
+                    elif max_length < message_data_object.length:
+                        # ReceivePartial event - not end of message
+                        connection.buffered_message_data_object = None
+                        partitioned_message_data_object = message_data_object.partition(max_length)
+                        connection.partitioned_message_data_object = partitioned_message_data_object
+                        handler(connection, message_data_object, message_context, False, None)
+                    else:
+                        handler(connection, message_data_object, message_context, True, None)  
         else:
             shim_print("READABLE SET TO NONE - receive queue empty", level='error')
             import time; time.sleep(2)
@@ -446,8 +484,11 @@ def handle_closed(ops):
     return NEAT_OK
 
 
-def on_clone_error(op):
+def on_clone_error(ops):
     shim_print("Clone operation failed at back end", level="error")
+    parent = Connection.connection_list[ops.parent_id]
+    handler = parent.clone_callbacks[ops.clone_id]
+    handler(None, )
     return NEAT_OK
 
 
@@ -463,7 +504,7 @@ def handle_clone_ready(ops):
     neat_set_operations(ops.ctx, ops.flow, ops)
 
     handler = parent.clone_callbacks[ops.clone_id]
-    handler(cloned_connection)
+    handler(cloned_connection, None)
     return NEAT_OK
 
 
@@ -481,6 +522,31 @@ class SendError:
 @dataclass()
 class ReceiveError:
     description: str
+
+
+@dataclass()
+class MessageDataObject:
+    """
+    The messageData object provides access to the bytes that were received for a Message, along with the length of the byte array.
+    """
+    data: bytearray
+    length: int
+
+    def combine_message_data_objects(self, other_object):
+        self.data += other_object.data
+        self.length += other_object.length
+
+    def partition(self, partition_size):
+        excess_object = MessageDataObject()
+        excess_object.data = self.data[partition_size::]
+        excess_object.length = len(excess_object.data)  # This could easily be done in init, but for now leave it
+
+        self.data = self.data[0:partition_size]
+        self.length = len(self.data)
+
+        return excess_object
+
+
 
 
 class ConnectionState(Enum):

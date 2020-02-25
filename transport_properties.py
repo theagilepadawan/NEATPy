@@ -191,7 +191,7 @@ class TransportProperties:
 
         if SupportedProtocolStacks.TCP.name in candidates and self.selection_properties[
             SelectionProperties.MULTIPATH] and self.selection_properties[
-            SelectionProperties.MULTIPATH].value >= PreferenceLevel.IGNORE.value:
+            SelectionProperties.MULTIPATH].value != PreferenceLevel.PROHIBIT.value:
             if SupportedProtocolStacks.check_for_mptcp():
                 candidates.append(SupportedProtocolStacks.MPTCP)
                 shim_print("MPTCP enabled on system")

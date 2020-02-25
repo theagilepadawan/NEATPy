@@ -16,11 +16,17 @@ class ListenerStateHandler:
     HANDLE_CONNECTION_RECEIVED: Callable[[Connection], None] = None
 
 
+class ListenErrorReasons(Enum):
+    UNFULFILLED_PROPERTIES = 'Properties of the preconnection cannot be fulfilled for listening'
+    UNRESOLVED_LOCAL_ENDPOINT = 'The Local Endpoint cannot be resolved'
+    PROHIBITED_BY_POLICY = 'Listening is prohibited by policy'
+
+
 class Listener:
     listener_list = {}
 
     def __init__(self, context, flow, ops, preconnection):
-        self.__ops = ops
+        self.__ops: neat_flow_operations = ops
         self.__context = context
         self.__flow = flow
 
@@ -35,6 +41,7 @@ class Listener:
 
         self.__ops.on_connected = self.handle_connected
         self.__ops.on_readable = handle_readable
+        self.__ops.on_error = self.handle_error
 
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
@@ -45,6 +52,8 @@ class Listener:
 
     def stop(self):
         shim_print("LISTENER STOP")
+        if self.state_handler and self.state_handler.HANDLE_STATE_STOPPED:
+            self.state_handler.HANDLE_STATE_STOPPED()
         backend.stop(self.__context)
 
     def set_new_connection_limit(self, value):
@@ -52,6 +61,14 @@ class Listener:
 
     def reset_connection_limit(self):
         self.connection_limit = math.inf
+
+    @staticmethod
+    def handle_error(ops):
+        listener: Listener = Listener.listener_list[0]
+        if listener.state_handler and listener.state_handler.HANDLE_STATE_LISTEN_ERROR:
+            listener.state_handler.HANDLE_STATE_LISTEN_ERROR(ListenErrorReasons.UNRESOLVED_LOCAL_ENDPOINT)
+        shim_print(f"Listner error - {ListenErrorReasons.UNRESOLVED_LOCAL_ENDPOINT.value}")
+        listener.stop()
 
     @staticmethod
     def handle_connected(ops):
