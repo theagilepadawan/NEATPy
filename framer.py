@@ -21,7 +21,7 @@ class Framer(ABC):
         pass
 
     @abstractmethod
-    def new_sent_message(self, connection, message_data, message_context, is_end_of_message):
+    def new_sent_message(self, connection, message_data, message_context, sent_handler, is_end_of_message):
         """
 
         Upon receiving this event, a framer implementation is responsible for performing any necessary
@@ -31,6 +31,7 @@ class Framer(ABC):
         :param message_data:
         :param message_context:
         :param is_end_of_message:
+        :param sent_handler:
         """
         pass
 

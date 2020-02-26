@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 
 from endpoint import LocalEndpoint, RemoteEndpoint
 from message_context import *
+import message_framer
 from neat import *
 import sys
 import copy
@@ -68,6 +69,7 @@ class Connection:
         self.preconnection = preconnection
         self.listener = listener
         self.transport_properties: TransportProperties = None
+        self.message_framer: MessageFramer = preconnection.message_framer
         self.state = ConnectionState.ESTABLISHING
 
     def established_routine(self, ops):
@@ -176,19 +178,23 @@ class Connection:
                        additional_msg=inconsistencies)
             return
 
+        if self.message_framer:
+            self.message_framer.framer_list[0].new_sent_message(self, message_data, message_context, sent_handler, end_of_message)
+        else:
+            self.add_to_message_queue(message_context, message_data, sent_handler, end_of_message)
+
+    def add_to_message_queue(self, message_context, message_data, sent_handler, end_of_message):
         # Check if lifetime is set
         expired_epoch = None
         if message_context.props[MessageProperties.LIFETIME] < math.inf:
             expired_epoch = int(time.time()) + message_context.props[MessageProperties.LIFETIME]
             shim_print(f"Send Actions expires {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expired_epoch))}")
-
-        # "A final message must always be sorted to the end of the list
+        # "A final message must always be sorted to the end of the list"
         if message_context.props[MessageProperties.FINAL]:
             priority = math.inf
             self.final_message_passed = True
         else:
             priority = -message_context.props[MessageProperties.PRIORITY]
-
         if self.batch_in_session:
             # Check if batch_struct is already present (i.e if this is the first send in batch or not)
             if isinstance(self.msg_list[-1], List):
@@ -200,7 +206,10 @@ class Connection:
             self.msg_list.put(item)
         message_passed(self.ops)
 
-    def receive(self, handler, min_incomplete_length=None, max_length=math.inf):
+    def framer_send(self):
+        pass
+
+    def receive(self, handler, min_incomplete_length=None, max_length=math.inf) -> None:
         shim_print("RECEIVED CALLED")
 
         if self.partitioned_message_data_object:
@@ -441,7 +450,7 @@ def handle_readable(ops):
                         connection.partitioned_message_data_object = partitioned_message_data_object
                         handler(connection, message_data_object, message_context, False, None)
                     else:
-                        handler(connection, message_data_object, message_context, True, None)  
+                        handler(connection, message_data_object, message_context, True, None)
         else:
             shim_print("READABLE SET TO NONE - receive queue empty", level='error')
             import time; time.sleep(2)
@@ -537,16 +546,14 @@ class MessageDataObject:
         self.length += other_object.length
 
     def partition(self, partition_size):
-        excess_object = MessageDataObject()
-        excess_object.data = self.data[partition_size::]
-        excess_object.length = len(excess_object.data)  # This could easily be done in init, but for now leave it
+        other_partition = MessageDataObject()
+        other_partition.data = self.data[partition_size::]
+        other_partition.length = len(other_partition.data)  # This could easily be done in init, but for now leave it
 
         self.data = self.data[0:partition_size]
         self.length = len(self.data)
 
-        return excess_object
-
-
+        return other_partition
 
 
 class ConnectionState(Enum):

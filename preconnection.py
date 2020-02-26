@@ -1,6 +1,7 @@
 # coding=utf-8
 import threading
 
+from message_framer import MessageFramer
 from neat import *
 from connection import *
 from listener import *
@@ -64,7 +65,7 @@ class Preconnection:
         self.number_of_connections = 0  # Is this really needed for the preconnection? Maybe regarding rendezvous?
         self.connection_limit = None
         self.unfulfilled_handler = unfulfilled_handler
-        self.framer_list = []
+        self.message_framer = None
 
         self.event_handler_list = {event: None for name, event in ConnectionEvents.__members__.items()}
         self.transport_properties = transport_properties
@@ -222,7 +223,7 @@ class Preconnection:
         backend.clean_up(self.__context)
 
     def add_framer(self, framer):
-        self.framer_list.append(framer)
+        self.message_framer = MessageFramer(framer)
 
     @staticmethod
     def handle_connected_rendezvous_listen(ops):
