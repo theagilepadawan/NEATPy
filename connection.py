@@ -54,6 +54,7 @@ class Connection:
         self.state_handler: ConnectionStateHandler = None
         self.local_endpoint = None
         self.remote_endpoint = None
+        self.framer_placeholder: FramerPlaceholder = FramerPlaceholder(connection=self)
         self.stack_supports_message_boundary_preservation = False
 
         # if this connection is a result from a clone, add parent
@@ -69,7 +70,7 @@ class Connection:
         self.preconnection = preconnection
         self.listener = listener
         self.transport_properties: TransportProperties = None
-        self.message_framer: MessageFramer = preconnection.message_framer
+        self.message_framer: message_framer.MessageFramer = preconnection.message_framer
         self.state = ConnectionState.ESTABLISHING
 
     def established_routine(self, ops):
@@ -205,9 +206,6 @@ class Connection:
             item = MessageQueueObject(priority, (message_data, message_context, sent_handler, expired_epoch))
             self.msg_list.put(item)
         message_passed(self.ops)
-
-    def framer_send(self):
-        pass
 
     def receive(self, handler, min_incomplete_length=None, max_length=math.inf) -> None:
         shim_print("RECEIVED CALLED")
@@ -407,36 +405,37 @@ def handle_readable(ops):
         shim_print(f"HANDLE READABLE - connection {connection.connection_id}")
 
         if connection.receive_request_queue:
-            handler, min_length, max_length = connection.receive_request_queue.pop(0)
             msg = backend.read(ops, connection.receive_buffer_size)
-            message_data_object = MessageDataObject(msg, len(msg))
+            shim_print(f'Data received from stream: {ops.stream_id}')
 
-            shim_print(f'Message received from stream: {ops.stream_id}')
-
-            # Create a message context to pass to the receive handler
-            message_context = MessageContext()
-            message_context.remote_endpoint = connection.remote_endpoint
-            message_context.local_endpoint = connection.local_endpoint
-
-            if connection.stack_supports_message_boundary_preservation:
-                # "If an incoming Message is larger than the minimum of this size and
-                # the maximum Message size on receive for the Connection's Protocol Stack,
-                #  it will be delivered via ReceivedPartial events"
-                if len(msg) > min(max_length, connection.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]):
-                    partition_size = min(max_length, connection.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE])
-                    partitioned_message_data_object = MessageDataObject(partition_size)
-                    connection.partitioned_message_data_object = partitioned_message_data_object
-                    handler(connection, message_data_object, message_data_object, False, None)
-                else:
-                    handler(connection, message_data_object, message_context, None, None)
-                # Min length does not need to be checked with stacks that deliver complete messages
-                # TODO: Check if there possibly could be scenarios with SCTP where partial messages is delivered
+            if connection.message_framer:
+                if connection.framer_placeholder.earmarked_bytes_missing > 0:
+                    connection.framer_placeholder.fill_earmarked_bytes()
+                connection.framer_placeholder = FramerPlaceholder(msg)
+                connection.message_framer.dispatch_handle_received_data(connection)
             else:
-                # If a framer, pass the message
-                if False:
-                    NotImplementedError
-                # No message boundary preservation and no framer yields a receive partial event
+                handler, min_length, max_length = connection.receive_request_queue.pop(0)
+                message_data_object = MessageDataObject(msg, len(msg))
+
+                # Create a message context to pass to the receive handler
+                message_context = MessageContext()
+                message_context.remote_endpoint = connection.remote_endpoint
+                message_context.local_endpoint = connection.local_endpoint
+                if connection.stack_supports_message_boundary_preservation:
+                    # "If an incoming Message is larger than the minimum of this size and
+                    # the maximum Message size on receive for the Connection's Protocol Stack,
+                    #  it will be delivered via ReceivedPartial events"
+                    if len(msg) > min(max_length, connection.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]):
+                        partition_size = min(max_length, connection.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE])
+                        partitioned_message_data_object = MessageDataObject(partition_size)
+                        connection.partitioned_message_data_object = partitioned_message_data_object
+                        handler(connection, message_data_object, message_context, False, None)
+                    else:
+                        handler(connection, message_data_object, message_context, None, None)
+                    # Min length does not need to be checked with stacks that deliver complete messages
+                    # TODO: Check if there possibly could be scenarios with SCTP where partial messages is delivered
                 else:
+                    # No message boundary preservation and no framer yields a receive partial event
                     # TODO: Now, a handler must be sent, but should it be possible to pass None, i.e no handler and just discard bytes/message?
                     if connection.buffered_message_data_object:
                         message_data_object.combine_message_data_objects(connection.buffered_message_data_object)
@@ -515,6 +514,35 @@ def handle_clone_ready(ops):
     handler = parent.clone_callbacks[ops.clone_id]
     handler(cloned_connection, None)
     return NEAT_OK
+
+@dataclass
+class FramerPlaceholder:
+    connection: Connection
+    inbound_data: bytearray = bytearray()
+    buffered_data: bytearray = bytearray()
+    cursor: int = 0
+    earmarked_bytes_missing = 0
+    saved_message_context = None
+    saved_is_end_of_message = None
+
+    def advance(self, length):
+        self.inbound_data = self.inbound_data[length::]
+
+    def fill_earmarked_bytes(self, bytes):
+        if len(bytes) < self.earmarked_bytes_missing:
+            self.buffered_data += bytes
+            self.earmarked_bytes_missing -= len(bytes)
+        else:
+            if len(bytes) > self.earmarked_bytes_missing:
+                msg = self.buffered_data + bytes[0:self.earmarked_bytes_missing]
+                self.inbound_data += bytes
+            else:
+                msg = self.buffered_data + bytes
+            handler, min_length, max_length = self.connection.receive_request_queue.pop(0)
+            message_data_object = MessageDataObject(msg, len(msg))
+            handler(self.connection, message_data_object, self.saved_message_context, self.saved_is_end_of_message, None)
+            if len(self.inbound_data) > 0:
+                self.connection.message_framer.dispatch_handle_received_data(self.connection)
 
 
 @dataclass(order=True)
