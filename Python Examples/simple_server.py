@@ -3,6 +3,7 @@
 
 import os, sys, inspect
 
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
@@ -11,6 +12,7 @@ from endpoint import *
 from preconnection import *
 from transport_properties import *
 from enumerations import *
+import framer
 
 if __name__ == "__main__":
     local_specifier = LocalEndpoint()
@@ -28,11 +30,16 @@ if __name__ == "__main__":
 
     tp = TransportProperties(profile)
 
-    def new_connection_received(connection: Connection):
-        connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg: {msg.data.decode()}", level='msg'))
+    def simple_receive_handler(connection, message, context, is_end, error):
+        shim_print(f"Got msg: {message.data.decode()}", level='msg')
         connection.send(b"Simple server hello", None)
 
+    def new_connection_received(connection: Connection):
+        connection.receive(simple_receive_handler)
+
+
     preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=tp)
+    preconnection.add_framer(framer.TestFramer())
     new_listener: Listener = preconnection.listen()
 
     listen_event_handler = ListenerStateHandler()
