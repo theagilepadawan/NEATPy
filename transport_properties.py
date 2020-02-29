@@ -1,11 +1,10 @@
-from utils import *
-from colorama import Fore, Back, Style
-import json
-from selection_properties import *
-from message_context import *
 from enum import Enum, auto
-from enumerations import *
-from connection_properties import *
+from colorama import Fore
+from connection_properties import GenericConnectionProperties
+from enumerations import SupportedProtocolStacks, ServiceLevel, PreferenceLevel
+from message_properties import MessageProperties
+from selection_properties import SelectionProperties
+from utils import shim_print
 
 protocols_services = {
     SupportedProtocolStacks.TCP: {

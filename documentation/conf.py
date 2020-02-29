@@ -1,5 +1,3 @@
-
-
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -15,14 +13,16 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-#sys.path.append('/Users/michael/Skole/Master/neat/build')
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'NEATPy'
+project = 'NEATpy'
 copyright = '2020, Michael Gundersen'
 author = 'Michael Gundersen'
+
+# The full version, including alpha/beta/rc tags
+release = '0.0.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -52,19 +52,3 @@ html_theme = 'alabaster'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-######################## THEME ######################################
-#import guzzle_sphinx_theme
-
-#html_theme_path = guzzle_sphinx_theme.html_theme_path()
-#html_theme = 'classic'
-#html_theme_options = {
-    #"rightsidebar": "true",
- #   "relbarbgcolor": "orange"
-#}
-
-# Register the theme as an extension to generate a sitemap.xml
-##extensions.append("guzzle_sphinx_theme")
-
-######################## THEME ######################################
-
-
