@@ -1,7 +1,6 @@
 NEATPy
 =========
 
-
 .. toctree::
    :maxdepth: 2
 
