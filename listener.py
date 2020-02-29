@@ -65,9 +65,9 @@ class Listener:
     @staticmethod
     def handle_error(ops):
         listener: Listener = Listener.listener_list[0]
+        shim_print(f"Listner error - {ListenErrorReasons.UNRESOLVED_LOCAL_ENDPOINT.value}")
         if listener.state_handler and listener.state_handler.HANDLE_STATE_LISTEN_ERROR:
             listener.state_handler.HANDLE_STATE_LISTEN_ERROR(ListenErrorReasons.UNRESOLVED_LOCAL_ENDPOINT)
-        shim_print(f"Listner error - {ListenErrorReasons.UNRESOLVED_LOCAL_ENDPOINT.value}")
         listener.stop()
 
     @staticmethod

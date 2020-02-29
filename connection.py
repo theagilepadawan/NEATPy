@@ -163,20 +163,24 @@ class Connection:
 
         # If the connection is closed, further sending will result in an SendError
         if self.close_called:
-            shim_print("SendError - Closed is called, no further sending is possible")
+            shim_print(f"SendError - {SendErrorReason.CONNECTION_CLOSING.value}")
+            sent_handler(message_context, SendErrorReason.CONNECTION_CLOSING)
             return
 
         # "If another Message is sent after a Message marked as Final has already been sent on a Connection
         #  the Send Action for the new Message will cause a SendError Event"
         if self.final_message_passed:
-            shim_print("Send error - Message marked final already sent", level='error')
+            shim_print(f"Send error - {SendErrorReason.FINAL_MESSAGE_PASSED.value}", level='error')
+            sent_handler(message_context, SendErrorReason.FINAL_MESSAGE_PASSED)
+            return
 
         # Check for inconsistency between message properties and the connection's transport properties
         inconsistencies = self.check_message_properties(message_context.props)
 
         if inconsistencies:
-            shim_print(f"SendError - inconsistencies in message properties:", level='error',
+            shim_print(f"SendError - {SendErrorReason.INCONSISTENT_PROPERTIES_PASSED.value}:", level='error',
                        additional_msg=inconsistencies)
+            sent_handler(message_context, SendErrorReason.INCONSISTENT_PROPERTIES_PASSED)
             return
 
         if self.message_framer:
@@ -336,11 +340,12 @@ def handle_writable(ops):
             res = backend.write(ops, message_to_be_sent)
             if res:
                 if res == NEAT_ERROR_MESSAGE_TOO_BIG:
-                    reason = "The message is too large for the system to handle"
+                    reason = SendErrorReason.MESSAGE_TOO_LARGE
                 elif res == NEAT_ERROR_IO:
-                    reason = "Failure of processing message in the protocol stack"
-                shim_print(f"SendError - Neat failed while writing - {reason}")
-                # Todo: Elegant error handling
+                    reason = SendErrorReason.FAILURE_UNDERLYING_STACK
+                shim_print(f"SendError - {reason.value}")
+                handler(context, reason)
+                return
             # Keep message until NEAT confirms sending with all_written
             connection.messages_passed_to_back_end.append((message_to_be_sent, context, handler))
         else:
@@ -380,6 +385,9 @@ def handle_all_written(ops):
         shim_print(f"ALL WRITTEN - connection {ops.connection_id}")
         message, message_context, handler = connection.messages_passed_to_back_end.pop(0)
 
+        if handler:
+            handler(connection)
+
         if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
             shim_print("All messages passed down to the network layer - calling close")
             close = True
@@ -388,10 +396,6 @@ def handle_all_written(ops):
             close = True
         if close:
             neat_close(connection.__ops.ctx, connection.__ops.flow)
-
-        if handler:
-            handler(connection)
-
     except:
         shim_print("An error occurred: {}".format(sys.exc_info()[0]))
         backend.stop(ops.ctx)
@@ -468,20 +472,20 @@ def handle_readable(ops):
 
 def handle_closed(ops):
     try:
-        connection = Connection.connection_list[ops.connection_id]
+        connection: Connection = Connection.connection_list[ops.connection_id]
         shim_print(f"HANDLE CLOSED - connection {ops.connection_id}")
 
-        # TODO: Check if state handler has closed handler
+        if connection.state_handler and connection.state_handler.HANDLE_STATE_CLOSED:
+            connection.state_handler.HANDLE_STATE_CLOSED(connection)
 
         # If a Connection becomes finished before a requested Receive action can be satisfied,
         # the implementation should deliver any partial Message content outstanding..."
         if connection.receive_request_queue:
-            if connection.tcp_to_small_queue:
-                handler = connection.receive_request_queue.pop(0)[
-                    0]  # Should check if there is more than one request in the queue
-                shim_print("Sending leftovers")
+            if connection.buffered_message_data_object:
+                handler, min_length, max_length = connection.receive_request_queue.pop(0)
+                shim_print("Dispatching received partial as connection is closing and there is buffered data")
                 message_context = MessageContext()
-                handler(connection, connection.tcp_to_small_queue.pop(), message_context)
+                handler(connection, connection.buffered_message_data_object, message_context, True, None)
             # "...or if none is available, an indication that there will be no more received Messages."
             else:
                 shim_print(
@@ -516,6 +520,7 @@ def handle_clone_ready(ops):
     handler = parent.clone_callbacks[ops.clone_id]
     handler(cloned_connection, None)
     return NEAT_OK
+
 
 @dataclass
 class FramerPlaceholder:
@@ -591,6 +596,15 @@ class ConnectionState(Enum):
     ESTABLISHED = auto()
     CLOSING = auto()
     CLOSED = auto()
+
+
+class SendErrorReason(Enum):
+    CONNECTION_CLOSING = "Connection is closing, no further sending is possible"
+    FINAL_MESSAGE_PASSED = "Message marked final already sent"
+    INCONSISTENT_PROPERTIES_PASSED = "Inconsistencies in message properties"
+    MESSAGE_TOO_LARGE = "Message is too large for the system to handle, try sendPartial()"
+    FAILURE_UNDERLYING_STACK = "Failure occurred in the underlying protocol stack"
+
 
 
 @dataclass()

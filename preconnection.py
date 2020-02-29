@@ -225,6 +225,9 @@ class Preconnection:
     def add_framer(self, framer):
         self.message_framer = MessageFramer(framer)
 
+    def resolve(self):
+        return NotImplementedError
+
     @staticmethod
     def handle_connected_rendezvous_listen(ops):
         precon: Preconnection = Preconnection.preconnection_list[ops.preconnection_id]
