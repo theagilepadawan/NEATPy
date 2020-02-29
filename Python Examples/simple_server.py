@@ -31,7 +31,7 @@ if __name__ == "__main__":
     tp = TransportProperties(profile)
 
     def simple_receive_handler(connection, message, context, is_end, error):
-        shim_print(f"Got msg: {message.data.decode()}", level='msg')
+        shim_print(f"Got msg {len(message.data)}: {message.data.decode()}", level='msg')
         connection.send(b"Simple server hello", None)
 
     def new_connection_received(connection: Connection):

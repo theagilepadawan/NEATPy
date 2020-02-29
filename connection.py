@@ -411,8 +411,10 @@ def handle_readable(ops):
             if connection.message_framer:
                 if connection.framer_placeholder.earmarked_bytes_missing > 0:
                     connection.framer_placeholder.fill_earmarked_bytes(msg)
-                connection.framer_placeholder.inbound_data = msg
-                connection.message_framer.dispatch_handle_received_data(connection)
+                    # Case if more data than unfulfilled message is received?
+                else:
+                    connection.framer_placeholder.inbound_data = msg
+                    connection.message_framer.dispatch_handle_received_data(connection)
             else:
                 handler, min_length, max_length = connection.receive_request_queue.pop(0)
                 message_data_object = MessageDataObject(msg, len(msg))

@@ -38,8 +38,8 @@ if __name__ == "__main__":
 
     def ready_handler(connection: Connection):
         shim_print("Connection is ready")
-        connection.send(b"Simple hello" * 6, None)
-        connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg: {msg.data.decode()}", level='msg'))
+        connection.send(b"Simple hello" * 100000, None)
+        connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
 
     connection_state_handler = ConnectionStateHandler()
     connection_state_handler.HANDLE_STATE_READY = ready_handler
