@@ -53,9 +53,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 ######################## THEME ######################################
-import guzzle_sphinx_theme
+#import guzzle_sphinx_theme
 
-html_theme_path = guzzle_sphinx_theme.html_theme_path()
+#html_theme_path = guzzle_sphinx_theme.html_theme_path()
 html_theme = 'classic'
 html_theme_options = {
     #"rightsidebar": "true",
