@@ -1,6 +1,8 @@
 from enum import Enum, auto
 import math
-from enumerations import *
+
+from enumerations import CapacityProfiles
+from utils import shim_print
 
 
 class MessageProperties(Enum):

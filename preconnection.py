@@ -1,15 +1,18 @@
 # coding=utf-8
-import threading
-
+import json
+from enum import Enum
+from typing import Callable
+from connection import Connection
+from endpoint import RemoteEndpoint
+from enumerations import ConnectionEvents
+from listener import Listener
+from message_context import MessageContext
 from message_framer import MessageFramer
 from neat import *
-from connection import *
-from listener import *
-from utils import *
-from endpoint import *
 import backend
-from enumerations import *
 import sys
+from transport_properties import TransportProperties
+from utils import shim_print
 
 
 class RendezvousObject:
@@ -78,13 +81,15 @@ class Preconnection:
         else:
             shim_print("No valid event passed. Ignoring")
 
-    """
-    []
-    Active open is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming
-    Connection requests. Active open is used by clients in client-server interactions.
-    """
-
     def initiate(self, timeout=None):
+        """ Active open is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming
+        Connection requests. Active open is used by clients in client-server interactions.Note that start() must be
+        called on the preconnection.
+
+        :param timeout:
+            The timeout parameter specifies how long to wait before aborting Active open.
+        :return:
+        """
         if not self.remote_endpoint:
             shim_print("Initiate error - Remote Endpoint MUST be specified if when calling initiate on the preconnection", level="error")
             backend.clean_up(self.__context)

@@ -1,5 +1,4 @@
 # coding=utf-8
-import inspect
 import shutil
 from colorama import Fore, Back, Style
 import datetime

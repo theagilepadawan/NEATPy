@@ -1,11 +1,14 @@
 import copy
+import math
 import sys
+from dataclasses import dataclass
+from enum import Enum
+from typing import Callable
 
 import backend
-import math;
+from connection import Connection, handle_readable
 from neat import *
-from connection import *
-from utils import *
+from utils import shim_print
 
 
 @dataclass()

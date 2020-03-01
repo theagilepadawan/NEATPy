@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import connection
 from utils import shim_print
 
 

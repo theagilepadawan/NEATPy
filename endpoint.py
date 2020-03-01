@@ -1,10 +1,6 @@
 # coding=utf-8
 # !/usr/bin/env python3
 
-from neat import *
-import sys
-import ctypes
-
 
 class LocalEndpoint:
     """ A local (TAPS) Endpoint with an interface

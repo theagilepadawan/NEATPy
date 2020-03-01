@@ -1,5 +1,8 @@
+import sys
 from enum import Enum, auto
-from enumerations import *
+
+from enumerations import CapacityProfiles
+from utils import shim_print
 
 
 class GenericConnectionProperties(Enum):

@@ -1,5 +1,6 @@
 from enum import Enum, auto
-from enumerations import *
+
+from utils import shim_print
 
 
 class CommunicationDirections(Enum):

@@ -1,24 +1,27 @@
 # coding=utf-8
 # !/usr/bin/env python3
 import inspect
+import json
+import math
 import queue
 import time
-from dataclasses import dataclass, field
-
-from endpoint import LocalEndpoint, RemoteEndpoint
-from message_context import *
-import message_framer
-from neat import *
 import sys
 import copy
-from transport_properties import *
-
+from dataclasses import dataclass, field
+from enum import Enum, auto
+from connection_properties import TCPUserTimeout, GenericConnectionProperties
+from endpoint import LocalEndpoint, RemoteEndpoint
+import message_framer
+from enumerations import SupportedProtocolStacks, AdditionalServices, ServiceLevel, PreferenceLevel
+from message_context import MessageContext
+from message_properties import MessageProperties
+from neat import *
+from selection_properties import CommunicationDirections, SelectionProperties
 import backend
-from utils import *
 from typing import Callable, List, Tuple, Any, Optional
+from transport_properties import TransportProperties
+from utils import shim_print
 #from typeAliases import ReceiveHandlerTypeSignature, SentHandlerTypeSignature
-
-from enumerations import *
 
 
 class Connection:

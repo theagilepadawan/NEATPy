@@ -11,6 +11,8 @@ from preconnection import *
 from endpoint import *
 from transport_properties import *
 from enumerations import *
+from connection import ConnectionStateHandler
+from connection_properties import TCPUserTimeout
 import framer
 
 

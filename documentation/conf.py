@@ -12,6 +12,7 @@
 #
 import os
 import sys
+import sphinx_readable_theme
 sys.path.insert(0, os.path.abspath('..'))
 
 
@@ -23,6 +24,7 @@ author = 'Michael Gundersen'
 
 # The full version, including alpha/beta/rc tags
 release = '0.0.1'
+
 
 
 # -- General configuration ---------------------------------------------------
@@ -46,9 +48,26 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+#html_theme = 'alabaster'
+
+## CUSTOM
+html_theme_path = [sphinx_readable_theme.get_html_theme_path()]
+html_theme = 'readable'
+## CUSOTM END
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+autodoc_mock_imports = ["neat"]
+
+
+def autodoc_skip_member(app, what, name, obj, skip, options):
+    exclusions = ('neat', '__neat__')
+    exclude = name in exclusions
+    return skip or exclude
+
+
+def setup(app):
+    app.connect('autodoc-skip-member', autodoc_skip_member)
