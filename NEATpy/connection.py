@@ -9,7 +9,7 @@ import sys
 import copy
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from connection_properties import TCPUserTimeout, GenericConnectionProperties
+from connection_properties import TCPUserTimeout, ConnectionProperties
 from endpoint import LocalEndpoint, RemoteEndpoint
 import message_framer
 from enumerations import SupportedProtocolStacks, AdditionalServices, ServiceLevel, PreferenceLevel
@@ -25,6 +25,11 @@ from utils import shim_print
 
 
 class Connection:
+    """ A Connection represents a transport Protocol Stack on which data can be sent to and/or received from a remote
+    Endpoint (i.e., depending on the kind of transport, connections can be bi-directional or unidirectional).
+
+    A Connection is created from a :py:class:`preconnection` or cloning, i.e it cannot be instantiated directly.
+    """
     connection_list = {}
     receive_buffer_size = 32 * 1024 * 1024  # 32MB
     clone_count = 0
@@ -110,9 +115,9 @@ class Connection:
         # Set TCP UTO if enabled
         if self.transport_stack is SupportedProtocolStacks.TCP:
             is_linux = sys.platform == 'linux'
-            uto_enabled = self.transport_properties.connection_properties[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.USER_TIMEOUT_ENABLED]
+            uto_enabled = self.transport_properties.connection_properties[ConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.USER_TIMEOUT_ENABLED]
             if is_linux and uto_enabled:
-                new_timeout = self.transport_properties.connection_properties[GenericConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.ADVERTISED_USER_TIMEOUT]
+                new_timeout = self.transport_properties.connection_properties[ConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.ADVERTISED_USER_TIMEOUT]
                 backend.set_timeout(self.context, self.flow, new_timeout)
 
     def crate_and_populate_endpoint(self, local=True):
@@ -142,22 +147,42 @@ class Connection:
     def set_connection_properties(self):
         try:
             (max_send, max_recv) = neat_get_max_buffer_sizes(self.flow)
-            self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND] = max_send
-            self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE] = max_recv
+            self.transport_properties.connection_properties[ConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND] = max_send
+            self.transport_properties.connection_properties[ConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE] = max_recv
 
-            shim_print(f"Send buffer: {self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND]} - Receive buffer: {self.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]}")
+            shim_print(f"Send buffer: {self.transport_properties.connection_properties[ConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND]} - Receive buffer: {self.transport_properties.connection_properties[ConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]}")
         except:
             shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
 
-    def set_property(self, connection_property: GenericConnectionProperties, value):
+    def set_property(self, connection_property: ConnectionProperties, value):
+        """The application can set and query Connection Properties on a per-Connection basis.
+        Connection Properties that are not read-only can be set during pre-establishment (see :py:class:`connection_properties`)
+        , as well as on connections directly using the SetProperty action:
+
+        :param connection_property:
+            The property to assign a value.
+        :param value:
+            The value to assign the property.
+        """
         # If the connection is part of a connection group set the property for all of the entangled connections
         if self.connection_group:
             for connection in self.connection_group:
-                GenericConnectionProperties.set_property(connection.transport_properties.connection_properties, connection_property, value)
+                ConnectionProperties.set_property(connection.transport_properties.connection_properties, connection_property, value)
         # Then set the property for the given connection
-        GenericConnectionProperties.set_property(self.transport_properties.connection_properties, connection_property, value)
+        ConnectionProperties.set_property(self.transport_properties.connection_properties, connection_property, value)
 
-    def send(self, message_data, sent_handler=None, message_context=None, end_of_message=True):
+    def send(self, message_data: bytearray, sent_handler=None, message_context: MessageContext = None, end_of_message: bool = True) -> None:
+        """Data is sent as Messages, which allow the application to communicate the boundaries of the data being
+        transferred. By default, Send enqueues a complete Message, and takes optional per-:py:class:`message_properties`.
+        All Send actions are asynchronous, and deliver events (see Section 7.3). Sending partial Messages for streaming
+        large data is also supported
+
+        :param message_data: The data to send
+        :param sent_handler: A function that is called after completion / error.
+        :param message_context:
+        :param end_of_message: When set to false indicates a partial send.
+            All data sent with the same MessageContext object will be treated as belonging to the same Message, and will constitute an in-order series until the endOfMessage is marked.
+        """
         shim_print("SEND CALLED")
 
         if not message_context:
@@ -215,6 +240,14 @@ class Connection:
         message_passed(self.ops)
 
     def receive(self, handler, min_incomplete_length=None, max_length=math.inf) -> None:
+        """ As with sending, data is received in terms of Messages. Receiving is an asynchronous operation,
+        in which each call to Receive enqueues a request to receive new data from the connection. Once data has been
+        received, or an error is encountered, an event will be delivered to complete the Receive request
+
+        :param handler: The function to handle the event delivered during completion
+        :param min_incomplete_length:
+        :param max_length:
+        """
         shim_print("RECEIVED CALLED")
 
         if self.partitioned_message_data_object:
@@ -237,6 +270,12 @@ class Connection:
                 received_called(self.ops)
 
     def batch(self, bacth_block: Callable[[], None]):
+        """Used to send multiple messages without the transport system dispatching messages further down the stack.
+        Used to minimize overhead, and as a mechanism for the application to indicate that messages could be coalesced
+        when possible.
+
+        :param bacth_block: A function / block of code which calls send multiple times
+        """
         self.batch_in_session = True
         bacth_block()
         self.batch_in_session = False
@@ -281,6 +320,16 @@ class Connection:
                 'props': self.transport_properties}
 
     def clone(self, clone_handler: Callable[[object, object], None]):
+        """Calling Clone on a Connection yields a group of two Connections: the parent Connection on which Clone was
+        called, and the resulting cloned Connection. These connections are "entangled" with each other, and become part
+        of a Connection Group. Calling Clone on any of these two Connections adds a third Connection to the Connection
+        Group, and so on. Connections in a Connection Group generally share Connection Properties. However, ¨
+        there may be exceptions, such as "Priority (Connection)", see Section 10.1.3. Like all other Properties,
+        Priority is copied to the new Connection when calling Clone(), but it is not entangled: Changing Priority on
+        one Connection does not change it on the other Connections in the same Connection Group.
+
+        :param clone_handler: A function to handle clone completion
+        """
         try:
             shim_print("CLONE")
             flow = neat_new_flow(self.context)
@@ -434,8 +483,8 @@ def handle_readable(ops):
                     # "If an incoming Message is larger than the minimum of this size and
                     # the maximum Message size on receive for the Connection's Protocol Stack,
                     #  it will be delivered via ReceivedPartial events"
-                    if len(msg) > min(max_length, connection.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]):
-                        partition_size = min(max_length, connection.transport_properties.connection_properties[GenericConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE])
+                    if len(msg) > min(max_length, connection.transport_properties.connection_properties[ConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE]):
+                        partition_size = min(max_length, connection.transport_properties.connection_properties[ConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE])
                         partitioned_message_data_object = MessageDataObject(partition_size)
                         connection.partitioned_message_data_object = partitioned_message_data_object
                         handler(connection, message_data_object, message_context, False, None)
@@ -607,7 +656,6 @@ class SendErrorReason(Enum):
     INCONSISTENT_PROPERTIES_PASSED = "Inconsistencies in message properties"
     MESSAGE_TOO_LARGE = "Message is too large for the system to handle, try sendPartial()"
     FAILURE_UNDERLYING_STACK = "Failure occurred in the underlying protocol stack"
-
 
 
 @dataclass()

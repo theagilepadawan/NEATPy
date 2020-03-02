@@ -73,7 +73,7 @@ if __name__ == "__main__":
         profile = profiles_dict[sys.argv[1]]
 
     tp = TransportProperties(profile)
-    tp.add(GenericConnectionProperties.USER_TIMEOUT_TCP, {TCPUserTimeout.USER_TIMEOUT_ENABLED: True})
+    tp.add(ConnectionProperties.USER_TIMEOUT_TCP, {TCPUserTimeout.USER_TIMEOUT_ENABLED: True})
 
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
 

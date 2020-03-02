@@ -1,6 +1,6 @@
 from enum import Enum, auto
 from colorama import Fore
-from connection_properties import GenericConnectionProperties
+from connection_properties import ConnectionProperties
 from enumerations import SupportedProtocolStacks, ServiceLevel, PreferenceLevel
 from message_properties import MessageProperties
 from selection_properties import SelectionProperties
@@ -60,20 +60,29 @@ protocols_services = {
 
 
 class TransportPropertyProfiles(Enum):
+    """ Transport property profiles are used as a mechanism to pre-configure :py:class:`transport_properties` objects,
+    with with frequently used sets of properties.
     """
-    TEST
-    """
+
+    #: This profile provides reliable, in-order transport service with congestion control. An example of a protocol that provides this service is TCP.
     RELIABLE_INORDER_STREAM = auto()
+    #: This profile provides message-preserving, reliable, in-order transport service with congestion control. An example of a protocol that provides this service is SCTP.
     RELIABLE_MESSAGE = auto()
+    #: This profile provides unreliable datagram transport service. An example of a protocol that provides this service is UDP.
     UNRELIABLE_DATAGRAM = auto()
 
 
 class TransportProperties:
 
-    def __init__(self, property_profile=None):
+    def __init__(self, property_profile: TransportPropertyProfiles = None):
+        """ Transport properties is the collection of :py:class:`message_properties`, :py:class:`selection_properties`
+        and :py:class:`connection_properties`.
+
+        :param property_profile: Transport property profile to use
+        """
         self.selection_properties = SelectionProperties.get_default()
         self.message_properties = MessageProperties.get_default()
-        self.connection_properties = GenericConnectionProperties.get_default()
+        self.connection_properties = ConnectionProperties.get_default()
 
         # Updates the selection properties dict with values from the transport profile
         if property_profile:
@@ -110,49 +119,78 @@ class TransportProperties:
                         remove_list.append(protocol)
         return [protocol for protocol in candidates if protocol not in remove_list]
 
-    def add(self, prop, value):
+    def add(self, prop: [SelectionProperties, MessageProperties, ConnectionProperties], value):
+        """ Add a property to the transport property object.
+
+        :param prop: Property to add
+        :param value: Value for given property
+        """
         if isinstance(prop, SelectionProperties):
             shim_print("Setting selection property...")
             SelectionProperties.set_property(self.selection_properties, prop, value)
-        elif isinstance(prop, GenericConnectionProperties):
+        elif isinstance(prop, ConnectionProperties):
             shim_print("Setting connection property...")
-            GenericConnectionProperties.set_property(self.connection_properties, prop, value)
+            ConnectionProperties.set_property(self.connection_properties, prop, value)
         elif isinstance(prop, MessageProperties):
             MessageProperties.set_property(self.message_properties, prop, value)
         else:
             shim_print("No valid property given - ignoring", level='error')
 
-    def avoid(self, prop):
+    def avoid(self, prop: SelectionProperties):
+        """ Set the preference level to avoid for the passed selection property.
+
+        :param prop: Selection property to set ``avoid`` as preference level for.
+        """
         if not isinstance(prop, SelectionProperties):
             shim_print("Property given is not a selection property - ignoring", level='error')
         else:
             self.add(prop, PreferenceLevel.AVOID)
 
-    def require(self, prop):
+    def require(self, prop: SelectionProperties):
+        """Set the preference level to require for the passed selection property.
+
+        :param prop: Selection property to set ``require`` as preference level for.
+        """
         if not isinstance(prop, SelectionProperties):
             shim_print("Property given is not a selection property - ignoring", level='error')
         else:
             self.add(prop, PreferenceLevel.REQUIRE)
 
-    def prefer(self, prop):
+    def prefer(self, prop: SelectionProperties):
+        """ Set the preference level to prefer for the passed selection property.
+
+        :param prop: Selection property to set ``prefer`` as preference level for.
+        """
         if not isinstance(prop, SelectionProperties):
             shim_print("Property given is not a selection property - ignoring", level='error')
         else:
             self.add(prop, PreferenceLevel.PREFER)
 
-    def ignore(self, prop):
+    def ignore(self, prop: SelectionProperties):
+        """  Set the preference level to ignore for the passed selection property.
+
+        :param prop: Selection property to set ``ignore`` as preference level for.
+        """
         if not isinstance(prop, SelectionProperties):
             shim_print("Property given is not a selection property - ignoring", level='error')
         else:
             self.add(prop, PreferenceLevel.IGNORE)
 
-    def prohibit(self, prop):
+    def prohibit(self, prop: SelectionProperties):
+        """  Set the preference level to prohibit for the passed selection property.
+
+        :param prop: Selection property to set ``prohibit`` as preference level for.
+        """
         if not isinstance(prop, SelectionProperties):
             shim_print("Property given is not a selection property - ignoring", level='error')
         else:
             self.add(prop, PreferenceLevel.PROHIBIT)
 
-    def default(self, prop):
+    def default(self, prop: SelectionProperties):
+        """ Set the default preference level for the given selection property.
+
+        :param prop: Selection property to reset to default preference level for.
+        """
         if not isinstance(prop, SelectionProperties):
             shim_print("Property given is not a selection property - ignoring", level='error')
         else:

@@ -5,7 +5,7 @@ import os, sys, inspect, time
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
+sys.path.insert(0, f"{parentdir}/NEATpy")
 
 from preconnection import *
 from endpoint import *
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         profile = profiles_dict[sys.argv[1]]
 
     tp = TransportProperties(profile)
-    tp.add(GenericConnectionProperties.USER_TIMEOUT_TCP, {TCPUserTimeout.USER_TIMEOUT_ENABLED: True})
+    tp.add(ConnectionProperties.USER_TIMEOUT_TCP, {TCPUserTimeout.USER_TIMEOUT_ENABLED: True})
 
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
     preconnection.add_framer(framer.TestFramer())

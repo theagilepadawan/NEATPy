@@ -6,26 +6,25 @@ from utils import shim_print
 
 
 class MessageProperties(Enum):
-    """
-    [From draft-ietf-taps-interface-latest - https://ietf-tapswg.github.io/api-drafts/draft-ietf-taps-interface.html]
+    """ [From draft-ietf-taps-interface-latest - https://ietf-tapswg.github.io/api-drafts/draft-ietf-taps-interface.html]
     << Applications may need to annotate the Messages they send with extra information to control how data is scheduled
     and processed by the transport protocols in the Connection. Therefore a message context containing these properties
     can be passed to the Send Action. >>
     """
-    LIFETIME = 'msg-lifetime'
-    PRIORITY = 'msg-prio'
-    ORDERED = 'msg-ordered'
-    IDEMPOTENT = 'idempotent'
-    FINAL = 'final'
-    CORRUPTION_PROTECTION_LENGTH = 'msg-checksum-len'
-    RELIABLE_DATA_TRANSFER = 'msg-reliable'
-    MESSAGE_CAPACITY_PROFILE_OVERRIDE = 'msg-capacity-profile'
-    SINGULAR_TRANSMISSION = 'singular-transmission'
+    LIFETIME = 'msg-lifetime' #: Default value is math.inf
+    PRIORITY = 'msg-prio' #: Default value is 100
+    ORDERED = 'msg-ordered' #: Default value is True
+    IDEMPOTENT = 'idempotent' #: Default value is False
+    FINAL = 'final' #: Default value is False
+    CORRUPTION_PROTECTION_LENGTH = 'msg-checksum-len' #: Default value is -1
+    RELIABLE_DATA_TRANSFER = 'msg-reliable' #: Default value is True
+    MESSAGE_CAPACITY_PROFILE_OVERRIDE = 'msg-capacity-profile' #: Default value is CapacityProfiles.DEFAULT
+    SINGULAR_TRANSMISSION = 'singular-transmission' #: Default value is False
 
     # Ready-only, receive message properties:
-    ECN = 'ecn'
-    EARLY_DATA = 'early-data'
-    RECEIVING_FINAL_MESSAGE = 'receiving-final-messages'
+    ECN = 'ecn' #: Read only property
+    EARLY_DATA = 'early-data' #: Read only property
+    RECEIVING_FINAL_MESSAGE = 'receiving-final-messages' #: Read only property
 
     def __str__(self):
         return self.value

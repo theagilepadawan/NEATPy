@@ -12,8 +12,10 @@
 #
 import os
 import sys
-import sphinx_readable_theme
-sys.path.insert(0, os.path.abspath('..'))
+#import sphinx_readable_theme
+import sphinx_rtd_theme
+
+sys.path.insert(0, os.path.abspath('../NEATpy'))
 
 
 # -- Project information -----------------------------------------------------
@@ -32,7 +34,7 @@ release = '0.0.1'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.coverage']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.coverage', "sphinx_rtd_theme", 'sphinx_autodoc_typehints']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -51,8 +53,12 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #html_theme = 'alabaster'
 
 ## CUSTOM
-html_theme_path = [sphinx_readable_theme.get_html_theme_path()]
-html_theme = 'readable'
+ #THEME 1
+#html_theme_path = [sphinx_readable_theme.get_html_theme_path()]
+#html_theme = 'readable'
+
+# THEME 2
+html_theme = "sphinx_rtd_theme"
 ## CUSOTM END
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -60,7 +66,10 @@ html_theme = 'readable'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-autodoc_mock_imports = ["neat"]
+autodoc_mock_imports = ["neat", "utils"]
+autodoc_typehints = 'description'
+autoclass_content = 'init'
+add_module_names = False
 
 
 def autodoc_skip_member(app, what, name, obj, skip, options):
@@ -69,5 +78,14 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
     return skip or exclude
 
 
+def autodoc_process_signature(app, what, name, obj, options, signature, return_annotation):
+    if signature and "(preconnection, connection_type, listener=None, parent=None)" in signature:
+
+        return "", return_annotation
+    else:
+        return signature, return_annotation
+
+
 def setup(app):
     app.connect('autodoc-skip-member', autodoc_skip_member)
+    app.connect('autodoc-process-signature', autodoc_process_signature)

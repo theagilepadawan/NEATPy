@@ -49,9 +49,20 @@ class Preconnection:
     preconnection_counter = 1
     rendezvous_counter = 1
 
-    def __init__(self, local_endpoint=None, remote_endpoint=None,
-                 transport_properties=None, security_parameters=None, unfulfilled_handler=None):
+    def __init__(self, local_endpoint=None, remote_endpoint=None,transport_properties=None, security_parameters=None, unfulfilled_handler=None):
+        """ A Preconnection represents a set of properties and constraints on the selection and configuration of paths
+        and protocols to establish a Connection with a remote Endpoint.
 
+        :param local_endpoint:
+            Optional local endpoint to be used with the preconnection
+        :param remote_endpoint:
+            Optional remote endpoint to be used with the preconnection
+        :param transport_properties:
+            A transport property object with desired selection properties.
+        :param security_parameters:
+        :param unfulfilled_handler:
+            A function handling an unfulfilled error
+        """
         self.__context, self.__flow, self.__ops = backend.bootstrap_backend()
         self.id = Preconnection.preconnection_counter
         self.__ops.preconnection_id = self.id
@@ -82,8 +93,8 @@ class Preconnection:
             shim_print("No valid event passed. Ignoring")
 
     def initiate(self, timeout=None):
-        """ Active open is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming
-        Connection requests. Active open is used by clients in client-server interactions.Note that start() must be
+        """ Initiate (Active open) is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming
+        Connection requests. Active open is used by clients in client-server interactions. Note that start() must be
         called on the preconnection.
 
         :param timeout:
@@ -135,16 +146,20 @@ class Preconnection:
         return new_con
 
     def start(self):
+        """ Starts the transport systems. Must be called after initiate / listen.
+
+        :return: This function does not return
+        """
         backend.start(self.__context)
         backend.clean_up(self.__context)
 
-    """
-    []
-    Passive open is the Action of waiting for Connections from remote Endpoints, commonly used by servers in
-    client-server interactions. Passive open is supported by this interface through the Listen Action and returns a
-    Listener object:
-    """
     def listen(self):
+        """Listen (Passive open) is the Action of waiting for Connections from remote Endpoints. Before listening
+        the transport system will resolve transport properties for candidate protocol stacks. A local endpoint must be
+        passed to the preconnection prior to listen.
+
+        :return: A listener object.
+        """
         if not self.local_endpoint:
             shim_print("Listen error - Local Endpoint MUST be specified if when calling listen on the preconnection", level="error")
             backend.clean_up(self.__context)
@@ -163,13 +178,15 @@ class Preconnection:
         listener = Listener(self.__context, self.__flow, self.__ops, self)
         return listener
 
-
-    """
-    []
-    The Rendezvous() Action causes the Preconnection to listen on the Local Endpoint for an incoming Connection from
-    the Remote Endpoint, while simultaneously trying to establish a Connection from the Local Endpoint to the Remote Endpoint.
-    """
     def rendezvous(self, completion_handler: Callable[[Connection, MessageContext, RendezvousErrorReasons], None]):
+        """The Rendezvous() Action causes the Preconnection to listen on the Local Endpoint for an incoming Connection from
+        the Remote Endpoint, while simultaneously trying to establish a Connection from the Local Endpoint to the Remote Endpoint.
+
+        :param completion_handler:
+            A function that handles either an error or completed rendezvous.
+        :return:
+            This functions does not return.
+        """
         # Both local and remote endpoint must be set
         if self.local_endpoint is None or self.remote_endpoint is None:
             shim_print("Both local and remote endpoints must be set for rendezvous. Aborting...", level='error')
@@ -228,6 +245,12 @@ class Preconnection:
         backend.clean_up(self.__context)
 
     def add_framer(self, framer):
+        """ Adds a framer to the Preconnection to run on top of transport protocols. Multiple Framers may be added.
+        If multiple Framers are added, the last one added runs first when framing outbound messages, and last when
+        parsing inbound data.
+
+        :param framer: The framer to be added. Must inherit from the Framer class.
+        """
         self.message_framer = MessageFramer(framer)
 
     def resolve(self):
