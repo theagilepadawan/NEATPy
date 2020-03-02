@@ -55,3 +55,13 @@ Endpoints
 
    .. autoclass:: RemoteEndpoint
       :members:
+
+Framer
+----------------------
+.. automodule:: framer
+
+   .. autoclass:: Framer
+      :members:
+
+   .. autoclass:: TestFramer
+      :nondoc-members:

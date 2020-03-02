@@ -281,6 +281,12 @@ class Connection:
         self.batch_in_session = False
 
     def close(self):
+        """Close terminates a Connection after satisfying all the requirements that were specified regarding
+        the delivery of Messages that the application has already given to the transport system. For example,
+        if reliable delivery was requested for a Message handed over before calling Close, the transport system
+        will ensure that this Message is indeed delivered. If the Remote Endpoint still has data to send, it cannot
+        be received after this call
+        """
         # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
         if self.msg_list.empty() or self.messages_passed_to_back_end:
             self.close_called = True
@@ -290,6 +296,8 @@ class Connection:
             self.state = ConnectionState.CLOSED
 
     def abort(self):
+        """Abort terminates a Connection without delivering remaining data:
+        """
         backend.abort(self.context, self.flow)
 
     def stop_listener(self):
@@ -314,6 +322,9 @@ class Connection:
         return ret
 
     def get_properties(self):
+        """At any point, the application can query Connection Properties.
+        :return: A dictionary with Connection Properties
+        """
         return {'state': self.state,
                 'send': self.can_be_used_for_sending(),
                 'receive': self.can_be_used_for_receive_data(),

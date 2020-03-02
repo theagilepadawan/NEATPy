@@ -9,9 +9,7 @@ class Framer(ABC):
 
     @abstractmethod
     def start(self, connection):
-        """
-
-        When a Message Framer generates a Start event, the framer implementation has the opportunity to start writing
+        """When a Message Framer generates a Start event, the framer implementation has the opportunity to start writing
         some data prior to the Connection delivering its Ready event. This allows the implementation to communicate
         control data to the remote endpoint that can be used to parse Messages.
         """
@@ -23,9 +21,7 @@ class Framer(ABC):
 
     @abstractmethod
     def new_sent_message(self, connection, message_data, message_context, sent_handler, is_end_of_message):
-        """
-
-        Upon receiving this event, a framer implementation is responsible for performing any necessary
+        """Upon receiving this event, a framer implementation is responsible for performing any necessary
         transformations and sending the resulting data back to the Message Framer, which will in turn send
         it to the next protocol.
         :param connection:
@@ -38,9 +34,7 @@ class Framer(ABC):
 
     @abstractmethod
     def handle_received_data(self, connection):
-        """
-
-        Upon receiving this event, the framer implementation can inspect the inbound data. The data is parsed from
+        """Upon receiving this event, the framer implementation can inspect the inbound data. The data is parsed from
         a particular cursor representing the unprocessed data. The application requests a specific amount of data it
         needs to have available in order to parse. If the data is not available, the parse fails.
         :param connection:
