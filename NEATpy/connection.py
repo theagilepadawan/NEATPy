@@ -341,6 +341,7 @@ class Connection:
                 'receive': self.can_be_used_for_receive_data(),
                 'props': self.transport_properties}
 
+
     def clone(self, clone_handler: Callable[[object, object], None]):
         """Calling Clone on a Connection yields a group of two Connections: the parent Connection on which Clone was
         called, and the resulting cloned Connection. These connections are "entangled" with each other, and become part
@@ -357,9 +358,11 @@ class Connection:
             flow = neat_new_flow(self.context)
             ops = neat_flow_operations()
 
+            new_connection = Connection(self.preconnection, 'active', parent=self)
+
             Connection.clone_count += 1
             self.clone_counter += 1
-            ops.clone_id = self.clone_counter
+            ops.clone_id = new_connection.connection_id
             ops.parent_id = self.connection_id
 
             self.clone_callbacks[self.clone_counter] = clone_handler
@@ -371,6 +374,8 @@ class Connection:
 
             neat_open(self.context, flow, self.preconnection.remote_endpoint.address,
                       self.preconnection.remote_endpoint.port, None, 0)
+            return new_connection
+
         except:
             shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name),level='error')
             backend.stop(self.context)
@@ -583,16 +588,14 @@ def on_clone_error(ops):
 def handle_clone_ready(ops):
     shim_print("CLONE IS READY TO GO BABY!!")
 
-    parent = Connection.connection_list[ops.parent_id]
-    cloned_connection = Connection(parent.preconnection, 'active', parent=parent)
+    cloned_connection = Connection.connection_list[ops.clone_id]
     cloned_connection.established_routine(ops)
+    parent = Connection.connection_list[ops.parent_id]
     parent.add_child(cloned_connection)
 
     ops.on_writable = handle_writable
     neat_set_operations(ops.ctx, ops.flow, ops)
 
-    handler = parent.clone_callbacks[ops.clone_id]
-    handler(cloned_connection, None)
     return NEAT_OK
 
 
