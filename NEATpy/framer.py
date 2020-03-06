@@ -12,6 +12,8 @@ class Framer(ABC):
         """When a Message Framer generates a Start event, the framer implementation has the opportunity to start writing
         some data prior to the Connection delivering its Ready event. This allows the implementation to communicate
         control data to the remote endpoint that can be used to parse Messages.
+
+        :param connection:
         """
         pass
 
@@ -24,6 +26,7 @@ class Framer(ABC):
         """Upon receiving this event, a framer implementation is responsible for performing any necessary
         transformations and sending the resulting data back to the Message Framer, which will in turn send
         it to the next protocol.
+
         :param connection:
         :param message_data:
         :param message_context:
@@ -37,6 +40,7 @@ class Framer(ABC):
         """Upon receiving this event, the framer implementation can inspect the inbound data. The data is parsed from
         a particular cursor representing the unprocessed data. The application requests a specific amount of data it
         needs to have available in order to parse. If the data is not available, the parse fails.
+
         :param connection:
         """
         pass

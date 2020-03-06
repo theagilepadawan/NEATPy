@@ -23,7 +23,9 @@ class CommunicationDirections(Enum):
 
 
 class PreferenceLevel(Enum):
-    REQUIRE = 2
+    """Preference level is used when specifying values for :py:class:`selection_properties`
+    """
+    REQUIRE = 2 #: TEST
     PREFER = 1
     IGNORE = 0
     AVOID = -1
@@ -31,22 +33,27 @@ class PreferenceLevel(Enum):
 
 
 class SelectionProperties(Enum):
-    RELIABILITY = 'reliability'
-    PRESERVE_MSG_BOUNDARIES = 'preserve-msg-boundaries'
-    PER_MSG_RELIABILITY = 'per-msg-reliability'
-    PRESERVE_ORDER = 'preserve-order'
-    ZERO_RTT_MSG = 'zero-rtt-msg'
-    MULTISTREAMING = 'multistreaming'
-    PER_MSG_CHECKSUM_LEN_SEND = 'per-msg-checksum-len-send'
-    PER_MSG_CHECKSUM_LEN_RECV = 'per-msg-checksum-len-recv'
-    CONGESTION_CONTROL = 'congestion-control'
-    INTERFACE = 'interface'
-    PVD = 'pvd'
-    LOCAL_ADDRESS_PREFERENCE = 'local-address-preference'
-    MULTIPATH = 'multipath'
-    DIRECTION = 'direction'
-    RETRANSMIT_NOTIFY = 'retransmit-notify'
-    SOFT_ERROR_NOTIFY = 'soft-error-notify'
+    """
+    An enumeration.
+    Selection properties are used for application to specify applications requirements for transport
+    and used for path and protocol stack selections. Selection properties are added to a :py:class:`transport_properties` object.
+    """
+    RELIABILITY = 'reliability' #: Default :py:class:`preference_level`.REQUIRE,
+    PRESERVE_MSG_BOUNDARIES = 'preserve-msg-boundaries' #: Default :py:class:`preference_level`.PREFER,
+    PER_MSG_RELIABILITY = 'per-msg-reliability' #: Default :py:class:`preference_level`.IGNORE,
+    PRESERVE_ORDER = 'preserve-order' #: Default :py:class:`preference_level`.REQUIRE,
+    ZERO_RTT_MSG = 'zero-rtt-msg' #: Default :py:class:`preference_level`.IGNORE,
+    MULTISTREAMING = 'multistreaming' #: Default :py:class:`preference_level`.PREFER,
+    PER_MSG_CHECKSUM_LEN_SEND = 'per-msg-checksum-len-send' #: Default :py:class:`preference_level`.IGNORE,
+    PER_MSG_CHECKSUM_LEN_RECV = 'per-msg-checksum-len-recv' #: Default :py:class:`preference_level`.IGNORE,
+    CONGESTION_CONTROL = 'congestion-control' #: Default :py:class:`preference_level`.REQUIRE,
+    INTERFACE = 'interface' #: Default :py:class:`preference_level`
+    PVD = 'pvd' #: Default :py:class:`preference_level`
+    LOCAL_ADDRESS_PREFERENCE = 'local-address-preference' #: Default :py:class:`preference_level`
+    MULTIPATH = 'multipath' #: Default :py:class:`preference_level`.PREFER
+    DIRECTION = 'direction' #: Default :py:class:`communication_directions`
+    RETRANSMIT_NOTIFY = 'retransmit-notify' #: Default :py:class:`preference_level`.IGNORE
+    SOFT_ERROR_NOTIFY = 'soft-error-notify' #: Default :py:class:`preference_level`.IGNORE
 
     def __str__(self):
         return self.value

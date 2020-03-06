@@ -172,6 +172,7 @@
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  | <a href="#W"><strong>W</strong></a>
+ | <a href="#Z"><strong>Z</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -191,6 +192,8 @@
         <li><a href="subdir/API.html#endpoint.RemoteEndpoint.address">(RemoteEndpoint attribute)</a>
 </li>
       </ul></li>
+      <li><a href="subdir/API.html#selection_properties.PreferenceLevel.AVOID">AVOID (PreferenceLevel attribute)</a>
+</li>
       <li><a href="subdir/API.html#transport_properties.TransportProperties.avoid">avoid() (TransportProperties method)</a>
 </li>
   </ul></td>
@@ -217,6 +220,8 @@
 </li>
       <li><a href="subdir/API.html#connection.Connection.close">close() (Connection method)</a>
 </li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.CONGESTION_CONTROL">CONGESTION_CONTROL (SelectionProperties attribute)</a>
+</li>
       <li><a href="subdir/API.html#connection.Connection">Connection (class in connection)</a>
 </li>
   </ul></td>
@@ -238,6 +243,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#transport_properties.TransportProperties.default">default() (TransportProperties method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.DIRECTION">DIRECTION (SelectionProperties attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -287,8 +296,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#framer.Framer.handle_received_data">handle_received_data() (Framer method)</a>
 </li>
+      <li><a href="subdir/API.html#connection.Connection.HANDLE_STATE_CLOSED">HANDLE_STATE_CLOSED (Connection attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="subdir/API.html#connection.Connection.HANDLE_STATE_CONNECTION_ERROR">HANDLE_STATE_CONNECTION_ERROR (Connection attribute)</a>
+</li>
+      <li><a href="subdir/API.html#connection.Connection.HANDLE_STATE_READY">HANDLE_STATE_READY (Connection attribute)</a>
+</li>
       <li><a href="subdir/API.html#endpoint.RemoteEndpoint.hostname">hostname (RemoteEndpoint attribute)</a>
 </li>
   </ul></td>
@@ -299,6 +314,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#message_properties.MessageProperties.IDEMPOTENT">IDEMPOTENT (MessageProperties attribute)</a>
 </li>
+      <li><a href="subdir/API.html#selection_properties.PreferenceLevel.IGNORE">IGNORE (PreferenceLevel attribute)</a>
+</li>
       <li><a href="subdir/API.html#transport_properties.TransportProperties.ignore">ignore() (TransportProperties method)</a>
 </li>
       <li><a href="subdir/API.html#preconnection.Preconnection.initiate">initiate() (Preconnection method)</a>
@@ -306,6 +323,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#endpoint.LocalEndpoint.interface">interface (LocalEndpoint attribute)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.INTERFACE">INTERFACE (SelectionProperties attribute)</a>
 </li>
       <li><a href="subdir/API.html#connection_properties.ConnectionProperties.is_read_only">is_read_only (ConnectionProperties attribute)</a>
 </li>
@@ -319,9 +338,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#message_properties.MessageProperties.LIFETIME">LIFETIME (MessageProperties attribute)</a>
 </li>
+      <li><a href="subdir/API.html#preconnection.Preconnection.listen">listen() (Preconnection method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="subdir/API.html#preconnection.Preconnection.listen">listen() (Preconnection method)</a>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.LOCAL_ADDRESS_PREFERENCE">LOCAL_ADDRESS_PREFERENCE (SelectionProperties attribute)</a>
 </li>
       <li><a href="subdir/API.html#endpoint.LocalEndpoint">LocalEndpoint (class in endpoint)</a>
 </li>
@@ -337,15 +358,19 @@
 </li>
       <li><a href="subdir/API.html#connection_properties.ConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_RECEIVE">MAXIMUM_MESSAGE_SIZE_ON_RECEIVE (ConnectionProperties attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#connection_properties.ConnectionProperties.MAXIMUM_MESSAGE_SIZE_ON_SEND">MAXIMUM_MESSAGE_SIZE_ON_SEND (ConnectionProperties attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#message_properties.MessageProperties.MESSAGE_CAPACITY_PROFILE_OVERRIDE">MESSAGE_CAPACITY_PROFILE_OVERRIDE (MessageProperties attribute)</a>
 </li>
       <li><a href="subdir/API.html#module-message_properties">message_properties (module)</a>
 </li>
       <li><a href="subdir/API.html#message_properties.MessageProperties">MessageProperties (class in message_properties)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.MULTIPATH">MULTIPATH (SelectionProperties attribute)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.MULTISTREAMING">MULTISTREAMING (SelectionProperties attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -369,6 +394,12 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.PER_MSG_CHECKSUM_LEN_RECV">PER_MSG_CHECKSUM_LEN_RECV (SelectionProperties attribute)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.PER_MSG_CHECKSUM_LEN_SEND">PER_MSG_CHECKSUM_LEN_SEND (SelectionProperties attribute)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.PER_MSG_RELIABILITY">PER_MSG_RELIABILITY (SelectionProperties attribute)</a>
+</li>
       <li><a href="subdir/API.html#endpoint.LocalEndpoint.portNumber">portNumber (LocalEndpoint attribute)</a>
 
       <ul>
@@ -379,9 +410,17 @@
 </li>
       <li><a href="subdir/API.html#module-preconnection">preconnection (module)</a>
 </li>
+      <li><a href="subdir/API.html#selection_properties.PreferenceLevel.PREFER">PREFER (PreferenceLevel attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#transport_properties.TransportProperties.prefer">prefer() (TransportProperties method)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.PreferenceLevel">PreferenceLevel (class in selection_properties)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.PRESERVE_MSG_BOUNDARIES">PRESERVE_MSG_BOUNDARIES (SelectionProperties attribute)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.PRESERVE_ORDER">PRESERVE_ORDER (SelectionProperties attribute)</a>
 </li>
       <li><a href="subdir/API.html#connection_properties.ConnectionProperties.PRIORITY">PRIORITY (ConnectionProperties attribute)</a>
 
@@ -389,7 +428,11 @@
         <li><a href="subdir/API.html#message_properties.MessageProperties.PRIORITY">(MessageProperties attribute)</a>
 </li>
       </ul></li>
+      <li><a href="subdir/API.html#selection_properties.PreferenceLevel.PROHIBIT">PROHIBIT (PreferenceLevel attribute)</a>
+</li>
       <li><a href="subdir/API.html#transport_properties.TransportProperties.prohibit">prohibit() (TransportProperties method)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.PVD">PVD (SelectionProperties attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -400,6 +443,8 @@
       <li><a href="subdir/API.html#connection.Connection.receive">receive() (Connection method)</a>
 </li>
       <li><a href="subdir/API.html#message_properties.MessageProperties.RECEIVING_FINAL_MESSAGE">RECEIVING_FINAL_MESSAGE (MessageProperties attribute)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.RELIABILITY">RELIABILITY (SelectionProperties attribute)</a>
 </li>
       <li><a href="subdir/API.html#message_properties.MessageProperties.RELIABLE_DATA_TRANSFER">RELIABLE_DATA_TRANSFER (MessageProperties attribute)</a>
 </li>
@@ -413,11 +458,15 @@
 </li>
       <li><a href="subdir/API.html#preconnection.Preconnection.rendezvous">rendezvous() (Preconnection method)</a>
 </li>
+      <li><a href="subdir/API.html#selection_properties.PreferenceLevel.REQUIRE">REQUIRE (PreferenceLevel attribute)</a>
+</li>
       <li><a href="subdir/API.html#transport_properties.TransportProperties.require">require() (TransportProperties method)</a>
 </li>
       <li><a href="subdir/API.html#connection_properties.ConnectionProperties.REQUIRED_MINIMUM_CORRUPTION_PROTECTION_COVERAGE_FOR_RECEIVING">REQUIRED_MINIMUM_CORRUPTION_PROTECTION_COVERAGE_FOR_RECEIVING (ConnectionProperties attribute)</a>
 </li>
       <li><a href="subdir/API.html#connection_properties.ConnectionProperties.RETRANSMISSION_THRESHOLD_BEFORE_EXCESSIVE_RETRANSMISSION_NOTIFICATION">RETRANSMISSION_THRESHOLD_BEFORE_EXCESSIVE_RETRANSMISSION_NOTIFICATION (ConnectionProperties attribute)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.RETRANSMIT_NOTIFY">RETRANSMIT_NOTIFY (SelectionProperties attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -425,6 +474,10 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="subdir/API.html#module-selection_properties">selection_properties (module)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties">SelectionProperties (class in selection_properties)</a>
+</li>
       <li><a href="subdir/API.html#connection.Connection.send">send() (Connection method)</a>
 </li>
       <li><a href="subdir/API.html#connection_properties.ConnectionProperties.set_property">set_property (ConnectionProperties attribute)</a>
@@ -436,6 +489,8 @@
       <li><a href="subdir/API.html#connection_properties.ConnectionProperties.set_tcp_uto">set_tcp_uto (ConnectionProperties attribute)</a>
 </li>
       <li><a href="subdir/API.html#message_properties.MessageProperties.SINGULAR_TRANSMISSION">SINGULAR_TRANSMISSION (MessageProperties attribute)</a>
+</li>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.SOFT_ERROR_NOTIFY">SOFT_ERROR_NOTIFY (SelectionProperties attribute)</a>
 </li>
       <li><a href="subdir/API.html#framer.Framer.start">start() (Framer method)</a>
 
@@ -449,12 +504,14 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="subdir/API.html#connection_properties.ConnectionProperties.TIMEOUT_FOR_ABORTING_CONNECTION">TIMEOUT_FOR_ABORTING_CONNECTION (ConnectionProperties attribute)</a>
+      <li><a href="subdir/API.html#framer.TestFramer">TestFramer (class in framer)</a>
 </li>
-      <li><a href="subdir/API.html#module-transport_properties">transport_properties (module)</a>
+      <li><a href="subdir/API.html#connection_properties.ConnectionProperties.TIMEOUT_FOR_ABORTING_CONNECTION">TIMEOUT_FOR_ABORTING_CONNECTION (ConnectionProperties attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="subdir/API.html#module-transport_properties">transport_properties (module)</a>
+</li>
       <li><a href="subdir/API.html#transport_properties.TransportProperties">TransportProperties (class in transport_properties)</a>
 </li>
       <li><a href="subdir/API.html#transport_properties.TransportPropertyProfiles">TransportPropertyProfiles (class in transport_properties)</a>
@@ -495,6 +552,14 @@
         <li><a href="subdir/API.html#endpoint.RemoteEndpoint.with_port">(RemoteEndpoint method)</a>
 </li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Z">Z</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="subdir/API.html#selection_properties.SelectionProperties.ZERO_RTT_MSG">ZERO_RTT_MSG (SelectionProperties attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 

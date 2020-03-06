@@ -57,9 +57,9 @@ class Connection:
         self.receive_request_queue = []
         self.buffered_message_data_object: MessageDataObject = None
         self.partitioned_message_data_object: MessageDataObject = None
+        self.message_sent_with_initiate = None
         self.clone_callbacks = {}
         self.connection_group = []
-        self.state_handler: ConnectionStateHandler = None
         self.local_endpoint = None
         self.remote_endpoint = None
         self.framer_placeholder: FramerPlaceholder = FramerPlaceholder(connection=self)
@@ -75,9 +75,13 @@ class Connection:
         self.final_message_received = False
         self.final_message_passed = False
 
+        self.HANDLE_STATE_READY: Callable[[], None] = None  #: Handler for when the connection transitions to ready state
+        self.HANDLE_STATE_CLOSED: Callable[[], None] = None #: Handler for when the connection transitions to clsoed state
+        self.HANDLE_STATE_CONNECTION_ERROR: Callable[[], None] = None #: Handler for when the connection gets experiences a connection error
+
         self.preconnection = preconnection
+        self.transport_properties = self.preconnection.transport_properties
         self.listener = listener
-        self.transport_properties: TransportProperties = None
         self.message_framer: message_framer.MessageFramer = preconnection.message_framer
         self.state = ConnectionState.ESTABLISHING
 
@@ -96,8 +100,8 @@ class Connection:
         self.set_connection_properties()
 
         # Fire off appropriate event handler (if present)
-        if self.state_handler and self.state_handler.HANDLE_STATE_READY:
-            self.state_handler.HANDLE_STATE_READY(self)
+        if self.HANDLE_STATE_READY:
+            self.HANDLE_STATE_READY(self)
 
         ops.on_all_written = handle_all_written
         ops.on_close = handle_closed
@@ -119,6 +123,9 @@ class Connection:
             if is_linux and uto_enabled:
                 new_timeout = self.transport_properties.connection_properties[ConnectionProperties.USER_TIMEOUT_TCP][TCPUserTimeout.ADVERTISED_USER_TIMEOUT]
                 backend.set_timeout(self.context, self.flow, new_timeout)
+        if self.message_sent_with_initiate:
+            message_data, sent_handler, message_context = self.message_sent_with_initiate
+            self.send(message_data, sent_handler=sent_handler, message_context=message_context)
 
     def crate_and_populate_endpoint(self, local=True):
         if local:
@@ -184,6 +191,10 @@ class Connection:
             All data sent with the same MessageContext object will be treated as belonging to the same Message, and will constitute an in-order series until the endOfMessage is marked.
         """
         shim_print("SEND CALLED")
+
+        if self.state == ConnectionState.ESTABLISHING:
+            self.message_sent_with_initiate = (message_data, sent_handler, message_context)
+            return
 
         if not message_context:
             message_context = MessageContext()
@@ -538,8 +549,8 @@ def handle_closed(ops):
         connection: Connection = Connection.connection_list[ops.connection_id]
         shim_print(f"HANDLE CLOSED - connection {ops.connection_id}")
 
-        if connection.state_handler and connection.state_handler.HANDLE_STATE_CLOSED:
-            connection.state_handler.HANDLE_STATE_CLOSED(connection)
+        if connection.HANDLE_STATE_CLOSED:
+            connection.HANDLE_STATE_CLOSED(connection)
 
         # If a Connection becomes finished before a requested Receive action can be satisfied,
         # the implementation should deliver any partial Message content outstanding..."
@@ -667,14 +678,6 @@ class SendErrorReason(Enum):
     INCONSISTENT_PROPERTIES_PASSED = "Inconsistencies in message properties"
     MESSAGE_TOO_LARGE = "Message is too large for the system to handle, try sendPartial()"
     FAILURE_UNDERLYING_STACK = "Failure occurred in the underlying protocol stack"
-
-
-@dataclass()
-class ConnectionStateHandler:
-    HANDLE_STATE_READY: Callable[[], None] = None  # Connection to be passed, if no design change?
-    HANDLE_STATE_CLOSED: Callable[[], None] = None
-    HANDLE_STATE_CONNECTION_ERROR: Callable[[], None] = None
-
 
 Message_queue_object = Tuple[bytes, MessageContext]
 Batch_struct = List[Message_queue_object]

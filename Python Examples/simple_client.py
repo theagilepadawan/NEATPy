@@ -11,7 +11,6 @@ from preconnection import *
 from endpoint import *
 from transport_properties import *
 from enumerations import *
-from connection import ConnectionStateHandler
 from connection_properties import TCPUserTimeout
 import framer
 
@@ -26,7 +25,6 @@ if __name__ == "__main__":
     ep = RemoteEndpoint()
     ep.with_address("127.0.0.1")
     ep.with_port(5000)
-    ep.with_interface("lo0")
 
     profile = None
     if len(sys.argv) > 1:
@@ -38,14 +36,12 @@ if __name__ == "__main__":
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
     preconnection.add_framer(framer.TestFramer())
 
-    def ready_handler(connection: Connection):
-        shim_print("Connection is ready")
-        connection.send(b"Simple hello" * 100000, None)
-        connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
+    #def ready_handler(connection: Connection):
+    #    shim_print("Connection is ready")
+    #    connection.send(b"Simple hello" * 100000, None)
+    #    connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
 
-    connection_state_handler = ConnectionStateHandler()
-    connection_state_handler.HANDLE_STATE_READY = ready_handler
-    new_connection: Connection = preconnection.initiate()
-    new_connection.state_handler = connection_state_handler
+    new_connection: Connection = preconnection.initiate_with_send(b"Simple hello" * 100000, None)
+    #new_connection.HANDLE_STATE_READY = ready_handler
 
     preconnection.start()

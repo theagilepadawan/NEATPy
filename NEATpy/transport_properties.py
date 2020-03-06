@@ -1,4 +1,6 @@
 from enum import Enum, auto
+from typing import Union
+
 from colorama import Fore
 from connection_properties import ConnectionProperties
 from enumerations import SupportedProtocolStacks, ServiceLevel, PreferenceLevel
@@ -119,7 +121,7 @@ class TransportProperties:
                         remove_list.append(protocol)
         return [protocol for protocol in candidates if protocol not in remove_list]
 
-    def add(self, prop: [SelectionProperties, MessageProperties, ConnectionProperties], value):
+    def add(self, prop: Union[SelectionProperties, MessageProperties, ConnectionProperties], value):
         """ Add a property to the transport property object.
 
         :param prop: Property to add

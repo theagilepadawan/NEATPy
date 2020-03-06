@@ -92,14 +92,13 @@ class Preconnection:
         else:
             shim_print("No valid event passed. Ignoring")
 
-    def initiate(self, timeout=None):
+    def initiate(self, timeout=None) -> Connection:
         """ Initiate (Active open) is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming
         Connection requests. Active open is used by clients in client-server interactions. Note that start() must be
         called on the preconnection.
 
         :param timeout:
             The timeout parameter specifies how long to wait before aborting Active open.
-        :return:
         """
         if not self.remote_endpoint:
             shim_print("Initiate error - Remote Endpoint MUST be specified if when calling initiate on the preconnection", level="error")
@@ -144,6 +143,12 @@ class Preconnection:
         new_con = Connection(self, 'active')
         Preconnection.initiated_connection_list[self.id] = new_con
         return new_con
+
+    def initiate_with_send(self, message_data, sent_handler, message_context=None, timeout=None) -> Connection:
+        new_connection = self.initiate(timeout=timeout)
+        new_connection.send(message_data, sent_handler=sent_handler, message_context=message_context)
+        return new_connection
+
 
     def start(self):
         """ Starts the transport systems. Must be called after initiate / listen.

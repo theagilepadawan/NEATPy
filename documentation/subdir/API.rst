@@ -18,6 +18,30 @@ Connection
    .. autoclass:: Connection
       :members:
 
+Transport Properties
+----------------------
+.. automodule:: transport_properties
+
+   .. autoclass:: TransportProperties
+      :members:
+
+Transport Property Profiles
+-----------------------------
+   .. autoclass:: TransportPropertyProfiles
+      :members:
+      :undoc-members:
+
+Selection Properties
+-----------------------
+.. automodule:: selection_properties
+
+   .. autoclass:: PreferenceLevel
+      :members:
+      :undoc-members:
+
+   .. autoclass:: SelectionProperties
+      :members:
+
 Connection Properties
 ----------------------
 .. automodule:: connection_properties
@@ -32,19 +56,6 @@ Message Properties
 
       .. autoclass:: MessageProperties
          :members:
-
-Transport Properties
-----------------------
-.. automodule:: transport_properties
-
-   .. autoclass:: TransportProperties
-      :members:
-
-Transport Property Profiles
------------------------------
-   .. autoclass:: TransportPropertyProfiles
-      :members:
-      :undoc-members:
 
 Endpoints
 ----------------------
@@ -64,4 +75,4 @@ Framer
       :members:
 
    .. autoclass:: TestFramer
-      :nondoc-members:
+      :undoc-members:

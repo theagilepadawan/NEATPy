@@ -2,7 +2,6 @@ from endpoint import *
 from preconnection import *
 from transport_properties import *
 from enumerations import *
-from listener import ListenerStateHandler
 import framer
 
 local_specifier = LocalEndpoint()
@@ -23,8 +22,6 @@ preconnection = Preconnection(local_endpoint=local_specifier, transport_properti
 preconnection.add_framer(framer.TestFramer())
 
 new_listener: Listener = preconnection.listen()
-listen_event_handler = ListenerStateHandler()
-listen_event_handler.HANDLE_CONNECTION_RECEIVED = new_connection_received
-new_listener.state_handler = listen_event_handler
+new_listener.HANDLE_CONNECTION_RECEIVED = new_connection_received
 
 preconnection.start()

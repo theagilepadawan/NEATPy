@@ -12,7 +12,6 @@ from endpoint import *
 from preconnection import *
 from transport_properties import *
 from enumerations import *
-from listener import ListenerStateHandler
 import framer
 
 if __name__ == "__main__":
@@ -38,13 +37,9 @@ if __name__ == "__main__":
     def new_connection_received(connection: Connection):
         connection.receive(simple_receive_handler)
 
-
     preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=tp)
     preconnection.add_framer(framer.TestFramer())
     new_listener: Listener = preconnection.listen()
-
-    listen_event_handler = ListenerStateHandler()
-    listen_event_handler.HANDLE_CONNECTION_RECEIVED = new_connection_received
-    new_listener.state_handler = listen_event_handler
+    new_listener.HANDLE_CONNECTION_RECEIVED = new_connection_received
 
     preconnection.start()

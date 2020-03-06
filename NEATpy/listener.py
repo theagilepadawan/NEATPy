@@ -11,14 +11,6 @@ from neat import *
 from utils import shim_print
 
 
-@dataclass()
-class ListenerStateHandler:
-    HANDLE_STATE_LISTENING: Callable[[], None] = None
-    HANDLE_STATE_LISTEN_ERROR: Callable[[], None] = None
-    HANDLE_STATE_STOPPED: Callable[[], None] = None
-    HANDLE_CONNECTION_RECEIVED: Callable[[Connection], None] = None
-
-
 class ListenErrorReasons(Enum):
     UNFULFILLED_PROPERTIES = 'Properties of the preconnection cannot be fulfilled for listening'
     UNRESOLVED_LOCAL_ENDPOINT = 'The Local Endpoint cannot be resolved'
@@ -37,7 +29,11 @@ class Listener:
         self.props = copy.deepcopy(preconnection.transport_properties)
         self.number_of_connections = 0
         self.connection_limit = math.inf
-        self.state_handler: ListenerStateHandler = None
+        self.HANDLE_STATE_LISTENING: Callable[[], None] = None
+        self.HANDLE_STATE_LISTEN_ERROR: Callable[[], None] = None
+        self.HANDLE_STATE_STOPPED: Callable[[], None] = None
+        self.HANDLE_CONNECTION_RECEIVED: Callable[[Connection], None] = None
+
 
         # Todo: Find a more sophisticated way to keep track of listeners (or is it necessary?)
         Listener.listener_list[0] = self
@@ -55,8 +51,8 @@ class Listener:
 
     def stop(self):
         shim_print("LISTENER STOP")
-        if self.state_handler and self.state_handler.HANDLE_STATE_STOPPED:
-            self.state_handler.HANDLE_STATE_STOPPED()
+        if self.HANDLE_STATE_STOPPED:
+            self.HANDLE_STATE_STOPPED()
         backend.stop(self.__context)
 
     def set_new_connection_limit(self, value):
@@ -69,8 +65,8 @@ class Listener:
     def handle_error(ops):
         listener: Listener = Listener.listener_list[0]
         shim_print(f"Listner error - {ListenErrorReasons.UNRESOLVED_LOCAL_ENDPOINT.value}")
-        if listener.state_handler and listener.state_handler.HANDLE_STATE_LISTEN_ERROR:
-            listener.state_handler.HANDLE_STATE_LISTEN_ERROR(ListenErrorReasons.UNRESOLVED_LOCAL_ENDPOINT)
+        if listener.HANDLE_STATE_LISTEN_ERROR:
+            listener.HANDLE_STATE_LISTEN_ERROR(ListenErrorReasons.UNRESOLVED_LOCAL_ENDPOINT)
         listener.stop()
 
     @staticmethod
@@ -82,8 +78,8 @@ class Listener:
             new_connection = Connection(listener.preconnection, 'passive', listener)
             new_connection.established_routine(ops)
 
-            if listener.state_handler and listener.state_handler.HANDLE_CONNECTION_RECEIVED:
-                listener.state_handler.HANDLE_CONNECTION_RECEIVED(new_connection)
+            if listener.HANDLE_CONNECTION_RECEIVED:
+                listener.HANDLE_CONNECTION_RECEIVED(new_connection)
         else:
             shim_print("Connection limit is reached!")
 
