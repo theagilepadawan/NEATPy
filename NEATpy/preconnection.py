@@ -256,7 +256,10 @@ class Preconnection:
 
         :param framer: The framer to be added. Must inherit from the Framer class.
         """
-        self.message_framer = MessageFramer(framer)
+        if self.message_framer:
+            self.message_framer.append_framer(framer)
+        else:
+            self.message_framer = MessageFramer(framer)
 
     def resolve(self):
         return NotImplementedError

@@ -5,14 +5,19 @@ from framer import Framer
 from message_context import MessageContext
 
 
-class MessageFramer():
+class MessageFramer:
 
     def __init__(self, framer_implementation: Framer):
         self.framer_list: List[Framer] = [framer_implementation]
-        pass
+        self.ongoing_transformations = {}
 
     def dispatch_handle_received_data(self, connection):
         self.framer_list[0].handle_received_data(connection)
+
+    def dispatch_new_sent_message(self, connection, message_data, message_context, sent_handler, is_end_of_message):
+        number_of_framers = len(self.framer_list)
+        self.ongoing_transformations[message_context] = number_of_framers - 2
+        self.framer_list[number_of_framers - 1].new_sent_message(connection, message_data, message_context, sent_handler, is_end_of_message)
 
     def fail_connection(self, connection, error):
         """
@@ -27,6 +32,9 @@ class MessageFramer():
     def make_connection_ready(self):
         pass
 
+    def append_framer(self, new_framer):
+        self.framer_list.append(new_framer)
+
     def prepend_framer(self, connection, other_framer):
         """
 
@@ -38,9 +46,28 @@ class MessageFramer():
         """
         pass
 
-    def send(self, connection, data, message_context, sent_handler, is_end_of_message):
-        # More logic here?
-        connection.add_to_message_queue(message_context, data, sent_handler, is_end_of_message)
+    def send(self, connection, message_data, message_context, sent_handler, is_end_of_message: bool):
+        """This function is used by framer implementations, sending transformed data back to the
+        message framer. The message framer will send the data to the next protocol (which, could be
+        additional framers, or the transport protocol backing the connection)
+
+        :param connection: The connection in which send() was called in the first place.
+        :param message_data: The transformed data
+        :param message_context: The message context passed by the application with the data
+        :param sent_handler: A handler / function passed by the application with the send() call.
+        :param is_end_of_message: A boolean value used with partial sends, indicating if this is the final part of the partial message
+        """
+        # Get the next framer index
+        next_framer = self.ongoing_transformations[message_context]
+
+        # If a valid index (i.e a value >= 0), send the transformed data to the next framer
+        if next_framer >= 0:
+            self.ongoing_transformations[message_context] = next_framer - 1
+            self.framer_list[next_framer].new_sent_message(connection, message_data, message_context, sent_handler, is_end_of_message)
+
+        # If this was the last framer, add the message to the connection message queue, to be dispatch further down the stack with NEAT
+        else:
+            connection.add_to_message_queue(message_context, message_data, sent_handler, is_end_of_message)
 
     def parse(self, connection, minimum_incomplete_length, maximum_length) -> (bytes, MessageContext, bool):
         framer_placeholder = connection.framer_placeholder

@@ -35,6 +35,7 @@ if __name__ == "__main__":
 
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
     preconnection.add_framer(framer.TestFramer())
+    preconnection.add_framer(framer.SecondFramer())
 
     def clone_ready(connection: Connection):
         shim_print("Clone is ready")
@@ -45,8 +46,8 @@ if __name__ == "__main__":
         shim_print("Connection is ready")
         #connection.send(b"Simple hello", None)
         connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
-        clone = connection.clone(None)
-        clone.HANDLE_STATE_READY = clone_ready
+        #clone = connection.clone(None)
+        #clone.HANDLE_STATE_READY = clone_ready
 
     new_connection: Connection = preconnection.initiate_with_send(b"Simple hello", None)
     new_connection.HANDLE_STATE_READY = ready_handler

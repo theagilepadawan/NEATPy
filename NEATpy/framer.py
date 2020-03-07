@@ -78,4 +78,25 @@ class TestFramer(Framer):
         connection.message_framer.advance_receive_cursor(connection, 4)
         connection.message_framer.deliver_and_advance_receive_cursor(connection, context, length, True)
 
+class SecondFramer(Framer):
+
+    def start(self, connection):
+        pass
+
+    def stop(self, connection):
+        pass
+
+    def new_sent_message(self, connection, message_data, message_context, sent_handler, is_end_of_message):
+        """
+        To provide an example, a simple protocol that adds a length as a header would receive the NewSentMessage event,
+        create a data representation of the length of the Message data, and then send a block of data that is the
+        concatenation of the length header and the original Message data.
+        """
+        shim_print(f"Framer got message: {message_data}")
+        new_block = "😘".encode() + message_data
+        connection.message_framer.send(connection, new_block, message_context, sent_handler, is_end_of_message)
+
+    def handle_received_data(self, connection):
+        pass
+
 

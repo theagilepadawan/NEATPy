@@ -223,7 +223,7 @@ class Connection:
             return
 
         if self.message_framer:
-            self.message_framer.framer_list[0].new_sent_message(self, message_data, message_context, sent_handler, end_of_message)
+            self.message_framer.dispatch_new_sent_message(self, message_data, message_context, sent_handler, end_of_message)
         else:
             self.add_to_message_queue(message_context, message_data, sent_handler, end_of_message)
 
