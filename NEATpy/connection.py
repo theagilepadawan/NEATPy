@@ -96,7 +96,6 @@ class Connection:
             self.stack_supports_message_boundary_preservation = True
 
 
-
         if SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.MULTISTREAMING) >= ServiceLevel.OPTIONAL.value:
             shim_print("Setting on connected for streams")
             ops.on_connected = incoming_stream
