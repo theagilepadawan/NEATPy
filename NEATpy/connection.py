@@ -96,10 +96,6 @@ class Connection:
         if SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.PRESERVE_MSG_BOUNDARIES) == ServiceLevel.INTRINSIC_SERVICE:
             self.stack_supports_message_boundary_preservation = True
 
-        if SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.MULTISTREAMING) >= ServiceLevel.OPTIONAL.value:
-            shim_print("Setting on connected for streams")
-            ops.on_connected = incoming_stream
-            ops.parent_id = self.connection_id
 
         self.ops.connection_id = self.connection_id
         shim_print(f"Connection [ID: {self.connection_id}] established - transport used: {self.transport_stack.name}", level='msg')
@@ -607,16 +603,6 @@ def handle_clone_ready(ops):
     return NEAT_OK
 
 
-def incoming_stream(ops):
-    shim_print(f"New incoming stream with stream id: {ops.stream_id}")
-    if ops.stream_id == 0:
-        shim_print("HERE")
-
-    pre_con = preconnection.Preconnection.preconnection_list[ops.preconnection_id]
-    new_connection = Connection(pre_con, 'active')
-    new_connection.established_routine(ops)
-    new_connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
-    return NEAT_OK
 
 
 @dataclass
