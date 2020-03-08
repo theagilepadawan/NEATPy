@@ -108,7 +108,6 @@ class Connection:
         ops.on_all_written = handle_all_written
         ops.on_close = handle_closed
 
-        neat_set_operations(ops.ctx, ops.flow, ops)
         res, res_json = neat_get_stats(self.context)
         json_rep = json.loads(res_json)
         shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
@@ -430,9 +429,10 @@ def handle_writable(ops):
             # Keep message until NEAT confirms sending with all_written
             connection.messages_passed_to_back_end.append((message_to_be_sent, context, handler))
         else:
+            pass    
             shim_print("WHAT")
             ops.on_writable = None
-            neat_set_operations(ops.ctx, ops.flow, ops)
+            return NEAT_OK
     except:
         shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
@@ -442,7 +442,6 @@ def handle_writable(ops):
 def message_passed(ops):
     try:
         ops.on_writable = handle_writable
-        neat_set_operations(ops.ctx, ops.flow, ops)
     except:
         shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
@@ -452,7 +451,6 @@ def message_passed(ops):
 def received_called(ops):
     try:
         ops.on_readable = handle_readable
-        neat_set_operations(ops.ctx, ops.flow, ops)
     except:
         shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
@@ -541,9 +539,7 @@ def handle_readable(ops):
                         handler(connection, message_data_object, message_context, True, None)
         else:
             shim_print("READABLE SET TO NONE - receive queue empty", level='error')
-            import time; time.sleep(2)
             ops.on_readable = None
-            neat_set_operations(ops.ctx, ops.flow, ops)
     except SystemError:
         return NEAT_OK
     except Exception as es:
@@ -598,7 +594,6 @@ def handle_clone_ready(ops):
     parent.add_child(cloned_connection)
 
     ops.on_writable = handle_writable
-    neat_set_operations(ops.ctx, ops.flow, ops)
 
     return NEAT_OK
 
