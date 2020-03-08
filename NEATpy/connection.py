@@ -103,7 +103,7 @@ class Connection:
 
         self.ops.connection_id = self.connection_id
         shim_print(f"Connection [ID: {self.connection_id}] established - transport used: {self.transport_stack.name}", level='msg')
-        self.set_connection_properties()
+        #self.set_connection_properties()
 
         # Fire off appropriate event handler (if present)
         if self.HANDLE_STATE_READY:
@@ -490,7 +490,9 @@ def handle_all_written(ops):
 
 def handle_readable(ops):
     try:
+        shim_print(ops)
         connection: Connection = Connection.connection_list[ops.connection_id]
+
         shim_print(f"HANDLE READABLE - connection {connection.connection_id}")
 
         if connection.receive_request_queue:
@@ -607,9 +609,13 @@ def handle_clone_ready(ops):
 
 def incoming_stream(ops):
     shim_print(f"New incoming stream with stream id: {ops.stream_id}")
+    if ops.stream_id == 0:
+        shim_print("HERE")
+
     pre_con = preconnection.Preconnection.preconnection_list[ops.preconnection_id]
     new_connection = Connection(pre_con, 'active')
     new_connection.established_routine(ops)
+    new_connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
     return NEAT_OK
 
 
