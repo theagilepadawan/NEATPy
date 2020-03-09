@@ -95,8 +95,7 @@ class Connection:
         if SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.PRESERVE_MSG_BOUNDARIES) == ServiceLevel.INTRINSIC_SERVICE:
             self.stack_supports_message_boundary_preservation = True
 
-        def incoming_stream(ops):
-            shim_print(f"New incoming stream with stream id: {ops.stream_id}")
+
 
         if SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.MULTISTREAMING) >= ServiceLevel.OPTIONAL.value:
             shim_print("Setting on connected for streams")
@@ -603,6 +602,11 @@ def handle_clone_ready(ops):
     ops.on_writable = handle_writable
     neat_set_operations(ops.ctx, ops.flow, ops)
 
+    return NEAT_OK
+
+
+def incoming_stream(ops):
+    shim_print(f"New incoming stream with stream id: {ops.stream_id}")
     return NEAT_OK
 
 
