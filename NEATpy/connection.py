@@ -16,6 +16,7 @@ from enumerations import SupportedProtocolStacks, AdditionalServices, ServiceLev
 from message_context import MessageContext
 from message_properties import MessageProperties
 from neat import *
+import preconnection
 from selection_properties import CommunicationDirections, SelectionProperties
 import backend
 from typing import Callable, List, Tuple, Any, Optional
@@ -606,8 +607,9 @@ def handle_clone_ready(ops):
 
 def incoming_stream(ops):
     shim_print(f"New incoming stream with stream id: {ops.stream_id}")
-    parent = Connection.connection_list[ops.parent_id]
-    shim_print(f"Connection: {parent}")
+    pre_con = preconnection.Preconnection.preconnection_list[ops.preconnection_id]
+    new_connection = Connection(pre_con, 'active')
+    new_connection.established_routine(ops)
     return NEAT_OK
 
 
