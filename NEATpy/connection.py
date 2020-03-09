@@ -98,7 +98,7 @@ class Connection:
         def incoming_stream(ops):
             shim_print(f"New incoming stream with stream id: {ops.stream_id}")
 
-        if SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.MULTISTREAMING) >= ServiceLevel.OPTIONAL:
+        if SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.MULTISTREAMING).value >= ServiceLevel.OPTIONAL.value:
             shim_print("Setting on connected for streams")
             ops.on_connected = incoming_stream
 
