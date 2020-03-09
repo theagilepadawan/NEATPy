@@ -95,6 +95,13 @@ class Connection:
         if SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.PRESERVE_MSG_BOUNDARIES) == ServiceLevel.INTRINSIC_SERVICE:
             self.stack_supports_message_boundary_preservation = True
 
+        def incoming_stream(ops):
+            shim_print(f"New incoming stream with stream id: {ops.stream_id}")
+
+        if SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.MULTISTREAMING) >= ServiceLevel.OPTIONAL:
+            shim_print("Setting on connected for streams")
+            ops.on_connected = incoming_stream
+
         self.ops.connection_id = self.connection_id
         shim_print(f"Connection [ID: {self.connection_id}] established - transport used: {self.transport_stack.name}", level='msg')
         self.set_connection_properties()
