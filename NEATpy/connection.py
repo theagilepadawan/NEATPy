@@ -107,6 +107,7 @@ class Connection:
 
         ops.on_all_written = handle_all_written
         ops.on_close = handle_closed
+        neat_set_operations(ops.ctx, ops.flow, ops)
 
         res, res_json = neat_get_stats(self.context)
         json_rep = json.loads(res_json)
@@ -415,7 +416,6 @@ def handle_writable(ops):
                                                                               time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(time.time())))), level='error')
                 # Todo: Call event handler if present
                 return NEAT_OK
-
             res = backend.write(ops, message_to_be_sent)
             if res:
                 if res == NEAT_ERROR_MESSAGE_TOO_BIG:
@@ -424,23 +424,24 @@ def handle_writable(ops):
                     reason = SendErrorReason.FAILURE_UNDERLYING_STACK
                 shim_print(f"SendError - {reason.value}")
                 handler(context, reason)
-                return
+                return NEAT_OK
             # Keep message until NEAT confirms sending with all_written
+
             connection.messages_passed_to_back_end.append((message_to_be_sent, context, handler))
-        else:
-            pass
-            shim_print("WHAT")
-            ops.on_writable = None
-            return NEAT_OK
+
     except:
         shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
-    return NEAT_OK
+    finally:
+        ops.on_writable = None
+        neat_set_operations(ops.ctx, ops.flow, ops)
+        return NEAT_OK
 
 
 def message_passed(ops):
     try:
         ops.on_writable = handle_writable
+        neat_set_operations(ops.ctx, ops.flow, ops)
     except:
         shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
@@ -450,6 +451,7 @@ def message_passed(ops):
 def received_called(ops):
     try:
         ops.on_readable = handle_readable
+        neat_set_operations(ops.ctx, ops.flow, ops)
     except:
         shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
         backend.stop(ops.ctx)
@@ -474,6 +476,9 @@ def handle_all_written(ops):
             close = True
         if close:
             neat_close(connection.__ops.ctx, connection.__ops.flow)
+        else:
+            ops.on_writable = handle_writable
+            neat_set_operations(ops.ctx, ops.flow, ops)
     except:
         shim_print("An error occurred: {}".format(sys.exc_info()[0]))
         backend.stop(ops.ctx)
@@ -536,9 +541,9 @@ def handle_readable(ops):
                         handler(connection, message_data_object, message_context, False, None)
                     else:
                         handler(connection, message_data_object, message_context, True, None)
-        else:
-            shim_print("READABLE SET TO NONE - receive queue empty", level='error')
-            ops.on_readable = None
+        # else:
+        #     shim_print("READABLE SET TO NONE - receive queue empty", level='error')
+        #     ops.on_readable = None
     except SystemError:
         return NEAT_OK
     except Exception as es:
