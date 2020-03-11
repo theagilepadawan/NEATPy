@@ -145,10 +145,19 @@ class Preconnection:
         return new_con
 
     def initiate_with_send(self, message_data, sent_handler, message_context=None, timeout=None) -> Connection:
+        """For application-layer protocols where the Connection initiator also sends the first message,
+        the InitiateWithSend() action combines Connection initiation with a first Message sent.
+        Returns a Connection object in the ``establishing`` state.
+
+        :param message_data: The message to be sent
+        :param sent_handler: A function / completion handler, handling both a successful completion and errors.
+        :param message_context: Optional, used to indicate the message is idempotent, so it possibly can be used with
+               0-RTT establishment, if supported by the transport stack and system.
+        :param timeout: The timeout parameter specifies how long to wait before aborting Active open.
+        """
         new_connection = self.initiate(timeout=timeout)
         new_connection.send(message_data, sent_handler=sent_handler, message_context=message_context)
         return new_connection
-
 
     def start(self):
         """ Starts the transport systems. Must be called after initiate / listen.
@@ -254,7 +263,7 @@ class Preconnection:
         If multiple Framers are added, the last one added runs first when framing outbound messages, and last when
         parsing inbound data.
 
-        :param framer: The framer to be added. Must inherit from the Framer class.
+        :param framer: The framer to be added. Must inherit from the :py:class:`framer` class and implement its abstract functions.
         """
         if self.message_framer:
             self.message_framer.append_framer(framer)

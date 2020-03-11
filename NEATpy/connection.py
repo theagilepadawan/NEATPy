@@ -182,8 +182,7 @@ class Connection:
     def send(self, message_data: bytearray, sent_handler=None, message_context: MessageContext = None, end_of_message: bool = True) -> None:
         """Data is sent as Messages, which allow the application to communicate the boundaries of the data being
         transferred. By default, Send enqueues a complete Message, and takes optional per-:py:class:`message_properties`.
-        All Send actions are asynchronous, and deliver events (see Section 7.3). Sending partial Messages for streaming
-        large data is also supported
+        Applications is able to handle events with the :param sent_handler.
 
         :param message_data: The data to send
         :param sent_handler: A function that is called after completion / error.
@@ -429,7 +428,7 @@ def handle_writable(ops):
             # Keep message until NEAT confirms sending with all_written
             connection.messages_passed_to_back_end.append((message_to_be_sent, context, handler))
         else:
-            pass    
+            pass
             shim_print("WHAT")
             ops.on_writable = None
             return NEAT_OK
