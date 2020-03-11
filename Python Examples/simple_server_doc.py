@@ -12,6 +12,7 @@ tp = TransportProperties(TransportPropertyProfiles.UNRELIABLE_DATAGRAM)
 def simple_receive_handler(connection, message, context, is_end, error):
     shim_print(f"Got msg {len(message.data)}: {message.data.decode()}", level='msg')
     connection.send(b"Simple server hello", None)
+    connection.receive(simple_receive_handler)
 
 
 def new_connection_received(connection: Connection):

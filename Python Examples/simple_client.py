@@ -16,6 +16,11 @@ import framer
 
 outer_con = None
 
+def receive_handler(con, msg, context, end, error):
+    shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg')
+    con.send(b"HEYA", None)
+    con.receive(lambda con, msg, context, end, error: shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
+
 def clone_ready(connection: Connection):
     shim_print("Clone is ready")
     connection.send(b"Simple clone hello", None)
@@ -24,9 +29,10 @@ def clone_ready(connection: Connection):
 def ready_handler(connection: Connection):
     shim_print("Connection is ready")
     connection.send(b"Simple hello", None)
-    connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
+    connection.receive(receive_handler)
     clone = connection.clone(None)
     clone.HANDLE_STATE_READY = clone_ready
+
 
 
 if __name__ == "__main__":
