@@ -87,6 +87,7 @@ class Connection:
         self.state = ConnectionState.ESTABLISHING
 
     def established_routine(self, ops):
+        self.state = ConnectionState.ESTABLISHED
         self.ops = ops
         self.context = ops.ctx
         self.flow = ops.flow
@@ -115,7 +116,6 @@ class Connection:
 
         self.local_endpoint = self.crate_and_populate_endpoint()
         self.remote_endpoint = self.crate_and_populate_endpoint(local=False)
-        self.state = ConnectionState.ESTABLISHED
 
         # Protocol stack specific logic
         # Set TCP UTO if enabled
@@ -600,9 +600,6 @@ def handle_clone_ready(ops):
     ops.on_writable = handle_writable
     neat_set_operations(ops.ctx, ops.flow, ops)
     return NEAT_OK
-
-
-
 
 @dataclass
 class FramerPlaceholder:
