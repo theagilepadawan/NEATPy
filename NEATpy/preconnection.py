@@ -123,9 +123,9 @@ class Preconnection:
 
         backend.pass_candidates_to_back_end(candidates, self.__context, self.__flow)
 
+        neat_secure_identity(self.__context, self.__flow,"/Users/michael/Skole/Master/neat/examples/cert.pem", NEAT_CERT_KEY_PEM)
         sec = json.dumps({"security": {"value": True, "precedence": 2}})
         neat_set_property(self.__context, self.__flow, sec)
-
 
 
 

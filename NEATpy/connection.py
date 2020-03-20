@@ -495,6 +495,7 @@ def handle_readable(ops):
         if connection.receive_request_queue:
             msg = backend.read(ops, connection.receive_buffer_size)
             shim_print(f'Data received from stream: {ops.stream_id}')
+            shim_print(msg)
 
             if connection.message_framer:
                 if connection.framer_placeholder.earmarked_bytes_missing > 0:

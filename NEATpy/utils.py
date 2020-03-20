@@ -8,7 +8,7 @@ colors = {
     "msg": Fore.BLUE,
     "error": Fore.RED,
 }
-debug = 0
+debug = 1
 
 
 def log_wrapper(func):

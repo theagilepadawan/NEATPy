@@ -15,8 +15,6 @@ from connection_properties import TCPUserTimeout
 import framer
 
 
-
-
 def sent_event_handler(connection):
     pass
 
@@ -35,7 +33,7 @@ def test(connection, message, message_context, end, error):
 
 
 def ready_handler(connection):
-    connection.send(b"GET / HTTP/1.1\r\nHost: weevil.info\r\nUser-agent: libneat\r\nConnection: close\r\n\r\n", None)
+    connection.send(b"GET / HTTP/1.1\r\nHost: vg.no\r\n\r\n\r\n", None)
     connection.receive(test, min_incomplete_length=50000)
 
 
@@ -47,8 +45,8 @@ if __name__ == "__main__":
     }
 
     ep = RemoteEndpoint()
-    ep.with_address("vg.no")
-    ep.with_port(80)
+    ep.with_address("195.88.54.16")
+    ep.with_port(443)
 
     profile = None
     if len(sys.argv) > 1:
