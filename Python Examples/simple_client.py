@@ -17,14 +17,27 @@ import framer
 outer_con = None
 
 def receive_handler(con, msg, context, end, error):
-    shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg')
+    shim_print(f"Parent got first msg {len(msg.data)}: {msg.data.decode()}", level='msg')
     con.send(b"HEYA", None)
-    con.receive(lambda con, msg, context, end, error: shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
+    con.receive(lambda con, msg, context, end, error: shim_print(f"Parent got second msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
+
+
 
 def clone_ready(connection: Connection):
     shim_print("Clone is ready")
     connection.send(b"Simple clone hello", None)
-    connection.receive(lambda con, msg, context, end, error: shim_print(f"Got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
+    connection.receive(lambda con, msg, context, end, error: shim_print(f"Clone got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
+    clone = connection.clone(None)
+    clone.HANDLE_STATE_READY = clone_ready2
+    outer_con.send(b"Bonus parent", None)
+    outer_con.receive(lambda con, msg, context, end, error: shim_print(f"Bonus parent got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
+
+
+def clone_ready2(connection: Connection):
+    shim_print("Clone is ready")
+    connection.send(b"Not so simple clone hello", None)
+    connection.receive(lambda con, msg, context, end, error: shim_print(f"Second clone got msg {len(msg.data)}: {msg.data.decode()}", level='msg'))
+
 
 def ready_handler(connection: Connection):
     shim_print("Connection is ready")

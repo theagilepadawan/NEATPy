@@ -105,18 +105,9 @@ class Preconnection:
             backend.clean_up(self.__context)
             sys.exit(1)
 
-        def on_initiate_error(ops):
-            shim_print("Initiate error - Unable to connect to remote endpoint", level="error")
-            backend.stop(self.__context)
-            return NEAT_OK
 
-        def on_initiate_timeout(ops):
-            shim_print("Timeout - aborting Active open", level="error")
-            backend.stop(self.__context)
-            return NEAT_OK
-
-        self.__ops.on_error = on_initiate_error
-        self.__ops.on_timeout = on_initiate_timeout
+        self.__ops.on_error = self.on_initiate_error
+        self.__ops.on_timeout = self.on_initiate_timeout
         self.__ops.on_connected = self.client_on_connected
         neat_set_operations(self.__context, self.__flow, self.__ops)
 
@@ -131,6 +122,14 @@ class Preconnection:
             return
 
         backend.pass_candidates_to_back_end(candidates, self.__context, self.__flow)
+
+        sec = json.dumps({"security": {"value": True, "precedence": 2}})
+        neat_set_property(self.__context, self.__flow, sec)
+
+
+
+
+
         if backend.initiate(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, 100):
             pass
         if timeout:
@@ -324,3 +323,14 @@ class Preconnection:
         con.established_routine(ops)
         return NEAT_OK
 
+    @staticmethod
+    def on_initiate_error(ops):
+        shim_print("Initiate error - Unable to connect to remote endpoint", level="error")
+        backend.stop(ops.ctx)
+        return NEAT_OK
+
+    @staticmethod
+    def on_initiate_timeout(ops):
+        shim_print("Timeout - aborting Active open", level="error")
+        backend.stop(ops.ctx)
+        return NEAT_OK

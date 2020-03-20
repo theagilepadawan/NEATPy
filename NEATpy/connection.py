@@ -110,9 +110,9 @@ class Connection:
         ops.on_close = handle_closed
         neat_set_operations(ops.ctx, ops.flow, ops)
 
-        res, res_json = neat_get_stats(self.context)
-        json_rep = json.loads(res_json)
-        shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
+        #res, res_json = neat_get_stats(self.context)
+        #json_rep = json.loads(res_json)
+        #shim_print(json.dumps(json_rep, indent=4, sort_keys=True))
 
         self.local_endpoint = self.crate_and_populate_endpoint()
         self.remote_endpoint = self.crate_and_populate_endpoint(local=False)
@@ -540,10 +540,10 @@ def handle_readable(ops):
                         handler(connection, message_data_object, message_context, False, None)
                     else:
                         handler(connection, message_data_object, message_context, True, None)
-        # else:
-        #     shim_print("READABLE SET TO NONE - receive queue empty", level='error')
-        #     ops.on_readable = None
-        #     neat_set_operations(ops.ctx, ops.flow, ops)
+        else:
+            shim_print("READABLE SET TO NONE - receive queue empty", level='error')
+            ops.on_readable = None
+            neat_set_operations(ops.ctx, ops.flow, ops)
     except SystemError:
         return NEAT_OK
     except Exception as es:
