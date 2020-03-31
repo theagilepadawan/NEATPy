@@ -112,6 +112,13 @@ class ServiceLevel(Enum):
 
 
 class PreferenceLevel(Enum):
+    """
+    An enumeration.
+    Used when specifying a preference for :py:class:`selection_properties`.
+
+    E.g an application specifying that a reliable transport is required would do this the following way::
+        tp.add(SelectionProperties.RELIABILITY, PreferenceLevel.REQUIRE)
+    """
     REQUIRE = 2
     PREFER = 1
     IGNORE = 0

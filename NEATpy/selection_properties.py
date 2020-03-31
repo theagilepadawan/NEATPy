@@ -23,9 +23,14 @@ class CommunicationDirections(Enum):
 
 
 class PreferenceLevel(Enum):
-    """Preference level is used when specifying values for :py:class:`selection_properties`
+    """ An enumeration.
+        Used when specifying a preference for :py:class:`selection_properties`.
+
+        E.g an application specifying that a reliable transport is required would do this the following way::
+
+            transport_properties.add(SelectionProperties.RELIABILITY, PreferenceLevel.REQUIRE)
     """
-    REQUIRE = 2 #: TEST
+    REQUIRE = 2
     PREFER = 1
     IGNORE = 0
     AVOID = -1

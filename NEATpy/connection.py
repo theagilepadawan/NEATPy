@@ -29,7 +29,7 @@ class Connection:
     """ A Connection represents a transport Protocol Stack on which data can be sent to and/or received from a remote
     Endpoint (i.e., depending on the kind of transport, connections can be bi-directional or unidirectional).
 
-    A Connection is created from a :py:class:`preconnection` or cloning, i.e it cannot be instantiated directly.
+    A Connection is created from a :py:class:`preconnection`  with active or passive open, or cloning, i.e it cannot be instantiated directly.
     """
     connection_list = {}
     receive_buffer_size = 32 * 1024 * 1024  # 32MB
@@ -183,7 +183,7 @@ class Connection:
     def send(self, message_data: bytearray, sent_handler=None, message_context: MessageContext = None, end_of_message: bool = True) -> None:
         """Data is sent as Messages, which allow the application to communicate the boundaries of the data being
         transferred. By default, Send enqueues a complete Message, and takes optional per-:py:class:`message_properties`.
-        Applications is able to handle events with the :param sent_handler.
+        Applications is able to handle events with the :param sent_handler. This completion in form of an error and successfully sent message.
 
         :param message_data: The data to send
         :param sent_handler: A function that is called after completion / error.
@@ -215,13 +215,13 @@ class Connection:
             return
 
         # Check for inconsistency between message properties and the connection's transport properties
-        inconsistencies = self.check_message_properties(message_context.props)
-
-        if inconsistencies:
-            shim_print(f"SendError - {SendErrorReason.INCONSISTENT_PROPERTIES_PASSED.value}:", level='error',
-                       additional_msg=inconsistencies)
-            sent_handler(message_context, SendErrorReason.INCONSISTENT_PROPERTIES_PASSED)
-            return
+        # inconsistencies = self.check_message_properties(message_context.props)
+        #
+        # if inconsistencies:
+        #     shim_print(f"SendError - {SendErrorReason.INCONSISTENT_PROPERTIES_PASSED.value}:", level='error',
+        #                additional_msg=inconsistencies)
+        #     sent_handler(message_context, SendErrorReason.INCONSISTENT_PROPERTIES_PASSED)
+        #     return
 
         if self.message_framer:
             self.message_framer.dispatch_new_sent_message(self, message_data, message_context, sent_handler, end_of_message)
@@ -256,9 +256,14 @@ class Connection:
         in which each call to Receive enqueues a request to receive new data from the connection. Once data has been
         received, or an error is encountered, an event will be delivered to complete the Receive request
 
-        :param handler: The function to handle the event delivered during completion
-        :param min_incomplete_length:
-        :param max_length:
+        :param handler: The function to handle the event delivered during completion, which includes both potential
+            errors and successfully received data.
+        :param min_incomplete_length: The default ``None`` value indicated that only complete messages should be delivered.
+            Set to anything other than this will trigger a receive event only when at least that many bytes are available.
+        :param max_length: Indicates the maximum size of a message in bytes the application is prepared to receive.
+            Incoming messages larger than this will be delivered in received partial events. To determine whether the received
+            event is a partial event the application is able to check whether the variable ``is_end_of_message`` holds a boolean
+            value, which indicates a partial event, while a None value indicates a complete message being delivered.
         """
         shim_print("RECEIVED CALLED")
 
@@ -334,8 +339,23 @@ class Connection:
         return ret
 
     def get_properties(self):
-        """At any point, the application can query Connection Properties.
-        :return: A dictionary with Connection Properties
+        """ Returns a dictionary consisting of the connections properties, which include the following:
+
+        - :py:class:`connection_state` - key `'state'``
+        - A boolean which holds the value for whether the connection can be used for sending - key ``'send'``
+        - A boolean which holds the value for whether the connection can be used for receiving - key ``'receive'``
+        - A :py:class:`transport_properties` object, which will differ with the connections status - key `'props'``
+            - A connection in an establishing phase will hold transport properties that the application specified with the :py:class:`preconnection`.
+            - A connection in either a established, closing or closed state will hold the :py:class:`selection_properties` and :py:class:`connection_properties`
+              of the actual protocols that were selected and instantiated.
+
+        An example showing an application checking if the connection can be used for sending::
+
+            returned_props_dict = connection.get_properties()
+            can_be_used_for_sending = returned_props_dict['send']
+            if can_be_used_for_sending:
+                ...
+
         """
         return {'state': self.state,
                 'send': self.can_be_used_for_sending(),
@@ -347,10 +367,9 @@ class Connection:
         """Calling Clone on a Connection yields a group of two Connections: the parent Connection on which Clone was
         called, and the resulting cloned Connection. These connections are "entangled" with each other, and become part
         of a Connection Group. Calling Clone on any of these two Connections adds a third Connection to the Connection
-        Group, and so on. Connections in a Connection Group generally share Connection Properties. However, ¨
-        there may be exceptions, such as "Priority (Connection)", see Section 10.1.3. Like all other Properties,
-        Priority is copied to the new Connection when calling Clone(), but it is not entangled: Changing Priority on
-        one Connection does not change it on the other Connections in the same Connection Group.
+        Group, and so on. Connections in a Connection Group generally share :py:class:`connection_properties`. However,
+        there may be exceptions, such as the priority property, which obviously will not trigger a change for all connections
+        in the connection group, rather like all other properties, priority is copied to the new Connection when calling Clone().
 
         :param clone_handler: A function to handle clone completion
         """
@@ -465,6 +484,8 @@ def handle_all_written(ops):
         close = False
         connection = Connection.connection_list[ops.connection_id]
         shim_print(f"ALL WRITTEN - connection {ops.connection_id}")
+        if not connection.messages_passed_to_back_end:
+            return NEAT_OK
         message, message_context, handler = connection.messages_passed_to_back_end.pop(0)
 
         if handler:
@@ -572,8 +593,7 @@ def handle_closed(ops):
                 handler(connection, connection.buffered_message_data_object, message_context, True, None)
             # "...or if none is available, an indication that there will be no more received Messages."
             else:
-                shim_print(
-                    "Connection closed, there will be no more received messages")  # TODO: Should this be thrown as an error (error event?)
+                shim_print("Connection closed, there will be no more received messages")  # TODO: Should this be thrown as an error (error event?)
         #if connection.connection_type == 'active':  # should check if there is any cloned connections etc...
         #    backend.stop(ops.ctx)
     except:
@@ -672,6 +692,9 @@ class MessageDataObject:
 
 
 class ConnectionState(Enum):
+    """
+    An enumeration of the different states for a connection.
+    """
     ESTABLISHING = auto()
     ESTABLISHED = auto()
     CLOSING = auto()

@@ -17,7 +17,7 @@ presents a standard conforming API to the end user, while under the hood, uses N
 
 .. toctree::
    :caption: API documentation
-   :maxdepth: 2
+   :maxdepth: 3
 
    subdir/API
 

@@ -76,6 +76,7 @@ class Preconnection:
         self.local_endpoint = local_endpoint
         self.remote_endpoint: RemoteEndpoint = remote_endpoint
         self.transport_properties = transport_properties
+        self.security_parameteres = security_parameters
         self.number_of_connections = 0  # Is this really needed for the preconnection? Maybe regarding rendezvous?
         self.connection_limit = None
         self.unfulfilled_handler = unfulfilled_handler
@@ -123,12 +124,8 @@ class Preconnection:
 
         backend.pass_candidates_to_back_end(candidates, self.__context, self.__flow)
 
-        neat_secure_identity(self.__context, self.__flow,"/Users/michael/Skole/Master/neat/examples/cert.pem", NEAT_CERT_KEY_PEM)
-        sec = json.dumps({"security": {"value": True, "precedence": 2}})
-        neat_set_property(self.__context, self.__flow, sec)
-
-
-
+        if self.security_parameteres:
+            self.register_security()
 
         if backend.initiate(self.__context, self.__flow, self.remote_endpoint.address, self.remote_endpoint.port, 100):
             pass
@@ -187,6 +184,10 @@ class Preconnection:
                 backend.clean_up(self.__context)
 
         backend.pass_candidates_to_back_end(candidates, self.__context, self.__flow)
+
+        if self.security_parameteres:
+            self.register_security(is_server=True)
+
         shim_print("LISTEN!")
         listener = Listener(self.__context, self.__flow, self.__ops, self)
         return listener
@@ -268,6 +269,14 @@ class Preconnection:
             self.message_framer.append_framer(framer)
         else:
             self.message_framer = MessageFramer(framer)
+
+    def register_security(self, is_server=None):
+        if is_server:
+            neat_secure_identity(self.__context, self.__flow, "/Users/michael/Skole/Master/neat/examples/cert.pem", NEAT_CERT_KEY_PEM)
+        sec = json.dumps({"security": {"value": True, "precedence": 2}})
+        neat_set_property(self.__context, self.__flow, sec)
+        ver = json.dumps({"verification": {"value": False, "precedence": 2}})
+        neat_set_property(self.__context, self.__flow, ver)
 
     def resolve(self):
         return NotImplementedError

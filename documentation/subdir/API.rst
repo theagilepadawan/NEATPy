@@ -15,6 +15,10 @@ Connection
 
 .. automodule:: connection
 
+   .. autoclass:: ConnectionState
+      :members:
+      :undoc-members:
+
    .. autoclass:: Connection
       :members:
 

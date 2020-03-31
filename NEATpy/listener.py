@@ -68,6 +68,7 @@ class Listener:
         if listener.HANDLE_STATE_LISTEN_ERROR:
             listener.HANDLE_STATE_LISTEN_ERROR(ListenErrorReasons.UNRESOLVED_LOCAL_ENDPOINT)
         listener.stop()
+        return NEAT_OK
 
     @staticmethod
     def handle_connected(ops):
