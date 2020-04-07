@@ -320,6 +320,9 @@ class Connection:
     def stop_listener(self):
         self.listener.stop()
 
+    def stop(self):
+        backend.stop(self.context)
+
     def can_be_used_for_sending(self):
         ret = True
         if self.transport_properties.selection_properties[SelectionProperties.DIRECTION] is CommunicationDirections.UNIDIRECTIONAL_RECEIVE:

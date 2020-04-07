@@ -21,7 +21,7 @@ def sent_cb(con):
 
 def simple_receive_handler(connection, message, context, is_end, error):
     shim_print(f"Got msg {len(message.data)}: {message.data.decode()}", level='msg')
-    connection.send(b"Secure server hello", sent_cb)
+    connection.send(b"Hello client", sent_cb)
 
 
 def new_connection_received(connection: Connection):
@@ -31,18 +31,7 @@ def new_connection_received(connection: Connection):
 if __name__ == "__main__":
     local_specifier = LocalEndpoint()
     local_specifier.with_port(5000)
-
-    profiles_dict = {
-        "udp": TransportPropertyProfiles.UNRELIABLE_DATAGRAM,
-        "tcp": TransportPropertyProfiles.RELIABLE_INORDER_STREAM,
-        "sctp": TransportPropertyProfiles.RELIABLE_MESSAGE
-    }
-
-    profile = None
-    if len(sys.argv) > 1:
-        profile = profiles_dict[sys.argv[1]]
-
-    tp = TransportProperties(profile)
+    tp = TransportProperties(TransportPropertyProfiles.RELIABLE_INORDER_STREAM)
 
     preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=tp)
     new_listener: Listener = preconnection.listen()

@@ -15,34 +15,31 @@ from enumerations import *
 from connection_properties import TCPUserTimeout
 
 
-def receive_handler(con, msg, context, end, error):
+def receive_handler(con:Connection, msg, context, end, error):
     shim_print(f"Got message {len(msg.data)}: {msg.data.decode()}", level='msg')
+    con.stop()
 
 
 def ready_handler(connection: Connection):
     shim_print("Connection is ready")
-    connection.send(b"Secure hello", None)
+    connection.send(b"Hello server", None)
     connection.receive(receive_handler)
 
-if __name__ == "__main__":
-    profiles_dict = {
-        "udp": TransportPropertyProfiles.UNRELIABLE_DATAGRAM,
-        "tcp": TransportPropertyProfiles.RELIABLE_INORDER_STREAM,
-        "sctp": TransportPropertyProfiles.RELIABLE_MESSAGE
-    }
 
+if __name__ == "__main__":
+    start = time.time()
     ep = RemoteEndpoint()
-    ep.with_address("127.0.0.1")
+    ep.with_address("192.168.1.2")
     ep.with_port(5000)
 
-    profile = None
-    if len(sys.argv) > 1:
-        profile = profiles_dict[sys.argv[1]]
-
-    tp = TransportProperties(profile)
+    tp = TransportProperties(TransportPropertyProfiles.RELIABLE_INORDER_STREAM)
 
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
-    outer_con: Connection = preconnection.initiate()
-    outer_con.HANDLE_STATE_READY = ready_handler
+    connection: Connection = preconnection.initiate()
+    connection.HANDLE_STATE_READY = ready_handler
 
     preconnection.start()
+    end = time.time()
+    print(end - start)
+
+
