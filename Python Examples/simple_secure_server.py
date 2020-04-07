@@ -14,6 +14,20 @@ from transport_properties import *
 from security_parameters import *
 from enumerations import *
 
+
+def sent_cb(con):
+    con.close()
+
+
+def simple_receive_handler(connection, message, context, is_end, error):
+    shim_print(f"Got msg {len(message.data)}: {message.data.decode()}", level='msg')
+    connection.send(b"Secure server hello", sent_cb)
+
+
+def new_connection_received(connection: Connection):
+    connection.receive(simple_receive_handler)
+
+
 if __name__ == "__main__":
     local_specifier = LocalEndpoint()
     local_specifier.with_port(5000)
@@ -29,19 +43,8 @@ if __name__ == "__main__":
         profile = profiles_dict[sys.argv[1]]
 
     tp = TransportProperties(profile)
-    sp = SecurityParameters()
 
-    def sent_cb(con):
-        con.close()
-
-    def simple_receive_handler(connection, message, context, is_end, error):
-        shim_print(f"Got msg {len(message.data)}: {message.data.decode()}", level='msg')
-        connection.send(b"Secure server hello", sent_cb)
-
-    def new_connection_received(connection: Connection):
-        connection.receive(simple_receive_handler)
-
-    preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=tp, security_parameters=sp)
+    preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=tp)
     new_listener: Listener = preconnection.listen()
     new_listener.HANDLE_CONNECTION_RECEIVED = new_connection_received
 
