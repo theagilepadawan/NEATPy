@@ -29,7 +29,7 @@ if __name__ == "__main__":
         profile = profiles_dict[sys.argv[1]]
 
     tp = TransportProperties(profile)
-    sp = SecurityParameters()
+#    sp = SecurityParameters()
 
     def sent_cb(con):
         con.close()
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     def new_connection_received(connection: Connection):
         connection.receive(simple_receive_handler)
 
-    preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=tp, security_parameters=sp)
+    preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=tp)
     new_listener: Listener = preconnection.listen()
     new_listener.HANDLE_CONNECTION_RECEIVED = new_connection_received
 
