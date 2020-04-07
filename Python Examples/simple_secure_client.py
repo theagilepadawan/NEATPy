@@ -32,7 +32,7 @@ if __name__ == "__main__":
     }
 
     ep = RemoteEndpoint()
-    ep.with_address("127.0.0.1")
+    ep.with_address("192.168.1.2")
     ep.with_port(5000)
 
     profile = None
@@ -40,9 +40,9 @@ if __name__ == "__main__":
         profile = profiles_dict[sys.argv[1]]
 
     tp = TransportProperties(profile)
-    sp = SecurityParameters()
+#    sp = SecurityParameters()
 
-    preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp, security_parameters=sp)
+    preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
     outer_con: Connection = preconnection.initiate()
     outer_con.HANDLE_STATE_READY = ready_handler
 
