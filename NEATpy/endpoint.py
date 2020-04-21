@@ -7,7 +7,6 @@ class LocalEndpoint:
         (address for now) and port number.
     """
     def __init__(self):
-        self.interface = None
         self.port = None
         self.address = None
         self.interface = None

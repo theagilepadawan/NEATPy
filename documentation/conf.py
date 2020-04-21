@@ -70,6 +70,8 @@ autodoc_mock_imports = ["neat", "utils"]
 autodoc_typehints = 'description'
 autoclass_content = 'init'
 add_module_names = False
+html_logo = "../documentation/logo.png"
+
 
 
 def autodoc_skip_member(app, what, name, obj, skip, options):
