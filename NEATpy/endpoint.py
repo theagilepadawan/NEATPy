@@ -3,45 +3,39 @@
 
 
 class LocalEndpoint:
-    """ A local (TAPS) Endpoint with an interface
-        (address for now) and port number.
+    """This class holds information about a local endpoint. It could be passed when initiating a :py:class:`preconnection`.
+    Furthermore it is required when trying to establish a connection with a remote endpoint with :py:meth:`.listen`.
     """
     def __init__(self):
         self.port = None
         self.address = None
         self.interface = None
 
-    def with_interface(self, interface):
-        """Specifies which interface the local endpoint should use.
+    def with_interface(self, interface: str) -> None:
+        """This function sets the interface desired to with the local endpoint.
 
-        Attributes:
-            interface (interface, required): Interface identifier.
+        :param interface: The endpoint to set.
         """
         self.interface = interface
 
-    def with_address(self, address):
-        """Specifies which address the local endpoint should use.
+    def with_address(self, address: str) -> None:
+        """This function sets the address desired to use with the local endpoint.
 
-        Attributes:
-            address (string, required): Address in the form of an IPv4
-                or IPv6 address.
+        :param address: The address to set.
         """
         self.address = address
 
-    def with_port(self, portNumber):
-        """Specifies which port the local endpoint should use.
+    def with_port(self, portNumber: int) -> None:
+        """This function sets the port desired to use with the local endpoint.
 
-        Attributes:
-            portNumber (integer, required): Port number.
+        :param portNumber: The port to set.
         """
         self.port = portNumber
 
 
 class RemoteEndpoint:
-    """ A remote (TAPS) Endpoint with an address,
-        that can either be given directly
-        as an IPv4 or IPv6 or that can be given
-        as a name that will be resolved with DNS.
+    """This class holds information about a remote endpoint. It could be passed when initiating a :py:class:`preconnection`.
+    Furthermore it is required when trying to establish a connection with a remote endpoint with :py:meth:`.initiate`.
     """
     def __init__(self):
         self.address = None
@@ -49,30 +43,31 @@ class RemoteEndpoint:
         self.host_name = None
         self.interface = None
 
-    def with_address(self, address):
-        """Specifies which address the remote endpoint should have.
+    def with_interface(self, interface: str) -> None:
+        """This function sets the interface desired to with the local endpoint.
 
-        Attributes:
-            address (string, required): Address in the form of an IPv4
-                or IPv6 address.
+        :param interface: The endpoint to set.
+        """
+        self.interface = interface
+
+    def with_address(self, address: str) -> None:
+        """This function sets the address desired to use with the local endpoint.
+
+        :param address: The address to set.
         """
         self.address = address
 
-    def with_hostname(self, hostname):
-        """Specifies which hostname the remote endpoint should have.
+    def with_port(self, portNumber: int) -> None:
+        """This function sets the port desired to use with the local endpoint.
 
-        Attributes:
-            hostname (string, required): Host name.
-        """
-        self.host_name = hostname
-
-    def with_port(self, portNumber):
-        """Specifies which port the remote endpoint should have.
-
-        Attributes:
-            portNumber (integer, required): Port number.
+        :param portNumber: The port to set.
         """
         self.port = portNumber
 
-    def with_interface(self, interface):
-        self.interface = interface
+    def with_hostname(self, hostname: str) -> None:
+        """This function sets the hostname for the remote endpoint.
+
+        :param hostname: The hostname to set.
+        """
+        self.host_name = hostname
+

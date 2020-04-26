@@ -254,11 +254,11 @@ class Connection:
     def receive(self, handler, min_incomplete_length=None, max_length=math.inf) -> None:
         """ As with sending, data is received in terms of Messages. Receiving is an asynchronous operation,
         in which each call to Receive enqueues a request to receive new data from the connection. Once data has been
-        received, or an error is encountered, an event will be delivered to complete the Receive request
+        received, or an error is encountered, an event will be delivered to complete the Receive request.
 
         :param handler: The function to handle the event delivered during completion, which includes both potential
             errors and successfully received data.
-        :param min_incomplete_length: The default ``None`` value indicated that only complete messages should be delivered.
+        :param min_incomplete_length: The default ``None`` value indicates that only complete messages should be delivered.
             Set to anything other than this will trigger a receive event only when at least that many bytes are available.
         :param max_length: Indicates the maximum size of a message in bytes the application is prepared to receive.
             Incoming messages larger than this will be delivered in received partial events. To determine whether the received
@@ -286,15 +286,15 @@ class Connection:
             if len(self.receive_request_queue) is 1:
                 received_called(self.ops)
 
-    def batch(self, bacth_block: Callable[[], None]):
+    def batch(self, batch_block: Callable[[], None]):
         """Used to send multiple messages without the transport system dispatching messages further down the stack.
         Used to minimize overhead, and as a mechanism for the application to indicate that messages could be coalesced
         when possible.
 
-        :param bacth_block: A function / block of code which calls send multiple times
+        :param batch_block: A function / block of code which calls send multiple times
         """
         self.batch_in_session = True
-        bacth_block()
+        batch_block()
         self.batch_in_session = False
 
     def close(self):
@@ -302,7 +302,7 @@ class Connection:
         the delivery of Messages that the application has already given to the transport system. For example,
         if reliable delivery was requested for a Message handed over before calling Close, the transport system
         will ensure that this Message is indeed delivered. If the Remote Endpoint still has data to send, it cannot
-        be received after this call
+        be received after this call.
         """
         # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
         if self.msg_list.empty() or self.messages_passed_to_back_end:
@@ -313,7 +313,7 @@ class Connection:
             self.state = ConnectionState.CLOSED
 
     def abort(self):
-        """Abort terminates a Connection without delivering remaining data:
+        """Abort terminates a Connection without delivering remaining data.
         """
         backend.abort(self.context, self.flow)
 
@@ -344,12 +344,12 @@ class Connection:
     def get_properties(self):
         """ Returns a dictionary consisting of the connections properties, which include the following:
 
-        - :py:class:`connection_state` - key `'state'``
+        - :py:class:`connection_state` - key ``'state'``
         - A boolean which holds the value for whether the connection can be used for sending - key ``'send'``
         - A boolean which holds the value for whether the connection can be used for receiving - key ``'receive'``
-        - A :py:class:`transport_properties` object, which will differ with the connections status - key `'props'``
+        - A :py:class:`transport_properties` object, which will differ with the connections status - key ``'props'``
             - A connection in an establishing phase will hold transport properties that the application specified with the :py:class:`preconnection`.
-            - A connection in either a established, closing or closed state will hold the :py:class:`selection_properties` and :py:class:`connection_properties`
+            - A connection in either an established, closing or closed state will hold the :py:class:`selection_properties` and :py:class:`connection_properties`
               of the actual protocols that were selected and instantiated.
 
         An example showing an application checking if the connection can be used for sending::
@@ -371,8 +371,8 @@ class Connection:
         called, and the resulting cloned Connection. These connections are "entangled" with each other, and become part
         of a Connection Group. Calling Clone on any of these two Connections adds a third Connection to the Connection
         Group, and so on. Connections in a Connection Group generally share :py:class:`connection_properties`. However,
-        there may be exceptions, such as the priority property, which obviously will not trigger a change for all connections
-        in the connection group, rather like all other properties, priority is copied to the new Connection when calling Clone().
+        there are exceptions, such as the priority property, which obviously will not trigger a change for all connections
+        in the connection group. As with all other properties, priority is copied to the new Connection when calling Clone().
 
         :param clone_handler: A function to handle clone completion
         """

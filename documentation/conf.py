@@ -71,6 +71,7 @@ autodoc_typehints = 'description'
 autoclass_content = 'init'
 add_module_names = False
 html_logo = "../documentation/logo.png"
+html_favicon = "../documentation/favicon.ico"
 
 
 

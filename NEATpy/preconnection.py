@@ -49,7 +49,7 @@ class Preconnection:
     preconnection_counter = 1
     rendezvous_counter = 1
 
-    def __init__(self, local_endpoint=None, remote_endpoint=None,transport_properties=None, security_parameters=None, unfulfilled_handler=None):
+    def __init__(self, local_endpoint=None, remote_endpoint=None, transport_properties=None, security_needed: bool = False, unfulfilled_handler=None):
         """ A Preconnection represents a set of properties and constraints on the selection and configuration of paths
         and protocols to establish a Connection with a remote Endpoint.
 
@@ -59,7 +59,7 @@ class Preconnection:
             Optional remote endpoint to be used with the preconnection
         :param transport_properties:
             A transport property object with desired selection properties.
-        :param security_parameters:
+        :param security_needed: Indicated whether or not a secure connection is needed.
         :param unfulfilled_handler:
             A function handling an unfulfilled error
         """
@@ -76,7 +76,7 @@ class Preconnection:
         self.local_endpoint = local_endpoint
         self.remote_endpoint: RemoteEndpoint = remote_endpoint
         self.transport_properties = transport_properties
-        self.security_parameteres = security_parameters
+        self.security_parameteres = security_needed
         self.number_of_connections = 0  # Is this really needed for the preconnection? Maybe regarding rendezvous?
         self.connection_limit = None
         self.unfulfilled_handler = unfulfilled_handler
@@ -158,7 +158,7 @@ class Preconnection:
     def start(self):
         """ Starts the transport systems. Must be called after initiate / listen.
 
-        :return: This function does not return
+        :return: This function does not return.
         """
         backend.start(self.__context)
         backend.clean_up(self.__context)

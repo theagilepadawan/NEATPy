@@ -242,5 +242,8 @@ class TransportProperties:
 
 
 
-
+def test():
+    tp = TransportProperties()
+    tp.add(SelectionProperties.RELIABILITY, PreferenceLevel.REQUIRE)
+    tp.prohibit(SelectionProperties.PRESERVE_MSG_BOUNDARIES)
 

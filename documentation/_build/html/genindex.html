@@ -14,6 +14,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -185,16 +187,10 @@
 </li>
       <li><a href="subdir/API.html#transport_properties.TransportProperties.add">add() (TransportProperties method)</a>
 </li>
-      <li><a href="subdir/API.html#preconnection.Preconnection.add_framer">add_framer() (Preconnection method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="subdir/API.html#endpoint.LocalEndpoint.address">address (LocalEndpoint attribute)</a>
-
-      <ul>
-        <li><a href="subdir/API.html#endpoint.RemoteEndpoint.address">(RemoteEndpoint attribute)</a>
+      <li><a href="subdir/API.html#preconnection.Preconnection.add_framer">add_framer() (Preconnection method)</a>
 </li>
-      </ul></li>
       <li><a href="subdir/API.html#selection_properties.PreferenceLevel.AVOID">AVOID (PreferenceLevel attribute)</a>
 </li>
       <li><a href="subdir/API.html#transport_properties.TransportProperties.avoid">avoid() (TransportProperties method)</a>
@@ -267,13 +263,15 @@
 </li>
       <li><a href="subdir/API.html#message_properties.MessageProperties.ECN">ECN (MessageProperties attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#module-endpoint">endpoint (module)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#connection.ConnectionState.ESTABLISHED">ESTABLISHED (ConnectionState attribute)</a>
 </li>
       <li><a href="subdir/API.html#connection.ConnectionState.ESTABLISHING">ESTABLISHING (ConnectionState attribute)</a>
+</li>
+      <li><a href="subdir/API.html#framer.ExampleFramer">ExampleFramer (class in framer)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -317,8 +315,6 @@
 </li>
       <li><a href="subdir/API.html#connection.Connection.HANDLE_STATE_READY">HANDLE_STATE_READY (Connection attribute)</a>
 </li>
-      <li><a href="subdir/API.html#endpoint.RemoteEndpoint.hostname">hostname (RemoteEndpoint attribute)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -336,8 +332,6 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#preconnection.Preconnection.initiate_with_send">initiate_with_send() (Preconnection method)</a>
-</li>
-      <li><a href="subdir/API.html#endpoint.LocalEndpoint.interface">interface (LocalEndpoint attribute)</a>
 </li>
       <li><a href="subdir/API.html#selection_properties.SelectionProperties.INTERFACE">INTERFACE (SelectionProperties attribute)</a>
 </li>
@@ -415,22 +409,16 @@
 </li>
       <li><a href="subdir/API.html#selection_properties.SelectionProperties.PER_MSG_RELIABILITY">PER_MSG_RELIABILITY (SelectionProperties attribute)</a>
 </li>
-      <li><a href="subdir/API.html#endpoint.LocalEndpoint.portNumber">portNumber (LocalEndpoint attribute)</a>
-
-      <ul>
-        <li><a href="subdir/API.html#endpoint.RemoteEndpoint.portNumber">(RemoteEndpoint attribute)</a>
-</li>
-      </ul></li>
       <li><a href="subdir/API.html#preconnection.Preconnection">Preconnection (class in preconnection)</a>
 </li>
       <li><a href="subdir/API.html#module-preconnection">preconnection (module)</a>
 </li>
       <li><a href="subdir/API.html#selection_properties.PreferenceLevel.PREFER">PREFER (PreferenceLevel attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#transport_properties.TransportProperties.prefer">prefer() (TransportProperties method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#selection_properties.PreferenceLevel">PreferenceLevel (class in selection_properties)</a>
 </li>
       <li><a href="subdir/API.html#selection_properties.SelectionProperties.PRESERVE_MSG_BOUNDARIES">PRESERVE_MSG_BOUNDARIES (SelectionProperties attribute)</a>
@@ -519,14 +507,12 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="subdir/API.html#framer.TestFramer">TestFramer (class in framer)</a>
-</li>
       <li><a href="subdir/API.html#connection_properties.ConnectionProperties.TIMEOUT_FOR_ABORTING_CONNECTION">TIMEOUT_FOR_ABORTING_CONNECTION (ConnectionProperties attribute)</a>
+</li>
+      <li><a href="subdir/API.html#module-transport_properties">transport_properties (module)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="subdir/API.html#module-transport_properties">transport_properties (module)</a>
-</li>
       <li><a href="subdir/API.html#transport_properties.TransportProperties">TransportProperties (class in transport_properties)</a>
 </li>
       <li><a href="subdir/API.html#transport_properties.TransportPropertyProfiles">TransportPropertyProfiles (class in transport_properties)</a>
@@ -560,7 +546,11 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="subdir/API.html#endpoint.LocalEndpoint.with_interface">with_interface() (LocalEndpoint method)</a>
+
+      <ul>
+        <li><a href="subdir/API.html#endpoint.RemoteEndpoint.with_interface">(RemoteEndpoint method)</a>
 </li>
+      </ul></li>
       <li><a href="subdir/API.html#endpoint.LocalEndpoint.with_port">with_port() (LocalEndpoint method)</a>
 
       <ul>

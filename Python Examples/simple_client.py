@@ -67,7 +67,7 @@ if __name__ == "__main__":
     tp.add(ConnectionProperties.USER_TIMEOUT_TCP, {TCPUserTimeout.USER_TIMEOUT_ENABLED: True})
 
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
-#    preconnection.add_framer(framer.TestFramer())
+#    preconnection.add_framer(framer.ExampleFramer())
 #    preconnection.add_framer(framer.SecondFramer())
     outer_con: Connection = preconnection.initiate()
     outer_con.HANDLE_STATE_READY = ready_handler

@@ -78,5 +78,5 @@ Framer
    .. autoclass:: Framer
       :members:
 
-   .. autoclass:: TestFramer
+   .. autoclass:: ExampleFramer
       :undoc-members:

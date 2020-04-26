@@ -17,3 +17,6 @@ examples/
 socketapi/
 tests/
 CMakeFiles/
+build/
+dist/
+*.egg-info/

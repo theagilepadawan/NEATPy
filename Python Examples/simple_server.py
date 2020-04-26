@@ -39,7 +39,7 @@ if __name__ == "__main__":
         connection.receive(simple_receive_handler)
 
     preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=tp)
-#    preconnection.add_framer(framer.TestFramer())
+#    preconnection.add_framer(framer.ExampleFramer())
     new_listener: Listener = preconnection.listen()
     new_listener.HANDLE_CONNECTION_RECEIVED = new_connection_received
 

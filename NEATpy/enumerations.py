@@ -131,36 +131,4 @@ class CapacityProfiles(Enum):
     LOW_LATENCY = auto()
 
 
-class ConnectionEvents(Enum):
-    EXPIRED = auto()
-    CLOSED = auto()
 
-    INITIATE_ERROR = 'Initiate error'
-    CONNECTION_ERROR = auto()
-    SOFT_ERROR = auto()
-    SEND_ERROR = auto()
-    RECEIVE_ERROR = auto()
-    CLONED_ERROR = auto()
-
-    EXCESSIVE_RETRANSMISSION = auto()
-    RECEIVED = auto()
-    RECEIVED_PARTIAL = auto()
-    SENT = auto()
-
-
-class PreconnectionEvents(Enum):
-    RENDEZVOUS_DONE = auto()
-    RENDEZVOUS_ERROR = auto()
-    READY = auto()
-
-
-class ListenerEvents(Enum):
-    CONNECTION_RECEIVED = auto()
-    STOPPED = auto()
-    LISTEN_ERROR = auto()
-
-
-class Events(Enum):
-    _ConnectionEvents = ConnectionEvents
-    _PreconnectionEvents = PreconnectionEvents
-    _ListenerEvents = ListenerEvents

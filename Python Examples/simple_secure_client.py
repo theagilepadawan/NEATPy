@@ -29,7 +29,7 @@ def ready_handler(connection: Connection):
 if __name__ == "__main__":
     start = time.time()
     ep = RemoteEndpoint()
-    ep.with_address("192.168.1.2")
+    ep.with_address("localhost")
     ep.with_port(5000)
 
     tp = TransportProperties(TransportPropertyProfiles.RELIABLE_INORDER_STREAM)
