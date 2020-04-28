@@ -304,7 +304,7 @@ class Connection:
         will ensure that this Message is indeed delivered. If the Remote Endpoint still has data to send, it cannot
         be received after this call.
         """
-        # Check if there is any messages left to pass to NEAT or messages that is not given to the network layer
+        # Check if there are any messages left to pass to NEAT or messages that are not given to the network layer
         if self.msg_list.empty() or self.messages_passed_to_back_end:
             self.close_called = True
             self.state = ConnectionState.CLOSING
@@ -332,7 +332,7 @@ class Connection:
         # If close is called on the connection?
         return ret
 
-    def can_be_used_for_receive_data(self):
+    def can_be_used_for_receiving_data(self):
         ret = True
         if self.transport_properties.selection_properties[SelectionProperties.DIRECTION] is CommunicationDirections.UNIDIRECTIONAL_SEND:
             ret = False
@@ -362,7 +362,7 @@ class Connection:
         """
         return {'state': self.state,
                 'send': self.can_be_used_for_sending(),
-                'receive': self.can_be_used_for_receive_data(),
+                'receive': self.can_be_used_for_receiving_data(),
                 'props': self.transport_properties}
 
 
@@ -638,19 +638,20 @@ class FramerPlaceholder:
     def advance(self, length):
         self.inbound_data = self.inbound_data[length::]
 
-    def fill_earmarked_bytes(self, bytes):
+    def fill_earmarked_bytes(self, bytes: bytearray):
         if len(bytes) < self.earmarked_bytes_missing:
             self.buffered_data += bytes
             self.earmarked_bytes_missing -= len(bytes)
         else:
             if len(bytes) > self.earmarked_bytes_missing:
                 msg = self.buffered_data + bytes[0:self.earmarked_bytes_missing]
-                self.inbound_data += bytes
+                self.inbound_data = self.inbound_data + bytes[self.earmarked_bytes_missing::]
             else:
                 msg = self.buffered_data + bytes
             handler, min_length, max_length = self.connection.receive_request_queue.pop(0)
             message_data_object = MessageDataObject(msg, len(msg))
             handler(self.connection, message_data_object, self.saved_message_context, self.saved_is_end_of_message, None)
+            self.earmarked_bytes_missing = 0
             if len(self.inbound_data) > 0:
                 self.connection.message_framer.dispatch_handle_received_data(self.connection)
 

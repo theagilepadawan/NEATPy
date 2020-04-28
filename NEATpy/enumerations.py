@@ -126,9 +126,7 @@ class PreferenceLevel(Enum):
     PROHIBIT = -2
 
 
-class CapacityProfiles(Enum):
-    DEFAULT = auto()
-    LOW_LATENCY = auto()
+
 
 
 

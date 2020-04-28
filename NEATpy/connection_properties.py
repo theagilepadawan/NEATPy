@@ -1,7 +1,6 @@
 import sys
 from enum import Enum, auto
 
-from enumerations import CapacityProfiles
 from utils import shim_print
 
 
@@ -96,3 +95,5 @@ class TCPUserTimeout(Enum):
     ADVERTISED_USER_TIMEOUT = 'tcp.user-timeout-value'
     USER_TIMEOUT_ENABLED = 'tcp.user-timeout'
     CHANGEABLE = 'tcp.user-timeout-recv'
+
+

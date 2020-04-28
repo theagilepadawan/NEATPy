@@ -7,9 +7,10 @@ Master thesis documentation
 ***********************************
 
 This is the documentation for NEATpy: a transport system conforming to the specification of a transport system
-specified by the `TAPS WG`_. While written in Python, it utilizes the NEAT_ codebase with the help of language bindings
-created by SWIG_. In this way this transport system is logically divided in a front-end and back-end; the Python front-end
-presents a standard conforming API to the end user, while under the hood, uses NEAT to handle all protocol machinery.
+specified by the `TAPS WG`_. It implementation is based on version 4 and 5 of the interface draft. While written in Python,
+it utilizes the NEAT_ codebase with the help of language bindings created by SWIG_. In this way this transport system
+is logically divided in a front-end and back-end; the Python front-end presents a standards conforming API to the end user,
+while under the hood, it uses NEAT to handle all protocol machinery.
 
 .. _TAPS WG: https://github.com/ietf-tapswg/api-drafts
 .. _SWIG: http://www.swig.org/

@@ -4,7 +4,6 @@ from enum import Enum
 from typing import Callable
 from connection import Connection
 from endpoint import RemoteEndpoint
-from enumerations import ConnectionEvents
 from listener import Listener
 from message_context import MessageContext
 from message_framer import MessageFramer
@@ -82,16 +81,9 @@ class Preconnection:
         self.unfulfilled_handler = unfulfilled_handler
         self.message_framer = None
 
-        self.event_handler_list = {event: None for name, event in ConnectionEvents.__members__.items()}
         self.transport_properties = transport_properties
         if not self.transport_properties:
             self.transport_properties = TransportProperties()
-
-    def set_event_handler(self, event: ConnectionEvents, handler):
-        if isinstance(event, ConnectionEvents):
-            self.event_handler_list[event] = handler
-        else:
-            shim_print("No valid event passed. Ignoring")
 
     def initiate(self, timeout=None) -> Connection:
         """ Initiate (Active open) is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming
