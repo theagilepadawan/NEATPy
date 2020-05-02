@@ -11,7 +11,9 @@
 
 My masters thesis. 
 
-Implementing a transport system specified by the TAPS WG. Leveraging the work put into the NEAT Project, while providing a high level interface in Python.
+Implementing a transport system specified by the TAPS WG. Leveraging the work put into the NEAT Project, while providing a high level interface in Python. 
+
+As NEAT, it is available for: FreeBSD, Linux, OS X and NetBSD.
 
 ### 🔗 [TAPS](https://datatracker.ietf.org/wg/taps/documents/)
 ### 🔗 [NEAT](https://www.neat-project.org/)
@@ -24,6 +26,10 @@ Implementing a transport system specified by the TAPS WG. Leveraging the work pu
 - 4️⃣ Try out the example client and server
 
 ---------------------------------------
+## Documentation 📖
+
+- https://neatpy.readthedocs.io/
+
 ## Author
 
 👤 **Michael Gundersen**
