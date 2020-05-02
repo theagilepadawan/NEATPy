@@ -16,10 +16,10 @@
 -------------------------------
 ## Install
 
-1️⃣ Clone NEATPy
-2️⃣ Clone and follow the build instructions for NEAT: https://github.com/NEAT-project/neat
-3️⃣ Copy `_neat_so` and `neat.py` into the root of NEATPy
-4️⃣ Try out the example client and server
+- 1️⃣ Clone NEATPy
+- 2️⃣ Clone and follow the build instructions for NEAT: https://github.com/NEAT-project/neat
+- 3️⃣ Copy `_neat_so` and `neat.py` into the root of NEATPy
+- 4️⃣ Try out the example client and server
 
 ---------------------------------------
 ## Author
