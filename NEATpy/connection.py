@@ -1,7 +1,6 @@
 # coding=utf-8
 # !/usr/bin/env python3
 import inspect
-import json
 import math
 import queue
 import time
@@ -16,14 +15,10 @@ from enumerations import SupportedProtocolStacks, AdditionalServices, ServiceLev
 from message_context import MessageContext
 from message_properties import MessageProperties
 from neat import *
-import preconnection
 from selection_properties import CommunicationDirections, SelectionProperties
 import backend
 from typing import Callable, List, Tuple, Any, Optional
-from transport_properties import TransportProperties
 from utils import shim_print
-#from typeAliases import ReceiveHandlerTypeSignature, SentHandlerTypeSignature
-
 
 class Connection:
     """ A Connection represents a transport Protocol Stack on which data can be sent to and/or received from a remote
@@ -59,7 +54,7 @@ class Connection:
         self.buffered_message_data_object: MessageDataObject = None
         self.partitioned_message_data_object: MessageDataObject = None
         self.message_sent_with_initiate = None
-        self.clone_callbacks = {}
+        self.clone_error_handler = {}
         self.connection_group = []
         self.local_endpoint = None
         self.remote_endpoint = None
@@ -75,6 +70,7 @@ class Connection:
         self.batch_in_session = False
         self.final_message_received = False
         self.final_message_passed = False
+
 
         self.HANDLE_STATE_READY: Callable[[], None] = None  #: Handler for when the connection transitions to ready state
         self.HANDLE_STATE_CLOSED: Callable[[], None] = None #: Handler for when the connection transitions to clsoed state
@@ -370,7 +366,7 @@ class Connection:
                 'props': self.transport_properties}
 
 
-    def clone(self, clone_handler: Callable[[object, object], None]):
+    def clone(self, clone_error_handler: Callable[[object, object], None]):
         """Calling Clone on a Connection yields a group of two Connections: the parent Connection on which Clone was
         called, and the resulting cloned Connection. These connections are "entangled" with each other, and become part
         of a Connection Group. Calling Clone on any of these two Connections adds a third Connection to the Connection
@@ -378,31 +374,31 @@ class Connection:
         there are exceptions, such as the priority property, which obviously will not trigger a change for all connections
         in the connection group. As with all other properties, priority is copied to the new Connection when calling Clone().
 
-        :param clone_handler: A function to handle clone completion
+        :param clone_error_handler: A function to handle the event which fires when the cloning operation fails.
         """
         try:
             shim_print("CLONE")
+            # NEAT boilerplate
             flow = neat_new_flow(self.context)
             ops = neat_flow_operations()
 
+            # Create new connection and register eventual error_handler
             new_connection = Connection(self.preconnection, 'active', parent=self)
+            new_connection.clone_error_handler = clone_error_handler
 
-            Connection.clone_count += 1
-            self.clone_counter += 1
-            ops.clone_id = new_connection.connection_id
-            ops.parent_id = self.connection_id
+            # Set connection id for the new clone in the operations struct
+            ops.connection_id = new_connection.connection_id
 
-            self.clone_callbacks[self.clone_counter] = clone_handler
-
+            # Set callbacks to properly handle clone establishment / error
             ops.on_error = on_clone_error
             ops.on_connected = handle_clone_ready
             neat_set_operations(self.context, flow, ops)
             backend.pass_candidates_to_back_end([self.transport_stack], self.context, flow)
 
+            # Asynchronously call NEAT to create a new connection
             neat_open(self.context, flow, self.preconnection.remote_endpoint.address,
                       self.preconnection.remote_endpoint.port, None, 0)
             return new_connection
-
         except:
             shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name),level='error')
             backend.stop(self.context)
@@ -618,16 +614,18 @@ def on_clone_error(ops):
 
 
 def handle_clone_ready(ops):
-    shim_print("CLONE IS READY TO GO BABY!!")
+    # Retrieve parent and child connection
+    child_connection = Connection.connection_list[ops.clone_id]
+    parent_connection = child_connection.parent
 
-    cloned_connection = Connection.connection_list[ops.clone_id]
-    cloned_connection.established_routine(ops)
-    parent = Connection.connection_list[ops.parent_id]
-    parent.add_child(cloned_connection)
+    # Add child to parents connection group and call established routine for child
+    parent_connection.add_child(child_connection)
+    child_connection.established_routine(ops)
 
     ops.on_writable = handle_writable
     neat_set_operations(ops.ctx, ops.flow, ops)
     return NEAT_OK
+
 
 @dataclass
 class FramerPlaceholder:
