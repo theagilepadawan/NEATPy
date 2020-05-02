@@ -9,7 +9,7 @@
   </a>
 </p>
 
-> My masters thesis. 
+My masters thesis. 
 
 Implementing a transport system specified by the TAPS WG. Leveraging the work put into the NEAT Project, while providing a high level interface in Python.
 
