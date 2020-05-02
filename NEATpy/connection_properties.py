@@ -2,7 +2,7 @@ import sys
 from enum import Enum, auto
 
 from utils import shim_print
-
+from neat import *
 
 class ConnectionProperties(Enum):
     RETRANSMISSION_THRESHOLD_BEFORE_EXCESSIVE_RETRANSMISSION_NOTIFICATION = 'retransmit-notify-threshold' #: Default value is -1
@@ -96,4 +96,12 @@ class TCPUserTimeout(Enum):
     USER_TIMEOUT_ENABLED = 'tcp.user-timeout'
     CHANGEABLE = 'tcp.user-timeout-recv'
 
+
+class CapacityProfiles(Enum):
+    DEFAULT = int("0x00", 0)
+    SCAVENGER =int("0x01", 0)
+    LOW_LATENCY_INTERACTIVE = int("0x24", 0)
+    LOW_LATENCY_NON_INTERACTIVE = int("0x12", 0)
+    CONSTANT_RATE_STREAMING = int("0x1C", 0)
+    CAPACITY_SEEKING = int("0x0A", 0)
 

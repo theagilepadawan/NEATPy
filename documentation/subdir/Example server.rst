@@ -31,7 +31,7 @@ To specify this we need to create a :py:class:`transport_properties` object and 
     transport_properties.prohibit(SelectionProperties.PRESERVE_MSG_BOUNDARIES)
 
 
-The next step is to create a :py:class:`preconnection`, passing our local endpoint and transport properties as arguments:
+The next step is to create a :py:class:`preconnection`, passing our local endpoint and transport properties as arguments. Next, we call :py:meth:`.listen`
 
 .. code-block:: python
 
@@ -54,7 +54,7 @@ functions or anonymous functions (in essence all objects that are callable), let
         anon_func = lambda connection: connection.close()
         connection.send(b"Hello from server", anon_func)
 
-The last step will be to register the event handler and call :py:meth:`.listen`.
+The last step will be to register the event handler and call :py:meth:`preconnection.Preconnection.start`.
 
 .. code-block:: python
 
@@ -62,6 +62,35 @@ The last step will be to register the event handler and call :py:meth:`.listen`.
     new_preconnection.start()
 
 
+.. Note:: Calling start on the Preconnection starts the inner event loop of the transport system and does not return. Further interaction is achieved through the various events,
+          e.g. the event signaling a Connection is received, manifested in the :py:attr:`.HANDLE_CONNECTION_RECEIVED` member of the :py:class:`listener` class.
+
+That is it! Assuming we are running our program from the command line and using a main function, the typed out server looks like the following:
+
+.. code-block:: python
+
+    import neatpy
+
+    def simple_connection_received_handler(connection, message, context, is_end, error):
+        anon_func = lambda connection: connection.close()
+        connection.send(b"Hello from server", anon_func)
+
+    def main():
+        local_specifier = LocalEndpoint()
+        local_specifier.with_port(5000)
+
+        transport_properties = TransportProperties()
+        transport_properties.add(SelectionProperties.RELIABILITY, PreferenceLevel.REQUIRE)
+        transport_properties.prohibit(SelectionProperties.PRESERVE_MSG_BOUNDARIES)
+
+        new_preconnection = Preconnection(local_endpoint=local_specifier, transport_properties=tp)
+        new_listener: Listener = new_preconnection.listen()
+
+        new_listener.HANDLE_CONNECTION_RECEIVED = new_connection_received
+        new_preconnection.start()
+
+    if __name__ == "__main__":
+        main()
 
 
 

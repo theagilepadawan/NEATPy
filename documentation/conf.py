@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('../NEATpy'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'NEATpy'
+project = 'NEATPy'
 copyright = '2020, Michael Gundersen'
 author = 'Michael Gundersen'
 
@@ -30,7 +30,6 @@ release = '0.0.1'
 
 
 # -- General configuration ---------------------------------------------------
-
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
@@ -67,7 +66,7 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ['_static']
 
 autodoc_mock_imports = ["neat", "utils"]
-autodoc_typehints = 'description'
+autodoc_typehints = 'signature'
 autoclass_content = 'init'
 add_module_names = False
 html_logo = "../documentation/logo.png"

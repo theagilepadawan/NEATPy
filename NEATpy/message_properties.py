@@ -1,7 +1,7 @@
 from enum import Enum, auto
 import math
 
-from enumerations import CapacityProfiles
+from connection_properties import CapacityProfiles
 from utils import shim_print
 
 

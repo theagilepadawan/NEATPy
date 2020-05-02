@@ -2,11 +2,12 @@ from enum import Enum, auto
 from typing import Union
 
 from colorama import Fore
-from connection_properties import ConnectionProperties
+from connection_properties import ConnectionProperties, CapacityProfiles
 from enumerations import SupportedProtocolStacks, ServiceLevel, PreferenceLevel
 from message_properties import MessageProperties
 from selection_properties import SelectionProperties
 from utils import shim_print
+from neat import *
 
 protocols_services = {
     SupportedProtocolStacks.TCP: {
@@ -65,7 +66,6 @@ class TransportPropertyProfiles(Enum):
     """ Transport property profiles are used as a mechanism to pre-configure :py:class:`transport_properties` objects,
     with with frequently used sets of properties.
     """
-
     #: This profile provides reliable, in-order transport service with congestion control. An example of a protocol that provides this service is TCP.
     RELIABLE_INORDER_STREAM = auto()
     #: This profile provides message-preserving, reliable, in-order transport service with congestion control. An example of a protocol that provides this service is SCTP.
@@ -85,6 +85,8 @@ class TransportProperties:
         self.selection_properties = SelectionProperties.get_default()
         self.message_properties = MessageProperties.get_default()
         self.connection_properties = ConnectionProperties.get_default()
+
+        self.buffer_capacity = None
 
         # Updates the selection properties dict with values from the transport profile
         if property_profile:
@@ -110,6 +112,11 @@ class TransportProperties:
                     SelectionProperties.PRESERVE_MSG_BOUNDARIES: PreferenceLevel.REQUIRE})
                 self.message_properties.update({MessageProperties.IDEMPOTENT: True})
 
+    def dispatch_capacity_profile(self, context, flow):
+        if neat_set_qos(context, flow, self.buffer_capacity) == NEAT_OK:
+            shim_print("Capacity profile set successfully", level='msg')
+
+
     def __filter_protocols(self, protocol_level, preference_level, candidates):
         remove_list = []
         for prop, preference in self.selection_properties.items():
@@ -131,8 +138,16 @@ class TransportProperties:
             shim_print("Setting selection property...")
             SelectionProperties.set_property(self.selection_properties, prop, value)
         elif isinstance(prop, ConnectionProperties):
-            shim_print("Setting connection property...")
-            ConnectionProperties.set_property(self.connection_properties, prop, value)
+            if ConnectionProperties.is_read_only(prop):
+                shim_print("Given property is read only - Ignoring...", level='error')
+            else:
+                if prop is ConnectionProperties.USER_TIMEOUT_TCP:
+                    ConnectionProperties.set_tcp_uto(prop, value)
+                elif prop is ConnectionProperties.CAPACITY_PROFILE:
+                    if isinstance(value, CapacityProfiles):
+                        self.buffer_capacity = value.value
+                else:
+                    self.connection_properties[prop] = value
         elif isinstance(prop, MessageProperties):
             MessageProperties.set_property(self.message_properties, prop, value)
         else:
@@ -244,6 +259,7 @@ class TransportProperties:
 
 def test():
     tp = TransportProperties()
+
     tp.add(SelectionProperties.RELIABILITY, PreferenceLevel.REQUIRE)
     tp.prohibit(SelectionProperties.PRESERVE_MSG_BOUNDARIES)
 

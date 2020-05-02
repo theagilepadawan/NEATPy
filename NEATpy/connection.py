@@ -94,6 +94,10 @@ class Connection:
         self.transport_stack = SupportedProtocolStacks(ops.transport_protocol)
         self.transport_properties = copy.deepcopy(self.preconnection.transport_properties)
 
+        if self.transport_properties.buffer_capacity:
+            self.transport_properties.dispatch_capacity_profile(self.context, self.flow)
+            self.transport_properties.buffer_capacity = None
+
         if SupportedProtocolStacks.get_service_level(self.transport_stack, SelectionProperties.PRESERVE_MSG_BOUNDARIES) == ServiceLevel.INTRINSIC_SERVICE:
             self.stack_supports_message_boundary_preservation = True
 
