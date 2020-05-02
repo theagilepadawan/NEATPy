@@ -9,7 +9,9 @@
   </a>
 </p>
 
-> My masters thesis. Implementing a transport system specified by the TAPS WG. Leveraging the work put into the NEAT Project, while providing a high level interface in Python.
+> My masters thesis. 
+
+Implementing a transport system specified by the TAPS WG. Leveraging the work put into the NEAT Project, while providing a high level interface in Python.
 
 ### 🔗 [TAPS](https://datatracker.ietf.org/wg/taps/documents/)
 ### 🔗 [NEAT](https://www.neat-project.org/)
