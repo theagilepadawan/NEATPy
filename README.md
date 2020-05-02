@@ -13,20 +13,15 @@
 
 ### 🔗 [TAPS](https://datatracker.ietf.org/wg/taps/documents/)
 ### 🔗 [NEAT](https://www.neat-project.org/)
-
+-------------------------------
 ## Install
 
-- Clone NEATPy
-- Clone and follow the build instructions for NEAT: https://github.com/NEAT-project/neat
-- Copy `_neat_so` and `neat.py` into the root of NEATPy
-- Try out the example client and server
+1️⃣ Clone NEATPy
+2️⃣ Clone and follow the build instructions for NEAT: https://github.com/NEAT-project/neat
+3️⃣ Copy `_neat_so` and `neat.py` into the root of NEATPy
+4️⃣ Try out the example client and server
 
-## Usage
-
-```sh
--
-```
-
+---------------------------------------
 ## Author
 
 👤 **Michael Gundersen**
