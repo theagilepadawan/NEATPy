@@ -32,7 +32,7 @@
 - Feel free to contribute! 
 
 ## 📝 License
-
+MIT License
 Copyright © 2020 [Michael Gundersen](https://github.com/theagilepadawan).<br />
 
 
