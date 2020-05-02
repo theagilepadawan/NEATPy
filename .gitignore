@@ -3,6 +3,8 @@
 *.dylib
 *.so
 *.so.*
+*.log
+*.prof
 
 .DS_Store
 _neat.so
@@ -15,6 +17,7 @@ neat.py
 __pycache__/
 examples/
 socketapi/
+documentation/_build/
 tests/
 CMakeFiles/
 build/
