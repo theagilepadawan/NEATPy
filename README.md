@@ -45,4 +45,3 @@ Copyright © 2020 [Michael Gundersen](https://github.com/theagilepadawan).<br />
 
 
 ***
-_This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
