@@ -7,6 +7,8 @@
   <a href="https://github.com/kefranabg/readme-md-generator/graphs/commit-activity" target="_blank">
     <img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" />
   </a>
+  
+  [![Generic badge](https://img.shields.io/badge/<SUBJECT>-<STATUS>-<COLOR>.svg)](https://shields.io/)
 </p>
 
 My masters thesis. 
