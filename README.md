@@ -8,7 +8,7 @@
     <img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" />
   </a>
   
-  [![Generic badge](https://img.shields.io/badge/<TAPS WG>-<IETF>-<BLUE>.svg)](https://shields.io/)
+  [![Generic badge](https://img.shields.io/badge/TAPS-IETF-BLUE.svg)](https://shields.io/)
 </p>
 
 My masters thesis. 
