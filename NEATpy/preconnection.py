@@ -59,9 +59,6 @@ class Preconnection:
             transport_properties.buffer_capacity = None
 
 
-
-
-
     def initiate(self, timeout=None) -> Connection:
         """ Initiate (Active open) is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming
         Connection requests. Active open is used by clients in client-server interactions. Note that start() must be

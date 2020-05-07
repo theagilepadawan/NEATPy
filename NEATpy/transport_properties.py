@@ -64,13 +64,13 @@ protocols_services = {
 
 class TransportPropertyProfiles(Enum):
     """ Transport property profiles are used as a mechanism to pre-configure :py:class:`transport_properties` objects,
-    with with frequently used sets of properties.
+    with frequently used sets of properties.
     """
-    #: This profile provides reliable, in-order transport service with congestion control. An example of a protocol that provides this service is TCP.
+    #: This profile provides a reliable, in-order transport service with congestion control. An example of a protocol that provides this service is TCP.
     RELIABLE_INORDER_STREAM = auto()
     #: This profile provides message-preserving, reliable, in-order transport service with congestion control. An example of a protocol that provides this service is SCTP.
     RELIABLE_MESSAGE = auto()
-    #: This profile provides unreliable datagram transport service. An example of a protocol that provides this service is UDP.
+    #: This profile provides an unreliable datagram transport service. An example of a protocol that provides this service is UDP.
     UNRELIABLE_DATAGRAM = auto()
 
 

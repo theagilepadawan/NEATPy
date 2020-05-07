@@ -26,16 +26,13 @@ def ready_handler(connection: Connection):
     connection.receive(receive_handler)
 
 if __name__ == "__main__":
-    start = time.time()
     ep = RemoteEndpoint()
     ep.with_address("127.0.0.1")
     ep.with_port(5000)
 
     tp = TransportProperties(TransportPropertyProfiles.RELIABLE_INORDER_STREAM)
-   # tp.add(ConnectionProperties.CAPACITY_PROFILE, CapacityProfiles.SCAVENGER)
 
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
     connection: Connection = preconnection.initiate()
     connection.HANDLE_STATE_READY = ready_handler
     preconnection.start()
-

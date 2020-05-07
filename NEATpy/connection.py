@@ -166,7 +166,7 @@ class Connection:
     def set_property(self, connection_property: ConnectionProperties, value):
         """The application can set and query Connection Properties on a per-Connection basis.
         Connection Properties that are not read-only can be set during pre-establishment (see :py:class:`connection_properties`)
-        , as well as on connections directly using the SetProperty action:
+        as well as on connections directly using the SetProperty action:
 
         :param connection_property:
             The property to assign a value.
@@ -183,7 +183,8 @@ class Connection:
     def send(self, message_data: bytearray, sent_handler=None, message_context: MessageContext = None, end_of_message: bool = True) -> None:
         """Data is sent as Messages, which allow the application to communicate the boundaries of the data being
         transferred. By default, Send enqueues a complete Message, and takes optional per-:py:class:`message_properties`.
-        Applications is able to handle events with the :param sent_handler. This completion in form of an error and successfully sent message.
+        Applications are able to handle events with the :param sent_handler. This handles completion in form of an
+        either an error or a successfully sent message.
 
         :param message_data: The data to send
         :param sent_handler: A function that is called after completion / error.
@@ -259,11 +260,11 @@ class Connection:
         :param handler: The function to handle the event delivered during completion, which includes both potential
             errors and successfully received data.
         :param min_incomplete_length: The default ``None`` value indicates that only complete messages should be delivered.
-            Set to anything other than this will trigger a receive event only when at least that many bytes are available.
+            Setting it to anything other than this will trigger a receive event only when at least that many bytes are available.
         :param max_length: Indicates the maximum size of a message in bytes the application is prepared to receive.
             Incoming messages larger than this will be delivered in received partial events. To determine whether the received
-            event is a partial event the application is able to check whether the variable ``is_end_of_message`` holds a boolean
-            value, which indicates a partial event, while a None value indicates a complete message being delivered.
+            event is a partial event the application is able to check whether the variable ``is_end_of_message`` holds the boolean
+            value `False`, which indicates a partial event, while a None value indicates a complete message being delivered.
         """
         shim_print("RECEIVED CALLED")
 
