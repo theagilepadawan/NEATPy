@@ -30,7 +30,9 @@ if __name__ == "__main__":
     ep.with_address("127.0.0.1")
     ep.with_port(5000)
 
-    tp = TransportProperties(TransportPropertyProfiles.RELIABLE_INORDER_STREAM)
+    tp = TransportProperties()
+    tp.add(SelectionProperties.RELIABILITY, PreferenceLevel.REQUIRE)
+    tp.prefer(SelectionProperties.PRESERVE_MSG_BOUNDARIES)
 
     preconnection = Preconnection(remote_endpoint=ep, transport_properties=tp)
     connection: Connection = preconnection.initiate()

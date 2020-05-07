@@ -253,13 +253,3 @@ class TransportProperties:
                 candidates.append(SupportedProtocolStacks.MPTCP)
                 shim_print("MPTCP enabled on system")
         return candidates
-
-
-
-
-def test():
-    tp = TransportProperties()
-
-    tp.add(SelectionProperties.RELIABILITY, PreferenceLevel.REQUIRE)
-    tp.prohibit(SelectionProperties.PRESERVE_MSG_BOUNDARIES)
-
