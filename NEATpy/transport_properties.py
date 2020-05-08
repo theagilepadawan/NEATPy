@@ -3,9 +3,9 @@ from typing import Union
 
 from colorama import Fore
 from connection_properties import ConnectionProperties, CapacityProfiles
-from enumerations import SupportedProtocolStacks, ServiceLevel, PreferenceLevel
+from enumerations import SupportedProtocolStacks, ServiceLevel
 from message_properties import MessageProperties
-from selection_properties import SelectionProperties
+from selection_properties import SelectionProperties, PreferenceLevel
 from utils import shim_print
 from neat import *
 
