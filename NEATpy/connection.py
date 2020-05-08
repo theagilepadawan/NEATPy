@@ -11,11 +11,11 @@ from enum import Enum, auto
 from connection_properties import TCPUserTimeout, ConnectionProperties
 from endpoint import LocalEndpoint, RemoteEndpoint
 import message_framer
-from enumerations import SupportedProtocolStacks, AdditionalServices, ServiceLevel, PreferenceLevel
+from enumerations import SupportedProtocolStacks, AdditionalServices, ServiceLevel
 from message_context import MessageContext
 from message_properties import MessageProperties
 from neat import *
-from selection_properties import CommunicationDirections, SelectionProperties
+from selection_properties import CommunicationDirections, SelectionProperties, PreferenceLevel
 import backend
 from typing import Callable, List, Tuple, Any, Optional
 from utils import shim_print
