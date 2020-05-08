@@ -25,7 +25,7 @@ copyright = '2020, Michael Gundersen'
 author = 'Michael Gundersen'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '1.0.0'
 
 
 
@@ -72,7 +72,7 @@ add_module_names = False
 html_logo = "../documentation/logo.png"
 html_favicon = "../documentation/favicon.ico"
 
-
+latex_logo = "../documentation/logo.png"
 
 def autodoc_skip_member(app, what, name, obj, skip, options):
     exclusions = ('neat', '__neat__')

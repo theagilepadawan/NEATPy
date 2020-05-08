@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup_args = dict(
     name='neat_py',
-    version='0.1',
+    version='1.0',
     description='A TAPS conforming transport system building on NEAT',
     license='MIT',
     packages=find_packages(),

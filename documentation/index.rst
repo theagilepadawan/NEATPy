@@ -52,6 +52,7 @@ successful implementation of these would require changes to NEAT, which was outs
   due to constraints in  NEAT. For the transport system to be fully security-conformant, further implementation
   of security within NEAT is needed.
 
+
 * *Rendezvous Action:*
 
   Currently, the TAPS description is not very clear, and the full specification for the action is yet to be finalized.
