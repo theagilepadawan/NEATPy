@@ -50,9 +50,13 @@ Connection Properties
 ----------------------
 .. automodule:: connection_properties
 
+   .. autoclass:: CapacityProfiles
+      :members:
+
    .. autoclass:: ConnectionProperties
       :members:
-      :undoc-members:
+
+
 
 Message Properties
 -----------------------

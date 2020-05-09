@@ -4,6 +4,7 @@ from enum import Enum, auto
 from utils import shim_print
 from neat import *
 
+
 class ConnectionProperties(Enum):
     RETRANSMISSION_THRESHOLD_BEFORE_EXCESSIVE_RETRANSMISSION_NOTIFICATION = 'retransmit-notify-threshold' #: Default value is -1
     REQUIRED_MINIMUM_CORRUPTION_PROTECTION_COVERAGE_FOR_RECEIVING = 'recv-checksum-len' #: Default value is -1
@@ -14,7 +15,7 @@ class ConnectionProperties(Enum):
     MAXIMUM_MESSAGE_SIZE_BEFORE_FRAGMENTATION_OR_SEGMENTATION = 'singular-transmission-msg-max-len' #: Default value is -1
     MAXIMUM_MESSAGE_SIZE_ON_SEND = 'send-msg-max-len' #: Default value is -1
     MAXIMUM_MESSAGE_SIZE_ON_RECEIVE = 'recv-msg-max-len' #: Default value is -1
-    CAPACITY_PROFILE = 'conn-capacity-profile' #: Default value is CapacityProfiles.DEFAULT
+    CAPACITY_PROFILE = 'conn-capacity-profile' #: Default value is :py:class:`CapacityProfiles`
     BOUNDS_ON_SEND_OR_RECEIVE_RATE = 'max-send-rate / max-recv-rate' #: Default value is (-1, -1)
     USER_TIMEOUT_TCP = 'tcp-uto'  #: Add three members here?
 
@@ -98,10 +99,13 @@ class TCPUserTimeout(Enum):
 
 
 class CapacityProfiles(Enum):
-    DEFAULT = int("0x00", 0)
-    SCAVENGER =int("0x01", 0)
-    LOW_LATENCY_INTERACTIVE = int("0x24", 0)
-    LOW_LATENCY_NON_INTERACTIVE = int("0x12", 0)
-    CONSTANT_RATE_STREAMING = int("0x1C", 0)
-    CAPACITY_SEEKING = int("0x0A", 0)
+    """By specifying a Capacity Profile, an application is able to signal what kind of network treatment it desires.
+     Under the hood the transport system will map each profile to different DSCP values for the given Connection.
+    """
+    DEFAULT = int("0x00", 0) #: No explicit information for expected capacity profile is given.
+    SCAVENGER = int("0x01", 0) #: A non-interactive Connection. The data is sent without any urgency for either sending or receiving.
+    LOW_LATENCY_INTERACTIVE = int("0x24", 0) #: An interactive Connection. Loss is preferred over latency.
+    LOW_LATENCY_NON_INTERACTIVE = int("0x12", 0) #: Loss is preferred to latency, but the Connection is non-interactive.
+    CONSTANT_RATE_STREAMING = int("0x1C", 0) #: Sending and receiving at a constant rate is desired. Minimal delay is wanted.
+    CAPACITY_SEEKING = int("0x0A", 0) #: Sending and receiving at the maximum rate allowed by the Connection's congestion controller.
 

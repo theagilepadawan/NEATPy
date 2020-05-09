@@ -65,6 +65,13 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+html_theme_options = {
+    'logo_only': True,
+    'display_version': True,
+    'prev_next_buttons_location': 'bottom',
+    'style_external_links': False,
+    'style_nav_header_background': '#00230e99',
+}
 autodoc_mock_imports = ["neat", "utils"]
 autodoc_typehints = 'signature'
 autoclass_content = 'init'
