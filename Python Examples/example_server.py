@@ -17,12 +17,12 @@ from enumerations import *
 
 
 def sent_cb(con):
-    con.close()
+    pass
 
 
 def simple_receive_handler(connection, message, context, is_end, error):
     shim_print(f"Got msg {len(message.data)}: {message.data.decode()}", level='msg')
-    connection.send(b"Hello client", sent_cb)
+    connection.send(b"Hello client", None)
 
 
 def new_connection_received(connection: Connection):

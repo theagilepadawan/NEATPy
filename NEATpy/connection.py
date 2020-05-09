@@ -47,6 +47,7 @@ class Connection:
         # Python specific
         self.connection_type = connection_type
         self.clone_counter = 0
+        self.parent = parent
         self.test_counter = 0
         self.msg_list: queue.PriorityQueue = queue.PriorityQueue()
         self.messages_passed_to_back_end = []
@@ -54,6 +55,7 @@ class Connection:
         self.buffered_message_data_object: MessageDataObject = None
         self.partitioned_message_data_object: MessageDataObject = None
         self.message_sent_with_initiate = None
+        self.received_called_before_established = None
         self.clone_error_handler = {}
         self.connection_group = []
         self.local_endpoint = None
@@ -62,9 +64,9 @@ class Connection:
         self.stack_supports_message_boundary_preservation = False
 
         # if this connection is a result from a clone, add parent
-        if parent:
-            shim_print(f"Connection is a result of cloning - Parent {parent}")
-            self.connection_group.append(parent)
+        if self.parent:
+            shim_print(f"Connection is a result of cloning - Parent {self.parent}")
+            self.connection_group.append(self.parent)
 
         self.close_called = False
         self.batch_in_session = False
@@ -100,7 +102,8 @@ class Connection:
 
         self.ops.connection_id = self.connection_id
         shim_print(f"Connection [ID: {self.connection_id}] established - transport used: {self.transport_stack.name}", level='msg')
-        #self.set_connection_properties()
+
+        self.set_connection_properties()
 
         # Fire off appropriate event handler (if present)
         if self.HANDLE_STATE_READY:
@@ -128,6 +131,9 @@ class Connection:
         if self.message_sent_with_initiate:
             message_data, sent_handler, message_context = self.message_sent_with_initiate
             self.send(message_data, sent_handler=sent_handler, message_context=message_context)
+        if self.received_called_before_established:
+            handler, min_incomplete_length, max_length = self.received_called_before_established
+            self.receive(handler, min_incomplete_length, max_length)
 
     def crate_and_populate_endpoint(self, local=True):
         if local:
@@ -267,6 +273,9 @@ class Connection:
             value `False`, which indicates a partial event, while a None value indicates a complete message being delivered.
         """
         shim_print("RECEIVED CALLED")
+        if self.state == ConnectionState.ESTABLISHING:
+            self.received_called_before_established = (handler, min_incomplete_length, max_length)
+            return
 
         if self.partitioned_message_data_object:
             if self.partitioned_message_data_object.length > max_length:
