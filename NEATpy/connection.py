@@ -616,7 +616,7 @@ def on_clone_error(ops):
 
 def handle_clone_ready(ops):
     # Retrieve parent and child connection
-    child_connection = Connection.connection_list[ops.clone_id]
+    child_connection = Connection.connection_list[ops.connection_id]
     parent_connection = child_connection.parent
 
     # Add child to parents connection group and call established routine for child
