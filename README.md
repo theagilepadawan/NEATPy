@@ -11,7 +11,7 @@
   [![Generic badge](https://img.shields.io/badge/TAPS-IETF-BLUE.svg)](https://shields.io/)
 </p>
 
-My masters thesis. 
+My master's thesis. 
 
 Implementing a transport system specified by the TAPS WG. Leveraging the work put into the NEAT Project, while providing a high level interface in Python. 
 
