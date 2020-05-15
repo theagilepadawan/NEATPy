@@ -2,8 +2,8 @@
 import json
 from enum import Enum
 from typing import Callable
-from connection import Connection
-from endpoint import RemoteEndpoint
+from connection import Connection, SendErrorReason
+from endpoint import RemoteEndpoint, LocalEndpoint
 from listener import Listener
 from message_context import MessageContext
 from message_framer import MessageFramer
@@ -19,16 +19,16 @@ class Preconnection:
     initiated_connection_list = {}
     preconnection_counter = 1
 
-    def __init__(self, local_endpoint=None, remote_endpoint=None, transport_properties=None, security_needed: bool = False, unfulfilled_handler=None):
+    def __init__(self, local_endpoint: LocalEndpoint =None, remote_endpoint: RemoteEndpoint =None, transport_properties: TransportProperties =None, security_needed: bool = False, unfulfilled_handler: Callable[[], None] =None):
         """ A Preconnection represents a set of properties and constraints on the selection and configuration of paths
         and protocols to establish a Connection with a remote Endpoint.
 
         :param local_endpoint:
-            Optional local endpoint to be used with the preconnection
+            Optional local endpoint to be used with the Preconnection
         :param remote_endpoint:
-            Optional remote endpoint to be used with the preconnection
+            Optional remote endpoint to be used with the Preconnection
         :param transport_properties:
-            A transport property object with desired selection properties.
+            A transport property object with desired Selection Properties.
         :param security_needed: Indicated whether or not a secure connection is needed.
         :param unfulfilled_handler:
             A function handling an unfulfilled error
@@ -58,11 +58,10 @@ class Preconnection:
             transport_properties.dispatch_capacity_profile(self.__context, self.__flow)
             transport_properties.buffer_capacity = None
 
-
     def initiate(self, timeout=None) -> Connection:
         """ Initiate (Active open) is the Action of establishing a Connection to a Remote Endpoint presumed to be listening for incoming
         Connection requests. Active open is used by clients in client-server interactions. Note that start() must be
-        called on the preconnection.
+        called on the Preconnection.
 
         :param timeout:
             The timeout parameter specifies how long to wait before aborting Active open.
@@ -105,7 +104,7 @@ class Preconnection:
         Preconnection.initiated_connection_list[self.id] = new_con
         return new_con
 
-    def initiate_with_send(self, message_data, sent_handler, message_context=None, timeout=None) -> Connection:
+    def initiate_with_send(self, message_data: bytearray, sent_handler: Callable[[Connection, SendErrorReason], None], message_context: MessageContext=None, timeout: int=None) -> Connection:
         """For application-layer protocols where the Connection initiator also sends the first message,
         the InitiateWithSend() action combines Connection initiation with a first Message sent.
         Returns a Connection object in the ``establishing`` state.
@@ -120,7 +119,7 @@ class Preconnection:
         new_connection.send(message_data, sent_handler=sent_handler, message_context=message_context)
         return new_connection
 
-    def start(self):
+    def start(self) -> None:
         """ Starts the transport systems. Must be called after initiate / listen.
 
         :return: This function does not return.
@@ -128,10 +127,10 @@ class Preconnection:
         backend.start(self.__context)
         backend.clean_up(self.__context)
 
-    def listen(self):
+    def listen(self) -> Listener:
         """Listen (Passive open) is the Action of waiting for Connections from remote Endpoints. Before listening
         the transport system will resolve transport properties for candidate protocol stacks. A local endpoint must be
-        passed to the preconnection prior to listen.
+        passed to the Preconnection prior to listen.
 
         :return: A listener object.
         """
@@ -157,7 +156,7 @@ class Preconnection:
         listener = Listener(self.__context, self.__flow, self.__ops, self)
         return listener
 
-    def add_framer(self, framer):
+    def add_framer(self, framer) -> None:
         """ Adds a framer to the Preconnection to run on top of transport protocols. Multiple Framers may be added.
         If multiple Framers are added, the last one added runs first when framing outbound messages, and last when
         parsing inbound data.
@@ -169,7 +168,7 @@ class Preconnection:
         else:
             self.message_framer = MessageFramer(framer)
 
-    def register_security(self, is_server=None):
+    def register_security(self, is_server=None) -> None:
         if is_server:
             neat_secure_identity(self.__context, self.__flow, "/Users/michael/Skole/Master/neat/examples/cert.pem", NEAT_CERT_KEY_PEM)
         sec = json.dumps({"security": {"value": True, "precedence": 2}})

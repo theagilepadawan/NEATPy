@@ -6,10 +6,9 @@ from utils import shim_print
 
 
 class MessageProperties(Enum):
-    """ [From draft-ietf-taps-interface-latest - https://ietf-tapswg.github.io/api-drafts/draft-ietf-taps-interface.html]
-    << Applications may need to annotate the Messages they send with extra information to control how data is scheduled
-    and processed by the transport protocols in the Connection. Therefore a message context containing these properties
-    can be passed to the Send Action. >>
+    """Message Properties are used by the application to annotate the Messages they send with extra information to control how data is scheduled
+    and processed by the transport protocols in the :py:class:`connection`. Message Properties are sent by adding them to a :py:class:`message_context`,
+    and pass said context to the :py:meth:`.send` call.
     """
     LIFETIME = 'msg-lifetime' #: Default value is math.inf
     PRIORITY = 'msg-prio' #: Default value is 100

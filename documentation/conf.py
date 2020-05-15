@@ -80,9 +80,25 @@ add_module_names = False
 html_logo = "../documentation/logo.svg"
 html_favicon = "../documentation/favicon.ico"
 
-latex_logo = "../documentation/logo.png"
+latex_logo = "../documentation/logo.pdf"
+latex_elements = {
+    # The paper size (’letterpaper’ or ’a4paper’).
+    'papersize': 'letterpaper',
+    # The font size (’10pt’, ’11pt’ or ’12pt’).
+    'pointsize': '10pt',
+    # Additional stuff for the LaTeX preamble.
+    'preamble': r'''
+        \usepackage{charter}
+        \usepackage[defaultsans]{lato}
+        \usepackage{inconsolata}
+        \addtolength{\evensidemargin}{-5mm}  % Compensate for binding
+        \addtolength{\oddsidemargin}{5mm}
+    ''',
+    'printindex': '\\footnotesize\\raggedright\\printindex',
+}
 image_converter = "/usr/local/bin/magick"
 image_converter_args = ["convert"]
+pygments_style = 'manni'
 
 def autodoc_skip_member(app, what, name, obj, skip, options):
     exclusions = ('neat', '__neat__')

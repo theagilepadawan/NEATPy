@@ -7,11 +7,8 @@ Let us create a simple client and server with NEATPy!
 Our server is going to reply :guilabel:`"Hello from server"` to all
 incoming messages, while our client will simply send a message, wait for a reply, then terminate the connection.
 
-Import *NEATPy* and let us start with the server!
+Let us start with the server!
 
-.. code-block:: python
-
-    import neatpy
 
 Server
 -------------------

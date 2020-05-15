@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from utils import shim_print
+from typing import Callable
+
 
 
 class Framer(ABC):
@@ -13,7 +15,7 @@ class Framer(ABC):
         some data prior to the Connection delivering its Ready event. This allows the implementation to communicate
         control data to the remote endpoint that can be used to parse Messages.
 
-        :param connection:
+        :param connection: The connection that the framer is registered with.
         """
         pass
 
@@ -22,16 +24,16 @@ class Framer(ABC):
         pass
 
     @abstractmethod
-    def new_sent_message(self, connection, message_data, message_context, sent_handler, is_end_of_message):
+    def new_sent_message(self, connection, message_data: bytearray, message_context, sent_handler: Callable[['Connection', 'SendErrorReason'], None], is_end_of_message: bool):
         """Upon receiving this event, a framer implementation is responsible for performing any necessary
         transformations and sending the resulting data back to the Message Framer, which will in turn send
         it to the next protocol.
 
-        :param connection:
-        :param message_data:
-        :param message_context:
-        :param is_end_of_message:
-        :param sent_handler:
+        :param connection:The connection the framer is registered with.
+        :param message_data: The data to send.
+        :param message_context: Additional :py:class:`message_properties` can be sent by adding them to a Message Context object `Optinoal`.
+        :param sent_handler: A function that is called after completion / error.
+        :param end_of_message: When set to false indicates a partial send.
         """
         pass
 
@@ -41,7 +43,7 @@ class Framer(ABC):
         a particular cursor representing the unprocessed data. The application requests a specific amount of data it
         needs to have available in order to parse. If the data is not available, the parse fails.
 
-        :param connection:
+        :param connection: The connection the framer is registered with.
         """
         pass
 

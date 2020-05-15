@@ -25,12 +25,12 @@ class LocalEndpoint:
         """
         self.address = address
 
-    def with_port(self, portNumber: int) -> None:
+    def with_port(self, port_number: int) -> None:
         """This function sets the port desired to use with the local endpoint.
 
-        :param portNumber: The port to set.
+        :param port_number: The port to set.
         """
-        self.port = portNumber
+        self.port = port_number
 
 
 class RemoteEndpoint:
@@ -57,12 +57,12 @@ class RemoteEndpoint:
         """
         self.address = address
 
-    def with_port(self, portNumber: int) -> None:
+    def with_port(self, port_number: int) -> None:
         """This function sets the port desired to use with the local endpoint.
 
-        :param portNumber: The port to set.
+        :param port_number: The port to set.
         """
-        self.port = portNumber
+        self.port = port_number
 
     def with_hostname(self, hostname: str) -> None:
         """This function sets the hostname for the remote endpoint.

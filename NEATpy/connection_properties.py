@@ -6,6 +6,11 @@ from neat import *
 
 
 class ConnectionProperties(Enum):
+    """Connection Properties represent the configuration and state of the selected Protocol Stack(s) backing a Connection.
+    The application can set and query Connection Properties on a per-Connection basis. Connection Properties that are not
+    read-only can be set prior to a call to either :py:meth:`.initiate` or :py:meth:`.listen`.
+
+    """
     RETRANSMISSION_THRESHOLD_BEFORE_EXCESSIVE_RETRANSMISSION_NOTIFICATION = 'retransmit-notify-threshold' #: Default value is -1
     REQUIRED_MINIMUM_CORRUPTION_PROTECTION_COVERAGE_FOR_RECEIVING = 'recv-checksum-len' #: Default value is -1
     PRIORITY = 'conn-prio' #: Default value is 100
@@ -17,7 +22,7 @@ class ConnectionProperties(Enum):
     MAXIMUM_MESSAGE_SIZE_ON_RECEIVE = 'recv-msg-max-len' #: Default value is -1
     CAPACITY_PROFILE = 'conn-capacity-profile' #: Default value is :py:class:`CapacityProfiles`
     BOUNDS_ON_SEND_OR_RECEIVE_RATE = 'max-send-rate / max-recv-rate' #: Default value is (-1, -1)
-    USER_TIMEOUT_TCP = 'tcp-uto'  #: Add three members here?
+    USER_TIMEOUT_TCP = 'tcp-uto'  #: An enumeration of three values, see :py:class:`TCPUserTimeout`.
 
     def __str__(self):
         return self.value
@@ -93,9 +98,16 @@ class ConnectionProperties(Enum):
 
 
 class TCPUserTimeout(Enum):
-    ADVERTISED_USER_TIMEOUT = 'tcp.user-timeout-value'
-    USER_TIMEOUT_ENABLED = 'tcp.user-timeout'
-    CHANGEABLE = 'tcp.user-timeout-recv'
+    """These properties specify configurations for the User Timeout Option (UTO), in case TCP becomes the chosen transport protocol.
+
+    To set a property of TCP UTO, pass a dictionary with one or more properties::
+
+        tcp_uto_dict = {TCPUserTimeout.ADVERTISED_USER_TIMEOUT: 150}
+        transport_properties_object.add(ConnectionProperties.USER_TIMEOUT_TCP, tcp_uto_dict)
+    """
+    ADVERTISED_USER_TIMEOUT = 'tcp.user-timeout-value' #: This time value is advertised via the TCP User Timeout Option (UTO) - Default 300 seconds.
+    USER_TIMEOUT_ENABLED = 'tcp.user-timeout' #: This property controls whether the UTO option is enabled for a connection - Default False`
+    CHANGEABLE = 'tcp.user-timeout-recv' #: This property controls whether the Timeout for aborting Connection may be changed based on a UTO option received from the remote peer - Default `True`
 
 
 class CapacityProfiles(Enum):

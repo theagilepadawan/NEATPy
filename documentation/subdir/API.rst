@@ -19,6 +19,9 @@ Connection
       :members:
       :undoc-members:
 
+   .. autoclass:: MessageDataObject
+      :members:
+
    .. autoclass:: Connection
       :members:
 
@@ -29,8 +32,6 @@ Transport Properties
    .. autoclass:: TransportProperties
       :members:
 
-Transport Property Profiles
------------------------------
    .. autoclass:: TransportPropertyProfiles
       :members:
       :undoc-members:
@@ -56,6 +57,8 @@ Connection Properties
    .. autoclass:: ConnectionProperties
       :members:
 
+   .. autoclass:: TCPUserTimeout
+      :members:
 
 
 Message Properties

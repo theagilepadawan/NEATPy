@@ -74,9 +74,9 @@ class Connection:
         self.final_message_passed = False
 
 
-        self.HANDLE_STATE_READY: Callable[[], None] = None  #: Handler for when the connection transitions to ready state
-        self.HANDLE_STATE_CLOSED: Callable[[], None] = None #: Handler for when the connection transitions to clsoed state
-        self.HANDLE_STATE_CONNECTION_ERROR: Callable[[], None] = None #: Handler for when the connection gets experiences a connection error
+        self.HANDLE_STATE_READY: Callable[[Connection], None] = None  #: Handler for when the connection transitions to ready state
+        self.HANDLE_STATE_CLOSED: Callable[[Connection], None] = None #: Handler for when the connection transitions to clsoed state
+        self.HANDLE_STATE_CONNECTION_ERROR: Callable[[Connection], None] = None #: Handler for when the connection gets experiences a connection error
 
         self.preconnection = preconnection
         self.transport_properties = self.preconnection.transport_properties
@@ -169,7 +169,7 @@ class Connection:
         except:
             shim_print("An error occurred in the Python callback: {} - {}".format(sys.exc_info()[0], inspect.currentframe().f_code.co_name), level='error')
 
-    def set_property(self, connection_property: ConnectionProperties, value):
+    def set_property(self, connection_property: ConnectionProperties, value) -> None:
         """The application can set and query Connection Properties on a per-Connection basis.
         Connection Properties that are not read-only can be set during pre-establishment (see :py:class:`connection_properties`)
         as well as on connections directly using the SetProperty action:
@@ -186,15 +186,15 @@ class Connection:
         # Then set the property for the given connection
         ConnectionProperties.set_property(self.transport_properties.connection_properties, connection_property, value)
 
-    def send(self, message_data: bytearray, sent_handler=None, message_context: MessageContext = None, end_of_message: bool = True) -> None:
+    def send(self, message_data: bytearray, sent_handler: Callable[['Connection', 'SendErrorReason'], None] = None, message_context: MessageContext = None, end_of_message: bool = True) -> None:
         """Data is sent as Messages, which allow the application to communicate the boundaries of the data being
         transferred. By default, Send enqueues a complete Message, and takes optional per-:py:class:`message_properties`.
         Applications are able to handle events with the :param sent_handler. This handles completion in form of an
         either an error or a successfully sent message.
 
-        :param message_data: The data to send
+        :param message_data: The data to send.
         :param sent_handler: A function that is called after completion / error.
-        :param message_context:
+        :param message_context: Additional :py:class:`message_properties` can be sent by adding them to a Message Context object `Optinoal`.
         :param end_of_message: When set to false indicates a partial send.
             All data sent with the same MessageContext object will be treated as belonging to the same Message, and will constitute an in-order series until the endOfMessage is marked.
         """
@@ -211,14 +211,14 @@ class Connection:
         # If the connection is closed, further sending will result in an SendError
         if self.close_called:
             shim_print(f"SendError - {SendErrorReason.CONNECTION_CLOSING.value}")
-            sent_handler(message_context, SendErrorReason.CONNECTION_CLOSING)
+            sent_handler(self, SendErrorReason.CONNECTION_CLOSING)
             return
 
         # "If another Message is sent after a Message marked as Final has already been sent on a Connection
         #  the Send Action for the new Message will cause a SendError Event"
         if self.final_message_passed:
             shim_print(f"Send error - {SendErrorReason.FINAL_MESSAGE_PASSED.value}", level='error')
-            sent_handler(message_context, SendErrorReason.FINAL_MESSAGE_PASSED)
+            sent_handler(self, SendErrorReason.FINAL_MESSAGE_PASSED)
             return
 
         # Check for inconsistency between message properties and the connection's transport properties
@@ -227,7 +227,7 @@ class Connection:
         # if inconsistencies:
         #     shim_print(f"SendError - {SendErrorReason.INCONSISTENT_PROPERTIES_PASSED.value}:", level='error',
         #                additional_msg=inconsistencies)
-        #     sent_handler(message_context, SendErrorReason.INCONSISTENT_PROPERTIES_PASSED)
+        #     sent_handler(self, SendErrorReason.INCONSISTENT_PROPERTIES_PASSED)
         #     return
 
         if self.message_framer:
@@ -258,7 +258,7 @@ class Connection:
             self.msg_list.put(item)
         message_passed(self.ops)
 
-    def receive(self, handler, min_incomplete_length=None, max_length=math.inf) -> None:
+    def receive(self, handler: Callable[['Connection', 'MessageDataObject', MessageContext, bool, bool], None], min_incomplete_length: int = None, max_length: int = math.inf) -> None:
         """ As with sending, data is received in terms of Messages. Receiving is an asynchronous operation,
         in which each call to Receive enqueues a request to receive new data from the connection. Once data has been
         received, or an error is encountered, an event will be delivered to complete the Receive request.
@@ -296,7 +296,7 @@ class Connection:
             if len(self.receive_request_queue) is 1:
                 received_called(self.ops)
 
-    def batch(self, batch_block: Callable[[], None]):
+    def batch(self, batch_block: Callable[[], None]) -> None:
         """Used to send multiple messages without the transport system dispatching messages further down the stack.
         Used to minimize overhead, and as a mechanism for the application to indicate that messages could be coalesced
         when possible.
@@ -307,7 +307,7 @@ class Connection:
         batch_block()
         self.batch_in_session = False
 
-    def close(self):
+    def close(self) -> None:
         """Close terminates a Connection after satisfying all the requirements that were specified regarding
         the delivery of Messages that the application has already given to the transport system. For example,
         if reliable delivery was requested for a Message handed over before calling Close, the transport system
@@ -322,18 +322,18 @@ class Connection:
             neat_close(self.ops.ctx, self.ops.flow)
             self.state = ConnectionState.CLOSED
 
-    def abort(self):
+    def abort(self) -> None:
         """Abort terminates a Connection without delivering remaining data.
         """
         backend.abort(self.context, self.flow)
 
-    def stop_listener(self):
+    def stop_listener(self) -> None:
         self.listener.stop()
 
-    def stop(self):
+    def stop(self) -> None:
         backend.stop(self.context)
 
-    def can_be_used_for_sending(self):
+    def can_be_used_for_sending(self) -> bool:
         ret = True
         if self.transport_properties.selection_properties[SelectionProperties.DIRECTION] is CommunicationDirections.UNIDIRECTIONAL_RECEIVE:
             ret = False
@@ -342,7 +342,7 @@ class Connection:
         # If close is called on the connection?
         return ret
 
-    def can_be_used_for_receiving_data(self):
+    def can_be_used_for_receiving_data(self) -> bool:
         ret = True
         if self.transport_properties.selection_properties[SelectionProperties.DIRECTION] is CommunicationDirections.UNIDIRECTIONAL_SEND:
             ret = False
@@ -351,13 +351,13 @@ class Connection:
         # If close is called on the connection?
         return ret
 
-    def get_properties(self):
+    def get_properties(self) -> None:
         """ Returns a dictionary consisting of the connections properties, which include the following:
 
         - :py:class:`connection_state` - key ``'state'``
         - A boolean which holds the value for whether the connection can be used for sending - key ``'send'``
         - A boolean which holds the value for whether the connection can be used for receiving - key ``'receive'``
-        - A :py:class:`transport_properties` object, which will differ with the connections status - key ``'props'``
+        - A :py:class:`transport_properties` object, which will differ with the connection's state - key ``'props'``
             - A connection in an establishing phase will hold transport properties that the application specified with the :py:class:`preconnection`.
             - A connection in either an established, closing or closed state will hold the :py:class:`selection_properties` and :py:class:`connection_properties`
               of the actual protocols that were selected and instantiated.
@@ -376,7 +376,7 @@ class Connection:
                 'props': self.transport_properties}
 
 
-    def clone(self, clone_error_handler: Callable[[object, object], None]):
+    def clone(self, clone_error_handler: Callable[['Connection'], None]) -> None:
         """Calling Clone on a Connection yields a group of two Connections: the parent Connection on which Clone was
         called, and the resulting cloned Connection. These connections are "entangled" with each other, and become part
         of a Connection Group. Calling Clone on any of these two Connections adds a third Connection to the Connection
@@ -384,7 +384,7 @@ class Connection:
         there are exceptions, such as the priority property, which obviously will not trigger a change for all connections
         in the connection group. As with all other properties, priority is copied to the new Connection when calling Clone().
 
-        :param clone_error_handler: A function to handle the event which fires when the cloning operation fails.
+        :param clone_error_handler: A function to handle the event which fires when the cloning operation fails. The connection which clone was called on is sent with the handler.
         """
         try:
             shim_print("CLONE")
@@ -446,17 +446,17 @@ def handle_writable(ops):
             if expired_epoch and expired_epoch < int(time.time()):
                 shim_print("""Send action expired: Expired: {} - Now: {}""".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expired_epoch)),
                                                                               time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(time.time())))), level='error')
-                # Todo: Call event handler if present
+                handler(connection, SendErrorReason.MESSAGE_TIMEOUT)
                 return NEAT_OK
 
-            res = backend.write(ops, message_to_be_sent)
-            if res:
-                if res == NEAT_ERROR_MESSAGE_TOO_BIG:
+            neat_result = backend.write(ops, message_to_be_sent)
+            if neat_result:
+                if neat_result == NEAT_ERROR_MESSAGE_TOO_BIG:
                     reason = SendErrorReason.MESSAGE_TOO_LARGE
-                elif res == NEAT_ERROR_IO:
+                elif neat_result == NEAT_ERROR_IO:
                     reason = SendErrorReason.FAILURE_UNDERLYING_STACK
                 shim_print(f"SendError - {reason.value}")
-                handler(context, reason)
+                handler(connection, reason)
                 return
             # Keep message until NEAT confirms sending with all_written
             connection.messages_passed_to_back_end.append((message_to_be_sent, context, handler))
@@ -502,7 +502,7 @@ def handle_all_written(ops):
         message, message_context, handler = connection.messages_passed_to_back_end.pop(0)
 
         if handler:
-            handler(connection)
+            handler(connection, None)
 
         if connection.close_called and len(connection.messages_passed_to_back_end) == 0:
             shim_print("All messages passed down to the network layer - calling close")
@@ -619,7 +619,7 @@ def on_clone_error(ops):
     shim_print("Clone operation failed at back end", level="error")
     parent = Connection.connection_list[ops.parent_id]
     handler = parent.clone_callbacks[ops.clone_id]
-    handler(None, )
+    handler()
     return NEAT_OK
 
 
@@ -688,9 +688,10 @@ class ReceiveError:
 class MessageDataObject:
     """
     The messageData object provides access to the bytes that were received for a Message, along with the length of the byte array.
+    It is passed to applications during the `receive` event, signaling a completion of a :py:meth:`.receive` call.
     """
-    data: bytearray
-    length: int
+    data: bytearray #: The raw bytes of the message
+    length: int #: The message length
 
     def combine_message_data_objects(self, other_object):
         self.data += other_object.data
@@ -723,6 +724,7 @@ class SendErrorReason(Enum):
     INCONSISTENT_PROPERTIES_PASSED = "Inconsistencies in message properties"
     MESSAGE_TOO_LARGE = "Message is too large for the system to handle, try sendPartial()"
     FAILURE_UNDERLYING_STACK = "Failure occurred in the underlying protocol stack"
+    MESSAGE_TIMEOUT = "The messages lifetime ran out"
 
 Message_queue_object = Tuple[bytes, MessageContext]
 Batch_struct = List[Message_queue_object]

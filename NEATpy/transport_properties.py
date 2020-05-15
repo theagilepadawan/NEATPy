@@ -128,7 +128,7 @@ class TransportProperties:
                         remove_list.append(protocol)
         return [protocol for protocol in candidates if protocol not in remove_list]
 
-    def add(self, prop: Union[SelectionProperties, MessageProperties, ConnectionProperties], value):
+    def add(self, prop: Union[SelectionProperties, MessageProperties, ConnectionProperties], value) -> None:
         """ Add a property to the transport property object.
 
         :param prop: Property to add
@@ -153,7 +153,7 @@ class TransportProperties:
         else:
             shim_print("No valid property given - ignoring", level='error')
 
-    def avoid(self, prop: SelectionProperties):
+    def avoid(self, prop: SelectionProperties) -> None:
         """ Set the preference level to avoid for the passed selection property.
 
         :param prop: Selection property to set ``avoid`` as preference level for.
@@ -163,7 +163,7 @@ class TransportProperties:
         else:
             self.add(prop, PreferenceLevel.AVOID)
 
-    def require(self, prop: SelectionProperties):
+    def require(self, prop: SelectionProperties) -> None:
         """Set the preference level to require for the passed selection property.
 
         :param prop: Selection property to set ``require`` as preference level for.
@@ -173,7 +173,7 @@ class TransportProperties:
         else:
             self.add(prop, PreferenceLevel.REQUIRE)
 
-    def prefer(self, prop: SelectionProperties):
+    def prefer(self, prop: SelectionProperties) -> None:
         """ Set the preference level to prefer for the passed selection property.
 
         :param prop: Selection property to set ``prefer`` as preference level for.
@@ -183,7 +183,7 @@ class TransportProperties:
         else:
             self.add(prop, PreferenceLevel.PREFER)
 
-    def ignore(self, prop: SelectionProperties):
+    def ignore(self, prop: SelectionProperties) -> None:
         """  Set the preference level to ignore for the passed selection property.
 
         :param prop: Selection property to set ``ignore`` as preference level for.
@@ -193,7 +193,7 @@ class TransportProperties:
         else:
             self.add(prop, PreferenceLevel.IGNORE)
 
-    def prohibit(self, prop: SelectionProperties):
+    def prohibit(self, prop: SelectionProperties) -> None:
         """  Set the preference level to prohibit for the passed selection property.
 
         :param prop: Selection property to set ``prohibit`` as preference level for.
