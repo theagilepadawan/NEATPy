@@ -75,7 +75,7 @@ class Connection:
 
 
         self.HANDLE_STATE_READY: Callable[[Connection], None] = None  #: Handler for when the connection transitions to ready state
-        self.HANDLE_STATE_CLOSED: Callable[[Connection], None] = None #: Handler for when the connection transitions to clsoed state
+        self.HANDLE_STATE_CLOSED: Callable[[Connection], None] = None #: Handler for when the connection transitions to closed state
         self.HANDLE_STATE_CONNECTION_ERROR: Callable[[Connection], None] = None #: Handler for when the connection gets experiences a connection error
 
         self.preconnection = preconnection

@@ -52,7 +52,7 @@ class ExampleFramer(Framer):
     """To provide an example this class implements the abstract interface in :py:class:`framer` class. It's a simple TLV framer
     that frame TCP messages by prepending message size. This is then parsed by the same framer at the destination.
 
-    To use the framer, simply create an instace, and pass it to a :py:class:`preconnection` like so::
+    To use the framer, simply create an instance, and pass it to a :py:class:`preconnection` like so::
 
         new_preconnection = Preconnection(remote_endpoint=ep)
         preconnection.add_framer(framer.ExampleFramer())
