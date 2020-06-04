@@ -18,14 +18,9 @@ from connection_properties import TCPUserTimeout
 def receive_handler(con:Connection, msg, context, end, error):
     shim_print(f"Got message {len(msg.data)}: {msg.data.decode()}", level='msg')
 
-def clone_send(con, error):
-    new = con.clone(None)
-    new.send(b"Hello from clone", None)
-    new.receive(receive_handler)
-
 def ready_handler(connection: Connection):
     shim_print("Connection is ready")
-    connection.send(b"Hello server", clone_send)
+    connection.send(b"Hello server", None)
     connection.receive(receive_handler)
 
 if __name__ == "__main__":
