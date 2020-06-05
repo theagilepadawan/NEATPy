@@ -32,6 +32,12 @@ As NEAT, it is available for: FreeBSD, Linux, OS X and NetBSD.
 
 - https://neatpy.readthedocs.io/
 
+---------------------------------------
+## Thesis 📖
+
+- http://welzl.at/teaching/dipls/michaelgundersen_thesis.pdf 
+
+
 ## Author
 
 👤 **Michael Gundersen**
